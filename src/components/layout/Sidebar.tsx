@@ -37,8 +37,7 @@ const Sidebar: React.FC = () => {
       case 'Admin':
         return [
           { icon: Shield, label: 'Admin Panel', path: '/admin' },
-          { icon: Users, label: 'Providers', path: '/admin/providers' },
-          { icon: FileText, label: 'Records', path: '/admin/records' },
+          { icon: User, label: 'Profile', path: '/admin/profile' },
           { icon: ShoppingCart, label: 'Marketplace', path: '/marketplace' },
         ];
       default:

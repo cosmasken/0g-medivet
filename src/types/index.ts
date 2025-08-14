@@ -18,6 +18,15 @@ export type ProviderProfile = {
   contact: string;
   whitelisted: boolean; // admin toggle
   reputation: number; // 0-100
+  bio?: string;
+};
+
+export type AdminProfile = {
+  fullName: string;
+  contact: string;
+  department: string;
+  adminLevel: string;
+  permissions: string[];
 };
 
 export type RecordStatus = 'Monetizable' | 'NonMonetizable' | 'Flagged';

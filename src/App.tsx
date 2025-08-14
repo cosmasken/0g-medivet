@@ -12,9 +12,11 @@ import Onboarding from "./pages/Onboarding";
 import PatientDashboard from "./pages/patient/Dashboard";
 import PatientProfile from "./pages/patient/Profile";
 import ProviderDashboard from "./pages/provider/Dashboard";
+import ProviderProfile from "./pages/provider/Profile";
 import Marketplace from "./pages/Marketplace";
 import RecordDetail from "./pages/RecordDetail";
 import AdminPanel from "./pages/admin/AdminPanel";
+import AdminProfile from "./pages/admin/Profile";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,9 @@ const App = () => (
             <Route path="/provider/dashboard" element={
               <ProtectedRoute><ProviderDashboard /></ProtectedRoute>
             } />
+            <Route path="/provider/profile" element={
+              <ProtectedRoute><ProviderProfile /></ProtectedRoute>
+            } />
             
             {/* Shared Routes */}
             <Route path="/marketplace" element={
@@ -59,6 +64,9 @@ const App = () => (
             {/* Admin Routes */}
             <Route path="/admin" element={
               <ProtectedRoute><AdminPanel /></ProtectedRoute>
+            } />
+            <Route path="/admin/profile" element={
+              <ProtectedRoute><AdminProfile /></ProtectedRoute>
             } />
             
             {/* Catch-all route */}

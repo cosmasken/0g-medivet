@@ -20,6 +20,8 @@ const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) => {
   const { currentUser } = useAuthStore();
   const { createRecord } = useRecordStore();
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -39,16 +41,34 @@ const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) => {
     'Other'
   ];
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setUploadingFiles(files);
+  };
+
   const handleUpload = async () => {
     if (!currentUser || !formData.title || !formData.category) {
       toast.error('Please fill in all required fields');
       return;
     }
 
+    if (uploadingFiles.length === 0) {
+      toast.error('Please select at least one file');
+      return;
+    }
+
     setUploading(true);
-    
-    // Simulate file upload and encryption
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    setUploadProgress(0);
+
+    // Simulate file upload with progress
+    for (let i = 0; i <= 100; i += 10) {
+      setUploadProgress(i);
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Simulate encryption process
+    toast.loading('Encrypting files...', { duration: 1000 });
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const mockEncryptedData = new Uint8Array([
       Math.floor(Math.random() * 256),
@@ -67,7 +87,12 @@ const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) => {
     });
 
     setUploading(false);
-    toast.success('Health record uploaded successfully!');
+    setUploadProgress(0);
+    toast.success(
+      `Health record uploaded successfully! ${uploadingFiles.length} file(s) encrypted and stored.`,
+      { duration: 3000 }
+    );
+    
     onOpenChange(false);
     setFormData({
       title: '',
@@ -75,6 +100,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) => {
       description: '',
       status: 'Monetizable'
     });
+    setUploadingFiles([]);
   };
 
   return (
@@ -147,16 +173,50 @@ const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) => {
             </Select>
           </div>
 
-          {/* Mock file upload area */}
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+          {/* File upload area */}
+          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center transition-colors hover:border-primary/50">
             <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground mb-2">
               Drop files here or click to browse
             </p>
-            <Button variant="outline" size="sm">
-              Choose Files
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="file-upload"
+            />
+            <Button variant="outline" size="sm" asChild>
+              <label htmlFor="file-upload" className="cursor-pointer">
+                Choose Files
+              </label>
             </Button>
+            {uploadingFiles.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium">Selected files:</p>
+                {uploadingFiles.map((file, index) => (
+                  <div key={index} className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                    {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {uploading && (
+            <div className="space-y-2">
+              <div className="w-full bg-secondary rounded-full h-2">
+                <div 
+                  className="medical-gradient h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-sm text-center text-muted-foreground">
+                Uploading... {uploadProgress}%
+              </p>
+            </div>
+          )}
 
           <div className="flex space-x-3 pt-4">
             <Button 
@@ -170,7 +230,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ open, onOpenChange }) => {
             <Button 
               onClick={handleUpload}
               className="flex-1"
-              disabled={uploading || !formData.title || !formData.category}
+              disabled={uploading || !formData.title || !formData.category || uploadingFiles.length === 0}
             >
               {uploading ? (
                 <div className="flex items-center space-x-2">
