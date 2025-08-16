@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Upload, 
-  FileText, 
-  DollarSign, 
-  Share2, 
-  Eye, 
+import {
+  Upload,
+  FileText,
+  DollarSign,
+  Share2,
+  Eye,
   Calendar,
   TrendingUp,
   Activity
@@ -20,6 +20,9 @@ import { PatientProfile } from '@/types';
 import { formatDistance } from 'date-fns';
 import UploadModal from '@/components/patient/UploadModal';
 import ShareModal from '@/components/patient/ShareModal';
+import AiInsightConsentModal from '@/components/patient/AiInsightConsentModal';
+import AiInsightResultModal from '@/components/patient/AiInsightResultModal';
+import WithdrawalModal from '@/components/patient/WithdrawalModal';
 import toast from 'react-hot-toast';
 
 const PatientDashboard: React.FC = () => {
@@ -28,6 +31,10 @@ const PatientDashboard: React.FC = () => {
   const { listings, bids } = useMarketStore();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [aiConsentModalOpen, setAiConsentModalOpen] = useState(false);
+  const [aiResultModalOpen, setAiResultModalOpen] = useState(false);
+  const [aiInsightData, setAiInsightData] = useState<any>(null);
+  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<number | null>(null);
 
   if (!currentUser || currentUser.role !== 'Patient') {
@@ -67,12 +74,19 @@ const PatientDashboard: React.FC = () => {
             Manage your health records and data monetization
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => setUploadModalOpen(true)}
-          className="medical-gradient medical-shadow"
+          className="medical-gradient medical-shadow mr-2"
         >
           <Upload className="mr-2 h-4 w-4" />
           Upload Record
+        </Button>
+        <Button
+          onClick={() => setWithdrawalModalOpen(true)}
+          variant="outline"
+        >
+          <DollarSign className="mr-2 h-4 w-4" />
+          Withdraw Funds
         </Button>
       </div>
 
@@ -131,6 +145,27 @@ const PatientDashboard: React.FC = () => {
         </Card>
       </div>
 
+      {/* AI Health Insights Card */}
+      <Card className="medical-card">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Activity className="h-5 w-5" />
+            <span>AI Health Insights (Preview)</span>
+          </CardTitle>
+          <CardDescription>
+            100% opt-in, encrypted on-device demo.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={() => setAiConsentModalOpen(true)}
+            className="medical-gradient medical-shadow"
+          >
+            Try Demo
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Monetization Status */}
       <Card className="medical-card">
         <CardHeader>
@@ -151,13 +186,13 @@ const PatientDashboard: React.FC = () => {
               <div>
                 <p className="font-medium">Monetization Status</p>
                 <p className="text-sm text-muted-foreground">
-                  {profile.monetizeEnabled 
-                    ? 'Your data can be listed on the marketplace' 
+                  {profile.monetizeEnabled
+                    ? 'Your data can be listed on the marketplace'
                     : 'Data monetization is currently disabled'
                   }
                 </p>
               </div>
-              <Button 
+              <Button
                 variant={profile.monetizeEnabled ? "destructive" : "default"}
                 onClick={() => toast.success('Monetization setting updated')}
               >
@@ -211,8 +246,8 @@ const PatientDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => handleShare(record.id)}
                     >
@@ -232,14 +267,34 @@ const PatientDashboard: React.FC = () => {
       </Card>
 
       {/* Modals */}
-      <UploadModal 
-        open={uploadModalOpen} 
-        onOpenChange={setUploadModalOpen} 
+      <UploadModal
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
       />
-      <ShareModal 
-        open={shareModalOpen} 
+      <ShareModal
+        open={shareModalOpen}
         onOpenChange={setShareModalOpen}
         recordId={selectedRecordId}
+      />
+      <AiInsightConsentModal
+        open={aiConsentModalOpen}
+        onOpenChange={setAiConsentModalOpen}
+        userRecords={userRecords}
+        onInsightGenerated={(insight) => {
+          setAiInsightData(insight);
+          setAiResultModalOpen(true);
+        }}
+      />
+      {aiInsightData && (
+        <AiInsightResultModal
+          open={aiResultModalOpen}
+          onOpenChange={setAiResultModalOpen}
+          insightData={aiInsightData}
+        />
+      )}
+      <WithdrawalModal
+        open={withdrawalModalOpen}
+        onOpenChange={setWithdrawalModalOpen}
       />
     </div>
   );

@@ -10,7 +10,10 @@ import {
   Activity,
   Shield,
   DollarSign,
-  Users
+  Users,
+  CreditCard,
+  Store,
+  History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,17 +29,23 @@ const Sidebar: React.FC = () => {
         return [
           { icon: Activity, label: 'Dashboard', path: '/patient/dashboard' },
           { icon: User, label: 'Profile', path: '/patient/profile' },
+          { icon: CreditCard, label: 'Billing', path: '/patient/billing' },
           { icon: DollarSign, label: 'Marketplace', path: '/marketplace' },
+          { icon: History, label: 'Audit Log', path: '/audit-log' },
         ];
       case 'Provider':
         return [
           { icon: FileText, label: 'Dashboard', path: '/provider/dashboard' },
-          { icon: ShoppingCart, label: 'Marketplace', path: '/marketplace' },
+          { icon: ShoppingCart, label: 'Purchased', path: '/provider/purchased' },
+          { icon: Store, label: 'Marketplace', path: '/marketplace' },
           { icon: User, label: 'Profile', path: '/provider/profile' },
+          { icon: History, label: 'Audit Log', path: '/audit-log' },
         ];
       case 'Admin':
         return [
           { icon: Shield, label: 'Admin Panel', path: '/admin' },
+          { icon: Users, label: 'Users', path: '/admin/users' },
+          { icon: History, label: 'Audit Log', path: '/audit-log' },
           { icon: User, label: 'Profile', path: '/admin/profile' },
           { icon: ShoppingCart, label: 'Marketplace', path: '/marketplace' },
         ];

@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+.env
+.env.local
+
+DEVELOPMENT_PLAN.md
+WALLETCONNECT_SETUP.md
+MOCK_PAGES.md
+WARP.md

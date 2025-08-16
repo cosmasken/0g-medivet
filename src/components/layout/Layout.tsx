@@ -12,9 +12,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
   const location = useLocation();
   
-  // Don't show layout on onboarding page
-  if (location.pathname === '/onboarding' || !isAuthenticated) {
+  // Don't show layout on onboarding, but show Header on connect page for role selection
+  if (location.pathname === '/onboarding') {
     return <>{children}</>;
+  }
+  
+  // For connect page, show Header but no Sidebar
+  if (location.pathname === '/connect') {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        {children}
+      </div>
+    );
   }
 
   return (

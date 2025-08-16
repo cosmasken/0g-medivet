@@ -19,4 +19,15 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Fix for "process is not defined" error
+    global: 'globalThis',
+    'process.env': {},
+    // Additional polyfills for Web3 compatibility
+    'process.version': '"v18.0.0"',
+    'process.browser': 'true'
+  },
+  optimizeDeps: {
+    include: ['wagmi', 'viem', '@tanstack/react-query']
+  }
 }));

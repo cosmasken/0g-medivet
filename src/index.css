@@ -2,61 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* MediVet Design System - Medical trust meets fintech innovation */
+/* 0G MediVet Design System - AI-powered decentralized healthcare */
 
 @layer base {
   :root {
-    /* Core medical trust palette */
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    /* 0G Core AI/Blockchain palette */
+    --background: 222 20% 98%;
+    --foreground: 225 25% 15%;
 
     /* Card and surface colors */
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 225 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 225 25% 15%;
 
-    /* Medical primary - trustworthy blue */
-    --primary: 210 100% 45%;
+    /* 0G Primary - Neural network purple-blue */
+    --primary: 250 85% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 210 100% 65%;
+    --primary-glow: 250 85% 75%;
 
-    /* Medical secondary - soft clinical blue */
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 215 25% 15%;
+    /* 0G Secondary - AI interface tones */
+    --secondary: 250 30% 96%;
+    --secondary-foreground: 225 25% 15%;
 
-    /* Muted clinical tones */
-    --muted: 210 30% 94%;
-    --muted-foreground: 215 15% 45%;
+    /* Muted AI tones */
+    --muted: 250 25% 94%;
+    --muted-foreground: 225 15% 45%;
 
-    /* Health accent - life green */
-    --accent: 145 65% 55%;
+    /* 0G Accent - Zero gravity cyan */
+    --accent: 190 85% 55%;
     --accent-foreground: 0 0% 100%;
 
-    /* Medical alert red */
+    /* Alert red (unchanged) */
     --destructive: 0 85% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Money/marketplace colors */
-    --success: 145 65% 45%;
+    /* Blockchain/success green */
+    --success: 160 75% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 45 95% 55%;
     --warning-foreground: 0 0% 100%;
 
     /* Border and input styling */
-    --border: 210 20% 88%;
-    --input: 210 20% 92%;
-    --ring: 210 100% 45%;
+    --border: 250 20% 88%;
+    --input: 250 20% 92%;
+    --ring: 250 85% 55%;
 
-    /* Gradients for medical aesthetics */
+    /* Gradients for 0G AI aesthetics */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(145 65% 65%));
-    --gradient-card: linear-gradient(180deg, hsl(var(--card)), hsl(210 15% 97%));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(160 75% 65%));
+    --gradient-card: linear-gradient(180deg, hsl(var(--card)), hsl(250 15% 97%));
+    --gradient-ai: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
 
-    /* Shadows for depth */
-    --shadow-medical: 0 4px 20px -4px hsl(var(--primary) / 0.15);
-    --shadow-card: 0 2px 10px -2px hsl(215 25% 15% / 0.08);
+    /* Shadows for AI depth */
+    --shadow-ai: 0 4px 20px -4px hsl(var(--primary) / 0.25);
+    --shadow-card: 0 2px 10px -2px hsl(225 25% 15% / 0.08);
     --shadow-success: 0 4px 20px -4px hsl(var(--success) / 0.25);
 
     /* Animation and transitions */
@@ -64,72 +65,73 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar medical theme */
-    --sidebar-background: 210 20% 98%;
-    --sidebar-foreground: 215 25% 15%;
-    --sidebar-primary: 210 100% 45%;
+    /* Sidebar 0G theme */
+    --sidebar-background: 222 20% 98%;
+    --sidebar-foreground: 225 25% 15%;
+    --sidebar-primary: 250 85% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 30% 94%;
-    --sidebar-accent-foreground: 215 25% 15%;
-    --sidebar-border: 210 20% 88%;
-    --sidebar-ring: 210 100% 45%;
+    --sidebar-accent: 250 25% 94%;
+    --sidebar-accent-foreground: 225 25% 15%;
+    --sidebar-border: 250 20% 88%;
+    --sidebar-ring: 250 85% 55%;
   }
 
   .dark {
-    /* Dark mode medical theme */
-    --background: 215 30% 8%;
-    --foreground: 210 20% 92%;
+    /* 0G Dark mode - AI/space theme */
+    --background: 225 30% 8%;
+    --foreground: 250 20% 92%;
 
-    --card: 215 25% 12%;
-    --card-foreground: 210 20% 92%;
+    --card: 225 25% 12%;
+    --card-foreground: 250 20% 92%;
 
-    --popover: 215 25% 12%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 225 25% 12%;
+    --popover-foreground: 250 20% 92%;
 
-    --primary: 210 100% 55%;
+    --primary: 250 85% 65%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 210 100% 75%;
+    --primary-glow: 250 85% 85%;
 
-    --secondary: 215 20% 18%;
-    --secondary-foreground: 210 20% 88%;
+    --secondary: 225 20% 18%;
+    --secondary-foreground: 250 20% 88%;
 
-    --muted: 215 20% 15%;
-    --muted-foreground: 215 15% 65%;
+    --muted: 225 20% 15%;
+    --muted-foreground: 225 15% 65%;
 
-    --accent: 145 65% 50%;
+    --accent: 190 85% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 85% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 65% 50%;
+    --success: 160 75% 50%;
     --success-foreground: 0 0% 100%;
     --warning: 45 95% 60%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 215 20% 20%;
-    --input: 215 20% 18%;
-    --ring: 210 100% 55%;
+    --border: 225 20% 20%;
+    --input: 225 20% 18%;
+    --ring: 250 85% 65%;
 
-    /* Dark mode gradients */
+    /* Dark mode 0G gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(145 65% 70%));
-    --gradient-card: linear-gradient(180deg, hsl(var(--card)), hsl(215 25% 10%));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(160 75% 70%));
+    --gradient-card: linear-gradient(180deg, hsl(var(--card)), hsl(225 25% 10%));
+    --gradient-ai: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
 
-    /* Dark mode shadows */
-    --shadow-medical: 0 4px 20px -4px hsl(var(--primary) / 0.3);
-    --shadow-card: 0 2px 10px -2px hsl(0 0% 0% / 0.2);
+    /* Dark mode 0G shadows */
+    --shadow-ai: 0 4px 20px -4px hsl(var(--primary) / 0.4);
+    --shadow-card: 0 2px 10px -2px hsl(0 0% 0% / 0.3);
     --shadow-success: 0 4px 20px -4px hsl(var(--success) / 0.3);
 
-    /* Dark mode sidebar */
-    --sidebar-background: 215 25% 10%;
-    --sidebar-foreground: 210 20% 88%;
-    --sidebar-primary: 210 100% 55%;
+    /* Dark mode 0G sidebar */
+    --sidebar-background: 225 25% 10%;
+    --sidebar-foreground: 250 20% 88%;
+    --sidebar-primary: 250 85% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 20% 15%;
-    --sidebar-accent-foreground: 210 20% 88%;
-    --sidebar-border: 215 20% 20%;
-    --sidebar-ring: 210 100% 55%;
+    --sidebar-accent: 225 20% 15%;
+    --sidebar-accent-foreground: 250 20% 88%;
+    --sidebar-border: 225 20% 20%;
+    --sidebar-ring: 250 85% 65%;
   }
 }
 
@@ -184,5 +186,40 @@
   /* Medical transitions */
   .medical-transition {
     transition: var(--transition-medical);
+  }
+
+  /* 0G AI-specific utilities */
+  .ai-gradient {
+    background: var(--gradient-ai);
+  }
+
+  .ai-shadow {
+    box-shadow: var(--shadow-ai);
+  }
+
+  .zero-g-glow {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+
+  .blockchain-pulse {
+    animation: blockchain-pulse 2s infinite;
+  }
+
+  @keyframes blockchain-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Neural network animation */
+  .neural-network {
+    background: radial-gradient(circle at 50% 50%, 
+      hsl(var(--primary) / 0.1) 0%, 
+      transparent 50%);
+    animation: neural-pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes neural-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
   }
 }

@@ -52,6 +52,55 @@ const Onboarding: React.FC = () => {
     setProfileData({ ...profileData, [field]: value });
   };
 
+  const handleMockLogin = (roleType: Role) => {
+    let mockProfile: PatientProfile | ProviderProfile;
+    let navigatePath: string;
+
+    switch (roleType) {
+      case 'Patient':
+        mockProfile = {
+          fullName: 'Mock Patient',
+          dob: '1990-01-01',
+          contact: 'mock.patient@example.com',
+          emergency: 'Mock Emergency - +1 555-0000',
+          monetizeEnabled: true
+        };
+        navigatePath = '/patient/dashboard';
+        break;
+      case 'Provider':
+        mockProfile = {
+          name: 'Dr. Mock Provider',
+          license: 'MDMOCK123',
+          specialty: 'General Practice',
+          contact: 'mock.provider@example.com',
+          whitelisted: true,
+          reputation: 90,
+          organization: 'Mock Clinic',
+          lastInteraction: new Date().toISOString()
+        };
+        navigatePath = '/provider/dashboard';
+        break;
+      case 'Admin':
+        mockProfile = {
+          name: 'Mock Admin',
+          license: 'ADMINMOCK',
+          specialty: 'System Admin',
+          contact: 'mock.admin@example.com',
+          whitelisted: true,
+          reputation: 100,
+          organization: 'MediVet Corp'
+        };
+        navigatePath = '/admin';
+        break;
+      default:
+        return;
+    }
+
+    login(roleType, mockProfile);
+    toast.success(`Welcome to MediVet! Logged in as ${roleType}`);
+    navigate(navigatePath);
+  };
+
   const handleSubmit = () => {
     if (!selectedRole) return;
 
@@ -147,8 +196,8 @@ const Onboarding: React.FC = () => {
                     <CardDescription>{role.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full" variant="outline">
-                      Continue as {role.title}
+                    <Button className="w-full" variant="outline" onClick={() => handleMockLogin(role.type)}>
+                      Try Mock Login
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardContent>

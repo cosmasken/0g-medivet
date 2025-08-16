@@ -19,6 +19,8 @@ export type ProviderProfile = {
   whitelisted: boolean; // admin toggle
   reputation: number; // 0-100
   bio?: string;
+  organization?: string;
+  lastInteraction?: string;
 };
 
 export type AdminProfile = {
@@ -36,12 +38,22 @@ export type HealthRecord = {
   owner: string; // Principal as string
   title: string;
   category: string;
-  encryptedBlob: Uint8Array;
+  // 0G Storage fields
+  storageHash?: string; // Root hash from 0G Storage
+  fileName?: string; // Original file name
+  fileSize?: number; // File size in bytes
+  mimeType?: string; // MIME type (e.g., 'application/dicom', 'application/pdf')
+  // Legacy field for backward compatibility
+  encryptedBlob?: Uint8Array;
   attachment?: number;
   status: RecordStatus;
   createdAt: number;
   accessCount: number;
   sharedWith?: Share[];
+  // Transaction info
+  txHash?: string; // Transaction hash from upload
+  isUploading?: boolean; // Upload status
+  uploadError?: string; // Upload error message
 };
 
 export type Share = {
@@ -78,4 +90,19 @@ export type MarketplaceListing = {
   listedAt: number;
   expiresAt: number;
   status: 'active' | 'sold' | 'expired';
+  correctness: number;
+  dataPoints: number;
+  anonymization: string;
+};
+
+export type AuditLogEvent = {
+  id: string;
+  timestamp: number;
+  actor: { id: string; role: Role; name: string };
+  action: 'CREATE' | 'SHARE' | 'VIEW' | 'DOWNLOAD' | 'REVOKE' | 'EXPIRE' | 'AI_DEMO_MOCK';
+  recordId: number;
+  recordTitle: string;
+  target?: { id: string; role: Role; name: string };
+  txHash: string;
+  details: Record<string, any>;
 };

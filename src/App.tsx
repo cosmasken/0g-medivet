@@ -1,81 +1,94 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster as HotToast } from "react-hot-toast";
 import { useAuthStore } from "@/stores/authStore";
+import { Web3Provider } from "@/providers/Web3Provider";
+import { NetworkProvider } from "@/providers/NetworkProvider";
 import Layout from "@/components/layout/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Onboarding from "./pages/Onboarding";
+import ConnectWallet from "./pages/ConnectWallet";
+import RequireWallet from "@/components/auth/RequireWallet";
 import PatientDashboard from "./pages/patient/Dashboard";
 import PatientProfile from "./pages/patient/Profile";
+import PatientBilling from "./pages/patient/Billing";
 import ProviderDashboard from "./pages/provider/Dashboard";
 import ProviderProfile from "./pages/provider/Profile";
+import ProviderPurchased from "./pages/provider/Purchased";
 import Marketplace from "./pages/Marketplace";
 import RecordDetail from "./pages/RecordDetail";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AdminProfile from "./pages/admin/Profile";
+import AdminUsers from "./pages/admin/Users";
+import AuditLog from "./pages/AuditLog";
 
-const queryClient = new QueryClient();
-
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/onboarding" replace />;
-};
+// Authentication now handled through wallet connection and role selection
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <HotToast position="top-right" />
-      <BrowserRouter>
-        <Layout>
+  <Web3Provider>
+    <NetworkProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <HotToast position="top-right" />
+        <BrowserRouter>
+          <Layout>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+            {/* Public Routes - Redirect to connect page */}
+            <Route path="/" element={<Navigate to="/connect" replace />} />
+            <Route path="/connect" element={<ConnectWallet />} />
             
-            {/* Patient Routes */}
+            {/* Protected Routes - Require wallet connection */}
             <Route path="/patient/dashboard" element={
-              <ProtectedRoute><PatientDashboard /></ProtectedRoute>
+              <RequireWallet><PatientDashboard /></RequireWallet>
             } />
             <Route path="/patient/profile" element={
-              <ProtectedRoute><PatientProfile /></ProtectedRoute>
+              <RequireWallet><PatientProfile /></RequireWallet>
+            } />
+            <Route path="/patient/billing" element={
+              <RequireWallet><PatientBilling /></RequireWallet>
             } />
             
-            {/* Provider Routes */}
             <Route path="/provider/dashboard" element={
-              <ProtectedRoute><ProviderDashboard /></ProtectedRoute>
+              <RequireWallet><ProviderDashboard /></RequireWallet>
             } />
             <Route path="/provider/profile" element={
-              <ProtectedRoute><ProviderProfile /></ProtectedRoute>
+              <RequireWallet><ProviderProfile /></RequireWallet>
+            } />
+            <Route path="/provider/purchased" element={
+              <RequireWallet><ProviderPurchased /></RequireWallet>
             } />
             
-            {/* Shared Routes */}
             <Route path="/marketplace" element={
-              <ProtectedRoute><Marketplace /></ProtectedRoute>
+              <RequireWallet><Marketplace /></RequireWallet>
             } />
             <Route path="/record/:id" element={
-              <ProtectedRoute><RecordDetail /></ProtectedRoute>
+              <RequireWallet><RecordDetail /></RequireWallet>
+            } />
+            <Route path="/audit-log" element={
+              <RequireWallet><AuditLog /></RequireWallet>
             } />
             
-            {/* Admin Routes */}
             <Route path="/admin" element={
-              <ProtectedRoute><AdminPanel /></ProtectedRoute>
+              <RequireWallet><AdminPanel /></RequireWallet>
             } />
             <Route path="/admin/profile" element={
-              <ProtectedRoute><AdminProfile /></ProtectedRoute>
+              <RequireWallet><AdminProfile /></RequireWallet>
+            } />
+            <Route path="/admin/users" element={
+              <RequireWallet><AdminUsers /></RequireWallet>
             } />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Layout>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+          </Layout>
+        </BrowserRouter>
+      </TooltipProvider>
+    </NetworkProvider>
+  </Web3Provider>
 );
 
 export default App;

@@ -15,7 +15,10 @@ import {
   TrendingUp,
   Eye,
   Filter,
-  Gavel
+  Gavel,
+  Database,
+  CheckCircle,
+  ShieldCheck
 } from 'lucide-react';
 import { formatDistance } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -199,7 +202,22 @@ const Marketplace: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="border-t border-b border-border py-3 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center"><Database className="h-3 w-3 mr-1.5" />Data Points</span>
+                      <span className="font-medium">{listing.dataPoints.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center"><CheckCircle className="h-3 w-3 mr-1.5" />Correctness</span>
+                      <span className="font-medium text-success">{listing.correctness}%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center"><ShieldCheck className="h-3 w-3 mr-1.5" />Anonymization</span>
+                      <span className="font-medium">{listing.anonymization}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
                     <div>
                       <p className="text-sm text-muted-foreground">Current Price</p>
                       <p className="text-2xl font-bold text-success">

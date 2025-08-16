@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useRecordStore } from '@/stores/recordStore';
 import { useMarketStore } from '@/stores/marketStore';
@@ -12,6 +13,7 @@ import {
   DollarSign, 
   Clock, 
   Eye,
+  EyeOff,
   Unlock,
   TrendingUp,
   AlertCircle
@@ -26,6 +28,7 @@ const ProviderDashboard: React.FC = () => {
   const { getBidsForProvider } = useMarketStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [unlockingRecord, setUnlockingRecord] = useState<number | null>(null);
+  const [isRedacted, setIsRedacted] = useState(false);
 
   if (!currentUser || currentUser.role !== 'Provider') {
     return <div>Access denied</div>;
@@ -99,7 +102,7 @@ const ProviderDashboard: React.FC = () => {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sharedRecords.length}</div>
+            <div className="text-2xl font-bold">{isRedacted ? '***' : sharedRecords.length}</div>
             <p className="text-xs text-muted-foreground">
               Shared with you
             </p>
@@ -112,7 +115,7 @@ const ProviderDashboard: React.FC = () => {
             <DollarSign className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{myBids.filter(b => b.status === 'pending').length}</div>
+            <div className="text-2xl font-bold">{isRedacted ? '***' : myBids.filter(b => b.status === 'pending').length}</div>
             <p className="text-xs text-muted-foreground">
               Awaiting response
             </p>
@@ -135,7 +138,9 @@ const ProviderDashboard: React.FC = () => {
         <Card className="medical-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Verification Status</CardTitle>
-            <Eye className="h-4 w-4 text-primary" />
+            <Button variant="ghost" size="icon" onClick={() => setIsRedacted(!isRedacted)}>
+              {isRedacted ? <EyeOff className="h-4 w-4 text-primary" /> : <Eye className="h-4 w-4 text-primary" />}
+            </Button>
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${profile.whitelisted ? 'text-success' : 'text-warning'}`}>
@@ -191,7 +196,7 @@ const ProviderDashboard: React.FC = () => {
                   <div key={record.id} className="flex items-center justify-between p-4 border border-border rounded-lg medical-transition hover:shadow-md">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
-                        <h4 className="font-medium">{record.title}</h4>
+                        <h4 className="font-medium">{isRedacted ? `Record #${record.id}` : record.title}</h4>
                         <Badge variant="outline">{record.category}</Badge>
                         {isExpired && (
                           <Badge variant="destructive">Expired</Badge>
@@ -227,10 +232,12 @@ const ProviderDashboard: React.FC = () => {
                         )}
                         {isExpired ? 'Expired' : 'Decrypt'}
                       </Button>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-3 w-3 mr-1" />
-                        Details
-                      </Button>
+                      <Link to={`/record/${record.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-3 w-3 mr-1" />
+                          Details
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 );

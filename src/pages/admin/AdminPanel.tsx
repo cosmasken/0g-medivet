@@ -18,12 +18,15 @@ import {
   TrendingUp
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 const AdminPanel: React.FC = () => {
   const { providers, whitelistProvider, updateProviderReputation } = useAdminStore();
   const { records, flagRecord } = useRecordStore();
   const { listings } = useMarketStore();
   const [activeTab, setActiveTab] = useState('overview');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogConfig, setDialogConfig] = useState({ title: '', description: '', onConfirm: () => {} });
 
   const pendingProviders = providers.filter(p => !p.whitelisted);
   const whitelistedProviders = providers.filter(p => p.whitelisted);
@@ -38,6 +41,35 @@ const AdminPanel: React.FC = () => {
   const handleFlagRecord = (recordId: number, flagged: boolean) => {
     flagRecord(recordId, flagged ? 'Flagged' : 'Monetizable');
     toast.success(`Record ${flagged ? 'flagged' : 'unflagged'}`);
+  };
+
+  const openConfirmationDialog = (title: string, description: string, onConfirm: () => void) => {
+    setDialogConfig({ title, description, onConfirm });
+    setDialogOpen(true);
+  };
+
+  const handleRejectProvider = (providerName: string) => {
+    openConfirmationDialog(
+      'Reject Provider?',
+      `Are you sure you want to reject ${providerName}? This action cannot be undone.`,
+      () => toast.error('Provider rejection feature not implemented yet.')
+    );
+  };
+
+  const handleRevokeProvider = (license: string, providerName: string) => {
+    openConfirmationDialog(
+      'Revoke Provider?',
+      `Are you sure you want to revoke access for ${providerName}?`,
+      () => handleWhitelistProvider(license, false)
+    );
+  };
+
+  const handleRemoveRecord = (recordId: number, recordTitle: string) => {
+    openConfirmationDialog(
+      'Remove Record?',
+      `Are you sure you want to permanently remove the record "${recordTitle}"?`,
+      () => toast.error('Record removal feature not implemented yet.')
+    );
   };
 
   return (
@@ -204,7 +236,7 @@ const AdminPanel: React.FC = () => {
                         <Button 
                           variant="destructive" 
                           size="sm"
-                          onClick={() => toast('Provider rejection feature')}
+                          onClick={() => handleRejectProvider(provider.name)}
                         >
                           Reject
                         </Button>
@@ -251,7 +283,7 @@ const AdminPanel: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleWhitelistProvider(provider.license, false)}
+                        onClick={() => handleRevokeProvider(provider.license, provider.name)}
                       >
                         Revoke
                       </Button>
@@ -304,7 +336,7 @@ const AdminPanel: React.FC = () => {
                         <Button 
                           variant="destructive" 
                           size="sm"
-                          onClick={() => toast('Record removal feature')}
+                          onClick={() => handleRemoveRecord(record.id, record.title)}
                         >
                           Remove
                         </Button>
@@ -353,6 +385,13 @@ const AdminPanel: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      <ConfirmationDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title={dialogConfig.title}
+        description={dialogConfig.description}
+        onConfirm={dialogConfig.onConfirm}
+      />
     </div>
   );
 };

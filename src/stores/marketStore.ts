@@ -27,7 +27,10 @@ const seedListings: MarketplaceListing[] = [
     bidCount: 3,
     listedAt: Date.now() - 86400000 * 2, // 2 days ago
     expiresAt: Date.now() + 86400000 * 5, // 5 days from now
-    status: 'active'
+    status: 'active',
+    correctness: 99.2,
+    dataPoints: 1200,
+    anonymization: 'Fully Anonymized (k-anonymity > 5)'
   },
   {
     id: 2,
@@ -41,7 +44,10 @@ const seedListings: MarketplaceListing[] = [
     bidCount: 2,
     listedAt: Date.now() - 86400000 * 1, // 1 day ago
     expiresAt: Date.now() + 86400000 * 6, // 6 days from now
-    status: 'active'
+    status: 'active',
+    correctness: 97.8,
+    dataPoints: 8500,
+    anonymization: 'Fully Anonymized (k-anonymity > 10)'
   },
   {
     id: 3,
@@ -54,7 +60,10 @@ const seedListings: MarketplaceListing[] = [
     bidCount: 0,
     listedAt: Date.now() - 86400000 * 0.5, // 12 hours ago
     expiresAt: Date.now() + 86400000 * 7, // 7 days from now
-    status: 'active'
+    status: 'active',
+    correctness: 99.9,
+    dataPoints: 350,
+    anonymization: 'Fully Anonymized (k-anonymity > 2)'
   }
 ];
 
