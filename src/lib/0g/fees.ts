@@ -65,43 +65,96 @@ export async function calculateFees(
   provider: BrowserProvider
 ): Promise<[FeeInfo | null, Error | null]> {
   try {
+    console.log('Starting fee calculation...', { submission });
+    
     // Get market address and contract
     const marketAddr = await flowContract.market();
+    console.log('Market address:', marketAddr);
+    
     const market = getMarketContract(marketAddr, provider);
     
     // Get price per sector
     const pricePerSector = await market.pricePerSector();
+    console.log('Price per sector:', pricePerSector.toString());
+    
+    // Ensure we have valid submission data
+    if (!submission || !submission.length) {
+      throw new Error('Invalid submission data');
+    }
     
     // Calculate storage fee
     const storageFee = calculatePrice(submission, pricePerSector);
+    console.log('Storage fee calculated:', storageFee.toString());
+    
+    // Ensure storage fee is not zero (add minimum if needed)
+    const actualStorageFee = storageFee === BigInt(0) ? BigInt('1000000000000000') : storageFee; // 0.001 ETH minimum
+    if (storageFee === BigInt(0)) {
+      console.warn('Storage fee was 0, using minimum:', actualStorageFee.toString());
+    }
     
     // Get gas price
-    const feeData = await provider.getFeeData();
-    const gasPrice = feeData.gasPrice || BigInt(0);
+    let gasPrice = BigInt(0);
+    try {
+      const feeData = await provider.getFeeData();
+      gasPrice = feeData.gasPrice || BigInt('20000000000'); // 20 gwei fallback
+      console.log('Gas price:', gasPrice.toString());
+    } catch (error) {
+      console.warn('Failed to get gas price, using fallback:', error);
+      gasPrice = BigInt('20000000000'); // 20 gwei fallback
+    }
     
     // Estimate gas
-    let gasEstimate;
+    let gasEstimate = BigInt(0);
     try {
-      gasEstimate = await flowContract.submit.estimateGas(submission, { value: storageFee });
+      console.log('Estimating gas for submission...');
+      gasEstimate = await flowContract.submit.estimateGas(submission, { value: actualStorageFee });
+      console.log('Gas estimate:', gasEstimate.toString());
     } catch (error) {
-      // Use fallback gas estimate
+      console.warn('Gas estimation failed, using fallback:', error);
       gasEstimate = BigInt(500000); // Fallback gas estimate
     }
     
+    // Ensure reasonable gas estimate
+    const minGasEstimate = BigInt(200000);
+    const maxGasEstimate = BigInt(2000000);
+    
+    if (gasEstimate < minGasEstimate) {
+      console.warn('Gas estimate too low, using minimum:', minGasEstimate.toString());
+      gasEstimate = minGasEstimate;
+    } else if (gasEstimate > maxGasEstimate) {
+      console.warn('Gas estimate too high, capping at maximum:', maxGasEstimate.toString());
+      gasEstimate = maxGasEstimate;
+    }
+    
+    // Add buffer to gas estimate (20% more)
+    gasEstimate = gasEstimate * BigInt(120) / BigInt(100);
+    
     // Calculate estimated gas fee and total fee
     const estimatedGasFee = gasEstimate * gasPrice;
-    const totalFee = BigInt(storageFee) + estimatedGasFee;
+    const totalFee = actualStorageFee + estimatedGasFee;
     
-    return [{
-      storageFee: formatEther(storageFee),
+    console.log('Final fee calculation:', {
+      storageFee: actualStorageFee.toString(),
+      gasEstimate: gasEstimate.toString(),
+      gasPrice: gasPrice.toString(),
+      estimatedGasFee: estimatedGasFee.toString(),
+      totalFee: totalFee.toString()
+    });
+    
+    const result = {
+      storageFee: formatEther(actualStorageFee),
       estimatedGas: formatEther(estimatedGasFee),
       totalFee: formatEther(totalFee),
-      rawStorageFee: storageFee,
+      rawStorageFee: actualStorageFee,
       rawGasFee: estimatedGasFee,
       rawTotalFee: totalFee,
       isLoading: false
-    }, null];
+    };
+    
+    console.log('Fee calculation result:', result);
+    return [result, null];
   } catch (error) {
+    console.error('Fee calculation error:', error);
     return [null, error instanceof Error ? error : new Error(String(error))];
   }
-} 
+}

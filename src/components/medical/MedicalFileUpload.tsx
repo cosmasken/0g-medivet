@@ -79,7 +79,7 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
 
   const { address, isConnected } = useWallet();
   const { loading, error, uploadStatus, txHash, uploadFile, resetUploadState } = useUpload();
-  const { feeInfo, flowContract, calculateFeesForFile, error: feeError } = useFees();
+  const { feeInfo, flowContract, calculateFeesForFile, calculateFeesForSpecificFile, error: feeError } = useFees();
   const feesLoading = feeInfo.isLoading;
 
   // Handle drag events
@@ -168,29 +168,39 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
         f.id === uploadedFile.id ? { ...f, status: 'calculating-fees' } : f
       ));
 
-      // Calculate fees for this specific file
-      await calculateFeesForFile(uploadedFile.file, isConnected);
+      // Calculate fees for this specific file using the improved function
+      const [fees, error] = await calculateFeesForSpecificFile(uploadedFile.file, isConnected);
       
-      // Wait a moment for fees to be calculated
-      setTimeout(() => {
-        setUploadedFiles(prev => prev.map(f => {
-          if (f.id === uploadedFile.id) {
-            return { 
-              ...f, 
-              status: 'pending',
-              feeInfo: feeInfo.storageFee ? {
-                storageFee: feeInfo.storageFee,
-                estimatedGas: feeInfo.estimatedGas,
-                totalFee: feeInfo.totalFee,
-                rawStorageFee: feeInfo.rawStorageFee,
-                rawGasFee: feeInfo.rawGasFee,
-                rawTotalFee: feeInfo.rawTotalFee
-              } : undefined
-            };
-          }
-          return f;
-        }));
-      }, 1000);
+      if (error || !fees) {
+        console.error('Fee calculation failed:', error);
+        setUploadedFiles(prev => prev.map(f => 
+          f.id === uploadedFile.id ? { 
+            ...f, 
+            status: 'error', 
+            error: error?.message || 'Failed to calculate fees' 
+          } : f
+        ));
+        return;
+      }
+
+      // Update with calculated fees
+      setUploadedFiles(prev => prev.map(f => {
+        if (f.id === uploadedFile.id) {
+          return { 
+            ...f, 
+            status: 'pending',
+            feeInfo: {
+              storageFee: fees.storageFee,
+              estimatedGas: fees.estimatedGas,
+              totalFee: fees.totalFee,
+              rawStorageFee: fees.rawStorageFee,
+              rawGasFee: fees.rawGasFee,
+              rawTotalFee: fees.rawTotalFee
+            }
+          };
+        }
+        return f;
+      }));
       
     } catch (error) {
       console.error('Fee calculation error:', error);

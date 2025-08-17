@@ -116,6 +116,64 @@ export function useFees() {
     }
   }, [networkType]);
 
+  // Calculate fees for a specific file independently (no state updates)
+  const calculateFeesForSpecificFile = useCallback(async (
+    file: File, 
+    isWalletConnected: boolean
+  ): Promise<[FeeInfo | null, Error | null]> => {
+    if (!file || !isWalletConnected) {
+      return [null, new Error('File or wallet connection required')];
+    }
+    
+    try {
+      console.log(`Starting fee calculation for ${file.name}`);
+      
+      // 1. Create a blob from the file
+      const newBlob = createBlob(file);
+      
+      // 2. Generate a merkle tree
+      const [newTree, treeErr] = await generateMerkleTree(newBlob);
+      if (!newTree) {
+        return [null, new Error(`Merkle tree generation failed: ${treeErr?.message}`)];
+      }
+      
+      // 3. Create a submission
+      const [newSubmission, submissionErr] = await createSubmission(newBlob);
+      if (!newSubmission) {
+        return [null, new Error(`Submission creation failed: ${submissionErr?.message}`)];
+      }
+      
+      // 4. Get provider and signer
+      const [provider, providerErr] = await getProvider();
+      if (!provider) {
+        return [null, new Error(`Provider error: ${providerErr?.message}`)];
+      }
+      
+      const [signer, signerErr] = await getSigner(provider);
+      if (!signer) {
+        return [null, new Error(`Signer error: ${signerErr?.message}`)];
+      }
+      
+      // 5. Get flow contract
+      const network = getNetworkConfig(networkType);
+      const newFlowContract = getFlowContract(network.flowAddress, signer);
+      
+      // 6. Calculate fee information
+      const [fees, feeErr] = await calculateFees(newSubmission, newFlowContract, provider);
+      if (!fees) {
+        return [null, new Error(`Fee calculation error: ${feeErr?.message}`)];
+      }
+      
+      console.log(`Fee calculation completed for ${file.name}:`, fees);
+      return [fees, null];
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Fee calculation error for ${file.name}:`, error);
+      return [null, new Error(`Calculation error: ${errorMessage}`)];
+    }
+  }, [networkType]);
+
   // Get current network config
   const getCurrentNetwork = useCallback(() => {
     return getNetworkConfig(networkType);
@@ -130,6 +188,7 @@ export function useFees() {
     submission,
     flowContract,
     calculateFeesForFile,
+    calculateFeesForSpecificFile,
     getCurrentNetwork
   };
 } 
