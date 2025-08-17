@@ -53,8 +53,10 @@ interface UploadedFile {
   category?: string;
   feeInfo?: {
     storageFee: string;
+    estimatedGas: string;
     totalFee: string;
     rawStorageFee: bigint;
+    rawGasFee: bigint;
     rawTotalFee: bigint;
   };
 }
@@ -77,7 +79,8 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
 
   const { address, isConnected } = useWallet();
   const { loading, error, uploadStatus, txHash, uploadFile, resetUploadState } = useUpload();
-  const { feeInfo, flowContract, calculateFeesForFile, calculateFeesForSpecificFile, error: feeError, isCalculating } = useFees();
+  const { feeInfo, flowContract, calculateFeesForFile, error: feeError } = useFees();
+  const feesLoading = feeInfo.isLoading;
 
   // Handle drag events
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -165,37 +168,29 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
         f.id === uploadedFile.id ? { ...f, status: 'calculating-fees' } : f
       ));
 
-      // Calculate fees for this specific file using the improved function
-      const [fees, error] = await calculateFeesForSpecificFile(uploadedFile.file, isConnected);
+      // Calculate fees for this specific file
+      await calculateFeesForFile(uploadedFile.file, isConnected);
       
-      if (error || !fees) {
-        console.error('Fee calculation failed:', error);
-        setUploadedFiles(prev => prev.map(f => 
-          f.id === uploadedFile.id ? { 
-            ...f, 
-            status: 'error', 
-            error: error?.message || 'Failed to calculate fees' 
-          } : f
-        ));
-        return;
-      }
-
-      // Update with calculated fees
-      setUploadedFiles(prev => prev.map(f => {
-        if (f.id === uploadedFile.id) {
-          return { 
-            ...f, 
-            status: 'pending',
-            feeInfo: {
-              storageFee: fees.storageFee,
-              totalFee: fees.totalFee,
-              rawStorageFee: fees.rawStorageFee,
-              rawTotalFee: fees.rawTotalFee
-            }
-          };
-        }
-        return f;
-      }));
+      // Wait a moment for fees to be calculated
+      setTimeout(() => {
+        setUploadedFiles(prev => prev.map(f => {
+          if (f.id === uploadedFile.id) {
+            return { 
+              ...f, 
+              status: 'pending',
+              feeInfo: feeInfo.storageFee ? {
+                storageFee: feeInfo.storageFee,
+                estimatedGas: feeInfo.estimatedGas,
+                totalFee: feeInfo.totalFee,
+                rawStorageFee: feeInfo.rawStorageFee,
+                rawGasFee: feeInfo.rawGasFee,
+                rawTotalFee: feeInfo.rawTotalFee
+              } : undefined
+            };
+          }
+          return f;
+        }));
+      }, 1000);
       
     } catch (error) {
       console.error('Fee calculation error:', error);
@@ -263,7 +258,7 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
         f.id === uploadedFile.id ? { ...f, progress: 70 } : f
       ));
 
-      const resultTxHash = await uploadFile(blob, submission, flowContract, uploadedFile.feeInfo.rawTotalFee);
+      const resultTxHash = await uploadFile(blob, submission, flowContract, uploadedFile.feeInfo.rawTotalFee.toString());
       
       if (!resultTxHash) {
         throw new Error('Upload failed');
@@ -431,7 +426,7 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
           </div>
 
           {/* Status */}
-          {(isCalculating || !address) && (
+          {(feesLoading || !address) && (
             <Alert className="mt-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -538,16 +533,19 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
                   {/* Fee display */}
                   {uploadedFile.status === 'pending' && uploadedFile.feeInfo && (
                     <div className="bg-primary/5 border border-primary/20 rounded p-3">
-                      <h4 className="text-sm font-medium mb-2">0G Storage Fee</h4>
-                      <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-medium mb-2">Upload Cost Breakdown</h4>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground text-sm">Storage Cost:</span>
-                          <p className="font-semibold text-primary text-lg">{parseFloat(uploadedFile.feeInfo.totalFee).toFixed(6)} ETH</p>
-                          <p className="text-xs text-muted-foreground">No gas fees on 0G Network</p>
+                          <span className="text-muted-foreground">Storage Fee:</span>
+                          <p className="font-semibold">{parseFloat(uploadedFile.feeInfo.storageFee).toFixed(6)} ETH</p>
                         </div>
-                        <div className="text-right">
-                          <div className="text-xs text-muted-foreground">File Size</div>
-                          <div className="text-sm font-medium">{(uploadedFile.file.size / 1024).toFixed(1)} KB</div>
+                        <div>
+                          <span className="text-muted-foreground">Gas Fee:</span>
+                          <p className="font-semibold">{parseFloat(uploadedFile.feeInfo.estimatedGas).toFixed(6)} ETH</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Total Cost:</span>
+                          <p className="font-semibold text-primary">{parseFloat(uploadedFile.feeInfo.totalFee).toFixed(6)} ETH</p>
                         </div>
                       </div>
                     </div>
