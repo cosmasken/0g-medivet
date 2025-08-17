@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRecordStore } from '@/stores/recordStore';
 import { useMarketStore } from '@/stores/marketStore';
+import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
+import { useWallet } from '@/hooks/useWallet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Upload,
   FileText,
@@ -14,11 +17,16 @@ import {
   Eye,
   Calendar,
   TrendingUp,
-  Activity
+  Activity,
+  Database,
+  Plus,
+  CloudUpload
 } from 'lucide-react';
 import { PatientProfile } from '@/types';
 import { formatDistance } from 'date-fns';
-import UploadModal from '@/components/patient/UploadModal';
+import MedicalFileUpload from '@/components/medical/MedicalFileUpload';
+import MedicalTextUpload from '@/components/medical/MedicalTextUpload';
+import MedicalFilesList from '@/components/medical/MedicalFilesList';
 import ShareModal from '@/components/patient/ShareModal';
 import AiInsightConsentModal from '@/components/patient/AiInsightConsentModal';
 import AiInsightResultModal from '@/components/patient/AiInsightResultModal';
@@ -29,7 +37,9 @@ const PatientDashboard: React.FC = () => {
   const { currentUser } = useAuthStore();
   const { records, getRecordsByOwner } = useRecordStore();
   const { listings, bids } = useMarketStore();
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const { getFilesByWallet, addFile } = useMedicalFilesStore();
+  const { address } = useWallet();
+  const [showUploadSection, setShowUploadSection] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [aiConsentModalOpen, setAiConsentModalOpen] = useState(false);
   const [aiResultModalOpen, setAiResultModalOpen] = useState(false);
@@ -47,6 +57,11 @@ const PatientDashboard: React.FC = () => {
   const totalEarnings = userListings
     .filter(l => l.status === 'sold')
     .reduce((sum, l) => sum + (l.currentHighestBid || 0), 0);
+  
+  // Get 0G Storage files
+  const userFiles = address ? getFilesByWallet(address) : [];
+  const documentFiles = userFiles.filter(f => !f.isTextRecord);
+  const textRecords = userFiles.filter(f => f.isTextRecord);
 
   const handleShare = (recordId: number) => {
     setSelectedRecordId(recordId);
@@ -74,33 +89,35 @@ const PatientDashboard: React.FC = () => {
             Manage your health records and data monetization
           </p>
         </div>
-        <Button
-          onClick={() => setUploadModalOpen(true)}
-          className="medical-gradient medical-shadow mr-2"
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          Upload Record
-        </Button>
-        <Button
-          onClick={() => setWithdrawalModalOpen(true)}
-          variant="outline"
-        >
-          <DollarSign className="mr-2 h-4 w-4" />
-          Withdraw Funds
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            onClick={() => setShowUploadSection(!showUploadSection)}
+            className="ai-gradient zero-g-glow"
+          >
+            <CloudUpload className="mr-2 h-4 w-4" />
+            {showUploadSection ? 'Hide Upload' : 'Upload to 0G'}
+          </Button>
+          <Button
+            onClick={() => setWithdrawalModalOpen(true)}
+            variant="outline"
+          >
+            <DollarSign className="mr-2 h-4 w-4" />
+            Withdraw Funds
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="medical-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">0G Storage Files</CardTitle>
+            <Database className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{userRecords.length}</div>
+            <div className="text-2xl font-bold text-primary">{userFiles.length}</div>
             <p className="text-xs text-muted-foreground">
-              {userRecords.filter(r => r.status === 'Monetizable').length} monetizable
+              {documentFiles.length} documents • {textRecords.length} records
             </p>
           </CardContent>
         </Card>
@@ -204,73 +221,92 @@ const PatientDashboard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Records */}
-      <Card className="medical-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <FileText className="h-5 w-5" />
-            <span>Your Health Records</span>
-          </CardTitle>
-          <CardDescription>
-            Manage and share your medical data securely
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {userRecords.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No health records yet</p>
-                <p className="text-sm">Upload your first record to get started</p>
+      {/* Upload Section */}
+      {showUploadSection && (
+        <Card className="medical-card">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <div className="w-6 h-6 ai-gradient rounded-lg flex items-center justify-center zero-g-glow">
+                <CloudUpload className="h-3 w-3 text-white" />
               </div>
-            ) : (
-              userRecords.map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-4 border border-border rounded-lg medical-transition hover:shadow-md">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <h4 className="font-medium">{record.title}</h4>
-                      <Badge variant={getStatusColor(record.status) as any}>
-                        {record.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
-                      <span className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{formatDistance(new Date(record.createdAt), new Date(), { addSuffix: true })}</span>
-                      </span>
-                      <span className="flex items-center space-x-1">
-                        <Eye className="h-3 w-3" />
-                        <span>{record.accessCount} views</span>
-                      </span>
-                      <span className="capitalize text-primary">{record.category}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleShare(record.id)}
-                    >
-                      <Share2 className="h-3 w-3 mr-1" />
-                      Share
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <span>Upload to 0G Storage</span>
+            </CardTitle>
+            <CardDescription>
+              Upload medical files and records to decentralized storage
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="files" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="files">Medical Files</TabsTrigger>
+                <TabsTrigger value="records">Text Records</TabsTrigger>
+              </TabsList>
+              <TabsContent value="files" className="mt-6">
+                <MedicalFileUpload
+                  onUploadComplete={(files) => {
+                    files.forEach(f => {
+                      if (f.txHash && f.rootHash && address) {
+                        addFile({
+                          id: f.id,
+                          name: f.file.name,
+                          type: f.file.type,
+                          size: f.file.size,
+                          category: f.category,
+                          description: f.description,
+                          uploadDate: new Date().toISOString(),
+                          walletAddress: address,
+                          txHash: f.txHash,
+                          rootHash: f.rootHash,
+                          isTextRecord: false,
+                          shared: false,
+                          tags: f.category ? [f.category] : []
+                        });
+                      }
+                    });
+                    toast.success(`${files.length} file(s) uploaded and indexed!`);
+                  }}
+                  onError={(error) => {
+                    toast.error(`Upload error: ${error}`);
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="records" className="mt-6">
+                <MedicalTextUpload
+                  onUploadComplete={(record) => {
+                    if (record.txHash && record.rootHash && address) {
+                      addFile({
+                        id: record.id,
+                        name: `${record.title}.json`,
+                        type: 'application/json',
+                        size: JSON.stringify(record).length,
+                        category: record.category,
+                        description: record.description,
+                        uploadDate: new Date().toISOString(),
+                        walletAddress: address,
+                        txHash: record.txHash,
+                        rootHash: record.rootHash,
+                        isTextRecord: true,
+                        recordType: record.type,
+                        shared: false,
+                        tags: record.category ? [record.category, record.type] : [record.type]
+                      });
+                    }
+                    toast.success(`${record.title} uploaded and indexed!`);
+                  }}
+                  onError={(error) => {
+                    toast.error(`Upload error: ${error}`);
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Medical Files Management */}
+      <MedicalFilesList className="" />
 
       {/* Modals */}
-      <UploadModal
-        open={uploadModalOpen}
-        onOpenChange={setUploadModalOpen}
-      />
       <ShareModal
         open={shareModalOpen}
         onOpenChange={setShareModalOpen}

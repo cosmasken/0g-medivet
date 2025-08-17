@@ -9,12 +9,28 @@ export interface NetworkConfig {
 }
 
 /**
+ * Gets the appropriate storage RPC URL (proxy for development, direct for production)
+ */
+function getStorageRpcUrl(directUrl: string): string {
+  // In development, use proxy to avoid CORS issues
+  if (import.meta.env.DEV) {
+    if (directUrl.includes('indexer-storage-testnet-standard.0g.ai')) {
+      return '/api/0g';
+    }
+    if (directUrl.includes('indexer-storage-testnet-turbo.0g.ai')) {
+      return '/api/0g-turbo';
+    }
+  }
+  return directUrl;
+}
+
+/**
  * Gets network configuration based on network type
  * @param networkType The network type ('standard' or 'turbo')
  * @returns The network configuration
  */
 export function getNetworkConfig(networkType: NetworkType): NetworkConfig {
-  const NETWORKS: Record<string, NetworkConfig> = {
+  const baseNetworks: Record<string, NetworkConfig> = {
     standard: {
       name: 'Standard',
       flowAddress: import.meta.env.VITE_STANDARD_FLOW_ADDRESS || '0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628',
@@ -31,7 +47,13 @@ export function getNetworkConfig(networkType: NetworkType): NetworkConfig {
     }
   };
   
-  return NETWORKS[networkType];
+  const config = baseNetworks[networkType];
+  
+  // Apply proxy URL for storage RPC in development
+  return {
+    ...config,
+    storageRpc: getStorageRpcUrl(config.storageRpc)
+  };
 }
 
 /**
