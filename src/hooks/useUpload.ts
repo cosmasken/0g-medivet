@@ -24,8 +24,18 @@ export function useUpload() {
     flowContract: Contract | null, 
     storageFee: bigint
   ) => {
+    console.log('🚀 Starting upload process:', {
+      hasBlob: !!blob,
+      hasSubmission: !!submission,
+      hasFlowContract: !!flowContract,
+      storageFee: storageFee.toString(),
+      networkType
+    });
+    
     if (!blob || !submission || !flowContract) {
-      setError('Missing required upload data');
+      const error = 'Missing required upload data';
+      console.error('❌ Upload validation failed:', { blob: !!blob, submission: !!submission, flowContract: !!flowContract });
+      setError(error);
       return null;
     }
     
@@ -34,34 +44,54 @@ export function useUpload() {
     setUploadStatus('Preparing file...');
     setTxHash('');
     
+    let transactionHash = '';
+    
     try {
       // 1. Get provider and signer
+      console.log('📡 Getting provider and signer...');
       const [provider, providerErr] = await getProvider();
       if (!provider) {
+        console.error('❌ Provider failed:', providerErr);
         throw new Error(`Provider error: ${providerErr?.message}`);
       }
+      console.log('✅ Provider obtained');
       
       const [signer, signerErr] = await getSigner(provider);
       if (!signer) {
+        console.error('❌ Signer failed:', signerErr);
         throw new Error(`Signer error: ${signerErr?.message}`);
       }
+      console.log('✅ Signer obtained');
       
       // 2. Submit transaction to flow contract
       setUploadStatus('Confirming transaction...');
+      console.log('📝 Submitting transaction to flow contract...');
       const [txResult, txErr] = await submitTransaction(flowContract, submission, storageFee);
       if (!txResult) {
+        console.error('❌ Transaction submission failed:', txErr);
         throw new Error(`Transaction error: ${txErr?.message}`);
       }
       
       // 3. Store transaction hash
-      setTxHash(txResult.tx.hash);
+      transactionHash = txResult.tx.hash;
+      setTxHash(transactionHash);
+      console.log('✅ Transaction submitted successfully:', {
+        txHash: transactionHash,
+        gasUsed: txResult.receipt?.gasUsed?.toString(),
+        blockNumber: txResult.receipt?.blockNumber
+      });
       setUploadStatus('Waiting for transaction confirmation...');
       
       // 4. Get network configuration
       const network = getNetworkConfig(networkType);
+      console.log('🌐 Network configuration:', {
+        storageRpc: network.storageRpc,
+        l1Rpc: network.l1Rpc
+      });
       
       // 5. Upload file to storage
       setUploadStatus('Uploading file to storage...');
+      console.log('☁️ Starting storage upload...');
       const [uploadSuccess, uploadErr] = await uploadToStorage(
         blob, 
         network.storageRpc,
@@ -70,16 +100,27 @@ export function useUpload() {
       );
       
       if (!uploadSuccess) {
-        throw new Error(`Upload error: ${uploadErr?.message}`);
+        console.error('❌ Storage upload failed:', uploadErr);
+        console.log('⚠️ Transaction was successful but storage upload failed');
+        console.log('💡 Transaction hash for successful on-chain submission:', transactionHash);
+        throw new Error(`Storage upload failed: ${uploadErr?.message}. Transaction was successful: ${transactionHash}`);
       }
       
+      console.log('✅ Storage upload completed successfully');
       setUploadStatus('Upload complete!');
-      return txResult.tx.hash;
+      return transactionHash;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('❌ Upload process failed:', {
+        error: errorMessage,
+        transactionHash: transactionHash || 'No transaction submitted',
+        stage: transactionHash ? 'Storage Upload' : 'Transaction Submission'
+      });
       setError(errorMessage);
       setUploadStatus('');
-      return null;
+      
+      // Return transaction hash even if storage upload failed
+      return transactionHash || null;
     } finally {
       setLoading(false);
     }

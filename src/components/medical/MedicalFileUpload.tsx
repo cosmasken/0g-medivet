@@ -25,6 +25,8 @@ import { cn } from '@/lib/utils';
 import { useUpload } from '@/hooks/useUpload';
 import { useFees } from '@/hooks/useFees';
 import { useWallet } from '@/hooks/useWallet';
+import { useNetwork } from '@/providers/NetworkProvider';
+import { useMedicalAI } from '@/hooks/useMedicalAI';
 import { createBlob, generateMerkleTree, createSubmission } from '@/lib/0g/blob';
 import toast from 'react-hot-toast';
 
@@ -44,7 +46,7 @@ const MAX_FILES = 5;
 interface UploadedFile {
   file: File;
   id: string;
-  status: 'pending' | 'uploading' | 'completed' | 'error' | 'calculating-fees';
+  status: 'pending' | 'uploading' | 'completed' | 'error' | 'calculating-fees' | 'partial-success';
   progress: number;
   error?: string;
   txHash?: string;
@@ -80,6 +82,7 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
   const { address, isConnected } = useWallet();
   const { loading, error, uploadStatus, txHash, uploadFile, resetUploadState } = useUpload();
   const { feeInfo, flowContract, calculateFeesForFile, calculateFeesForSpecificFile, error: feeError } = useFees();
+  const { networkType } = useNetwork();
   const feesLoading = feeInfo.isLoading;
 
   // Handle drag events
@@ -228,8 +231,49 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
 
   // Upload single file
   const uploadSingleFile = async (uploadedFile: UploadedFile) => {
-    if (!address || !flowContract || !uploadedFile.feeInfo) {
-      throw new Error('Wallet not connected or fees not loaded');
+    console.log('Upload validation check:', {
+      address,
+      isConnected,
+      flowContract: !!flowContract,
+      feeInfo: !!uploadedFile.feeInfo,
+      feeInfoDetails: uploadedFile.feeInfo
+    });
+    
+    if (!address || !isConnected) {
+      throw new Error('Wallet not connected');
+    }
+    if (!uploadedFile.feeInfo) {
+      throw new Error('Fees not calculated yet');
+    }
+    
+    // Get flow contract if not available from hook
+    let uploadFlowContract = flowContract;
+    if (!uploadFlowContract) {
+      console.log('Flow contract not available from hook, getting it directly...');
+      try {
+        // Import fee calculation utilities
+        const { getProvider, getSigner, getFlowContract } = await import('@/lib/0g/fees');
+        const { getNetworkConfig } = await import('@/lib/0g/network');
+        
+        const [provider] = await getProvider();
+        if (!provider) {
+          throw new Error('Failed to get provider');
+        }
+        
+        const [signer] = await getSigner(provider);
+        if (!signer) {
+          throw new Error('Failed to get signer');
+        }
+        
+        // Use the current network type from the hook
+        const network = getNetworkConfig(networkType);
+        uploadFlowContract = getFlowContract(network.flowAddress, signer);
+        
+        console.log('Flow contract obtained directly:', !!uploadFlowContract);
+      } catch (error) {
+        console.error('Failed to get flow contract:', error);
+        throw new Error('Flow contract not available');
+      }
     }
 
     setCurrentUploading(uploadedFile.id);
@@ -268,46 +312,75 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
         f.id === uploadedFile.id ? { ...f, progress: 70 } : f
       ));
 
-      const resultTxHash = await uploadFile(blob, submission, flowContract, uploadedFile.feeInfo.rawTotalFee.toString());
+      const resultTxHash = await uploadFile(blob, submission, uploadFlowContract, uploadedFile.feeInfo.rawTotalFee.toString());
       
-      if (!resultTxHash) {
-        throw new Error('Upload failed');
-      }
-
       // Get root hash from tree
       const rootHash = tree.rootHash();
       
-      console.log('Upload completed successfully:', {
+      console.log('Upload process result:', {
         fileName: uploadedFile.file.name,
         txHash: resultTxHash,
         rootHash: rootHash,
         fileSize: uploadedFile.file.size
       });
       
-      // Update as completed
-      setUploadedFiles(prev => prev.map(f => 
-        f.id === uploadedFile.id ? { 
-          ...f, 
-          status: 'completed', 
-          progress: 100,
-          txHash: resultTxHash,
-          rootHash
-        } : f
-      ));
+      if (resultTxHash) {
+        // Update as completed
+        setUploadedFiles(prev => prev.map(f => 
+          f.id === uploadedFile.id ? { 
+            ...f, 
+            status: 'completed', 
+            progress: 100,
+            txHash: resultTxHash,
+            rootHash
+          } : f
+        ));
 
-      toast.success(`${uploadedFile.file.name} uploaded successfully!`);
+        toast.success(`${uploadedFile.file.name} uploaded successfully!`);
+      } else {
+        throw new Error('Upload failed - no transaction hash returned');
+      }
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      setUploadedFiles(prev => prev.map(f => 
-        f.id === uploadedFile.id ? { 
-          ...f, 
-          status: 'error', 
-          error: errorMessage 
-        } : f
-      ));
+      console.error('Upload error details:', {
+        fileName: uploadedFile.file.name,
+        error: errorMessage,
+        stage: 'File upload process'
+      });
       
-      toast.error(`Upload failed: ${errorMessage}`);
+      // Check if transaction hash is mentioned in error (indicates partial success)
+      const txHashMatch = errorMessage.match(/Transaction was successful: (0x[a-fA-F0-9]{64})/);
+      const partialTxHash = txHashMatch ? txHashMatch[1] : null;
+      
+      if (partialTxHash) {
+        // Transaction succeeded but storage failed
+        setUploadedFiles(prev => prev.map(f => 
+          f.id === uploadedFile.id ? { 
+            ...f, 
+            status: 'partial-success', 
+            error: 'Transaction confirmed but storage upload failed. You can retry the storage upload.',
+            txHash: partialTxHash,
+            progress: 80,
+            rootHash: tree?.rootHash() || ''
+          } : f
+        ));
+        
+        toast.error(`Storage upload failed for ${uploadedFile.file.name}, but transaction was confirmed. You can retry.`, {
+          duration: 6000
+        });
+      } else {
+        // Complete failure
+        setUploadedFiles(prev => prev.map(f => 
+          f.id === uploadedFile.id ? { 
+            ...f, 
+            status: 'error', 
+            error: errorMessage 
+          } : f
+        ));
+        
+        toast.error(`Upload failed: ${errorMessage}`);
+      }
     } finally {
       setCurrentUploading(null);
       resetUploadState();
@@ -338,10 +411,114 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
     }
   };
 
-  // Retry upload
-  const retryUpload = (fileId: string) => {
+  // Retry storage upload only (for partial success cases)
+  const retryStorageUpload = async (uploadedFile: UploadedFile) => {
+    if (!uploadedFile.txHash || !uploadedFile.rootHash) {
+      console.error('Cannot retry storage upload - missing transaction hash or root hash');
+      return;
+    }
+
+    console.log('🔄 Retrying storage upload only:', {
+      fileName: uploadedFile.file.name,
+      txHash: uploadedFile.txHash,
+      hasRootHash: !!uploadedFile.rootHash
+    });
+
+    setCurrentUploading(uploadedFile.id);
+    
+    try {
+      // Update status to show retrying storage
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === uploadedFile.id ? { ...f, status: 'uploading', progress: 85, error: undefined } : f
+      ));
+
+      // Create blob again
+      const blob = createBlob(uploadedFile.file);
+      
+      // Get network configuration
+      const network = getNetworkConfig(networkType);
+      console.log('🌐 Network config for storage retry:', {
+        storageRpc: network.storageRpc,
+        l1Rpc: network.l1Rpc
+      });
+      
+      // Get signer for storage upload
+      const [provider] = await getProvider();
+      if (!provider) {
+        throw new Error('Failed to get provider for storage retry');
+      }
+      
+      const [signer] = await getSigner(provider);
+      if (!signer) {
+        throw new Error('Failed to get signer for storage retry');
+      }
+
+      // Import storage upload function
+      const { uploadToStorage } = await import('@/lib/0g/uploader');
+      
+      // Retry only the storage upload part
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === uploadedFile.id ? { ...f, progress: 90 } : f
+      ));
+      
+      const [uploadSuccess, uploadErr] = await uploadToStorage(
+        blob, 
+        network.storageRpc,
+        network.l1Rpc,
+        signer
+      );
+      
+      if (!uploadSuccess) {
+        throw new Error(`Storage retry failed: ${uploadErr?.message}`);
+      }
+      
+      console.log('✅ Storage retry completed successfully');
+      
+      // Update as completed
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === uploadedFile.id ? { 
+          ...f, 
+          status: 'completed', 
+          progress: 100,
+          error: undefined
+        } : f
+      ));
+
+      toast.success(`${uploadedFile.file.name} storage upload completed successfully!`);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('❌ Storage retry failed:', {
+        fileName: uploadedFile.file.name,
+        error: errorMessage
+      });
+      
+      // Reset to partial success state with error
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === uploadedFile.id ? { 
+          ...f, 
+          status: 'partial-success', 
+          error: `Storage retry failed: ${errorMessage}. Transaction is still valid.`,
+          progress: 80
+        } : f
+      ));
+      
+      toast.error(`Storage retry failed for ${uploadedFile.file.name}: ${errorMessage}`);
+    } finally {
+      setCurrentUploading(null);
+    }
+  };
+
+  // Retry upload (full retry for errors, storage-only retry for partial success)
+  const retryUpload = async (fileId: string) => {
     const file = uploadedFiles.find(f => f.id === fileId);
-    if (file) {
+    if (!file) return;
+    
+    if (file.status === 'partial-success') {
+      // For partial success, only retry storage upload
+      await retryStorageUpload(file);
+    } else {
+      // For complete errors, reset to pending for full retry
       setUploadedFiles(prev => prev.map(f => 
         f.id === fileId ? { ...f, status: 'pending', error: undefined, progress: 0 } : f
       ));
@@ -474,7 +651,22 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
                 )}
                 {pendingCount > 0 && (
                   <Button 
-                    onClick={uploadAllFiles}
+                    onClick={() => {
+                      console.log('Upload all files clicked:', {
+                        loading,
+                        address,
+                        isConnected,
+                        calculatingCount,
+                        pendingCount,
+                        filesWithoutFees: uploadedFiles.filter(f => f.status === 'pending' && !f.feeInfo).length,
+                        allPendingFiles: uploadedFiles.filter(f => f.status === 'pending').map(f => ({
+                          name: f.file.name,
+                          hasFeeInfo: !!f.feeInfo,
+                          status: f.status
+                        }))
+                      });
+                      uploadAllFiles();
+                    }}
                     disabled={loading || !address || calculatingCount > 0 || pendingCount === 0 || uploadedFiles.filter(f => f.status === 'pending' && !f.feeInfo).length > 0}
                     className="ai-gradient zero-g-glow"
                   >
@@ -510,13 +702,13 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
                       {uploadedFile.status === 'completed' && (
                         <CheckCircle className="h-5 w-5 text-success" />
                       )}
-                      {uploadedFile.status === 'error' && (
+                      {(uploadedFile.status === 'error' || uploadedFile.status === 'partial-success') && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => retryUpload(uploadedFile.id)}
                         >
-                          Retry
+                          {uploadedFile.status === 'partial-success' ? 'Retry Storage' : 'Retry'}
                         </Button>
                       )}
                       <Button
@@ -610,6 +802,56 @@ const MedicalFileUpload: React.FC<MedicalFileUploadProps> = ({
                         {uploadedFile.error}
                       </AlertDescription>
                     </Alert>
+                  )}
+
+                  {/* Partial success info */}
+                  {uploadedFile.status === 'partial-success' && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded p-4 space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <AlertCircle className="h-5 w-5 text-yellow-600" />
+                        <p className="text-sm text-yellow-800 font-medium">Transaction successful, but storage upload failed</p>
+                      </div>
+                      
+                      {/* Error message */}
+                      {uploadedFile.error && (
+                        <p className="text-xs text-yellow-700">{uploadedFile.error}</p>
+                      )}
+                      
+                      {/* Transaction Hash */}
+                      {uploadedFile.txHash && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-foreground">✅ Transaction Hash (Confirmed on Blockchain):</p>
+                          <div className="flex items-center space-x-2 bg-background/50 rounded p-2">
+                            <code className="text-xs font-mono text-muted-foreground flex-1 break-all">
+                              {uploadedFile.txHash}
+                            </code>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => copyToClipboard(uploadedFile.txHash!, 'Transaction hash')}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Progress bar showing 80% complete */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-yellow-700">Upload Progress</span>
+                          <span className="text-yellow-700">{uploadedFile.progress}% (Transaction Done)</span>
+                        </div>
+                        <Progress value={uploadedFile.progress} className="h-2" />
+                      </div>
+                      
+                      <div className="bg-yellow-100 border border-yellow-300 rounded p-3">
+                        <p className="text-xs text-yellow-800">
+                          💡 <strong>Good news:</strong> Your payment was processed and recorded on the blockchain! 
+                          The storage upload failed, but you can retry just the storage part without paying again.
+                        </p>
+                      </div>
+                    </div>
                   )}
 
                   {/* Success info */}
