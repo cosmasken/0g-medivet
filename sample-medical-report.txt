@@ -1,0 +1,69 @@
+MEDICAL CONSULTATION REPORT
+
+Patient: John Doe
+Age: 45 years
+Gender: Male
+Date: 2024-08-17
+Physician: Dr. Sarah Smith, MD
+
+CHIEF COMPLAINT:
+Patient presents with chest discomfort and shortness of breath during physical activity, lasting for the past 2 weeks.
+
+HISTORY OF PRESENT ILLNESS:
+Mr. Doe reports experiencing substernal chest pressure, rated 6/10 in intensity, occurring primarily during moderate exercise such as climbing stairs or walking uphill. The discomfort resolves with rest within 2-3 minutes. He also notes mild dyspnea on exertion that has progressively worsened over the past month.
+
+PAST MEDICAL HISTORY:
+- Hypertension (diagnosed 5 years ago)
+- Type 2 Diabetes Mellitus (diagnosed 3 years ago)
+- Hyperlipidemia
+- Family history of coronary artery disease (father had MI at age 52)
+
+CURRENT MEDICATIONS:
+- Metformin 1000mg twice daily
+- Lisinopril 10mg daily
+- Atorvastatin 40mg daily
+- Aspirin 81mg daily
+
+PHYSICAL EXAMINATION:
+Vital Signs: BP 145/92 mmHg, HR 88 bpm, RR 18/min, O2 sat 97% on room air
+General: Alert, oriented, mild diaphoresis
+Cardiovascular: Regular rate and rhythm, S1 S2 present, no murmurs
+Pulmonary: Clear to auscultation bilaterally
+Extremities: No peripheral edema
+
+LABORATORY RESULTS:
+- Fasting Glucose: 156 mg/dL (elevated)
+- HbA1c: 8.2% (elevated)
+- Total Cholesterol: 220 mg/dL
+- LDL: 145 mg/dL (elevated)
+- HDL: 38 mg/dL (low)
+- Triglycerides: 185 mg/dL (elevated)
+
+DIAGNOSTIC TESTS:
+ECG: Normal sinus rhythm, no acute ST changes
+Chest X-ray: Heart size normal, lungs clear
+
+ASSESSMENT:
+1. Chest pain, likely anginal equivalent - rule out coronary artery disease
+2. Diabetes mellitus type 2, poorly controlled
+3. Hypertension, not at goal
+4. Dyslipidemia with elevated cardiovascular risk
+
+PLAN:
+1. Cardiology referral for stress testing and further cardiac evaluation
+2. Increase Lisinopril to 20mg daily
+3. Add Metoprolol 25mg twice daily for cardiac protection
+4. Intensify diabetes management - consider insulin therapy
+5. Lifestyle counseling: diet modification, exercise program, smoking cessation
+6. Follow-up in 2 weeks
+7. Patient educated on cardiac symptoms and when to seek emergency care
+
+RISK FACTORS:
+- Age and gender (45-year-old male)
+- Diabetes mellitus (poorly controlled)
+- Hypertension
+- Dyslipidemia
+- Family history of premature CAD
+- Sedentary lifestyle
+
+This case represents a high-risk patient requiring immediate cardiovascular evaluation and aggressive risk factor modification.

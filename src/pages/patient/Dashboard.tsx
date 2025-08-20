@@ -27,6 +27,8 @@ import { formatDistance } from 'date-fns';
 import MedicalFileUpload from '@/components/medical/MedicalFileUpload';
 import MedicalTextUpload from '@/components/medical/MedicalTextUpload';
 import MedicalFilesList from '@/components/medical/MedicalFilesList';
+import MedicalFileDownload from '@/components/medical/MedicalFileDownload';
+import MedicalMarketplace from '@/components/medical/MedicalMarketplace';
 import ShareModal from '@/components/patient/ShareModal';
 import AiInsightConsentModal from '@/components/patient/AiInsightConsentModal';
 import AiInsightResultModal from '@/components/patient/AiInsightResultModal';
@@ -303,8 +305,55 @@ const PatientDashboard: React.FC = () => {
         </Card>
       )}
 
-      {/* Medical Files Management */}
-      <MedicalFilesList className="" />
+      {/* Medical Files and Marketplace Tabs */}
+      <Card className="medical-card">
+        <CardContent className="pt-6">
+          <Tabs defaultValue="files" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="files" className="flex items-center space-x-2">
+                <Database className="h-4 w-4" />
+                <span>My Files</span>
+              </TabsTrigger>
+              <TabsTrigger value="download" className="flex items-center space-x-2">
+                <Upload className="h-4 w-4" />
+                <span>Download</span>
+              </TabsTrigger>
+              <TabsTrigger value="marketplace" className="flex items-center space-x-2">
+                <DollarSign className="h-4 w-4" />
+                <span>Marketplace</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="files" className="mt-6">
+              <MedicalFilesList className="" />
+            </TabsContent>
+            
+            <TabsContent value="download" className="mt-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Download Medical Files</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Download files from 0G Storage using their root hash
+                  </p>
+                </div>
+                <MedicalFileDownload />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="marketplace" className="mt-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Medical Data Marketplace</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Browse and trade medical datasets (Demo)
+                  </p>
+                </div>
+                <MedicalMarketplace />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
       {/* Modals */}
       <ShareModal
