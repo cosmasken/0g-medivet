@@ -14,6 +14,12 @@ export default defineConfig(({ mode }) => ({
     react(),
     nodePolyfills({
       protocolImports: true,
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+      include: ['fs', 'fs/promises', 'path', 'crypto', 'stream', 'util', 'events', 'buffer'],
     }),
     mode === 'development' &&
     componentTagger(),
@@ -28,12 +34,15 @@ export default defineConfig(({ mode }) => ({
       events: 'events',
       path: 'path-browserify',
       vm: 'vm-browserify',
+      'fs': 'node-stdlib-browser/esm/fs',
+      'fs/promises': 'node-stdlib-browser/esm/fs/promises',
+      'node:fs/promises': 'node-stdlib-browser/esm/fs/promises',
     },
   },
   define: {
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'util', 'events', 'path-browserify', 'vm-browserify']
+    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'util', 'events', 'path-browserify', 'vm-browserify', 'node-stdlib-browser']
   }
 }));
