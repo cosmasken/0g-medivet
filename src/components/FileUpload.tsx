@@ -1,155 +1,133 @@
 import { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Upload, File, CheckCircle } from 'lucide-react';
+import { Upload, File } from 'lucide-react';
 import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
 import { useWallet } from '@/hooks/useWallet';
+import { useUpload } from '@/hooks/useUpload';
 import { createBlobFromFile } from '@/lib/0g/blob';
-import { uploadToStorage } from '@/lib/0g/uploader';
-import { BrowserProvider } from 'ethers';
 import toast from 'react-hot-toast';
 
 interface FileUploadProps {
   onUploadComplete?: (fileId: string) => void;
-  acceptedTypes?: string[];
   maxSize?: number;
 }
 
 const FileUpload = ({ 
   onUploadComplete, 
-  acceptedTypes = ['image/*', 'application/pdf', '.doc,.docx'],
   maxSize = 10 * 1024 * 1024 // 10MB
 }: FileUploadProps) => {
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const { address } = useWallet();
   const { addFile } = useMedicalFilesStore();
+  const { loading, error, uploadStatus, txHash, uploadFile, resetUploadState } = useUpload();
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+  const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
     if (!address) {
       toast.error('Please connect your wallet first');
       return;
     }
 
-    const file = acceptedFiles[0];
-    if (!file) return;
-
-    setUploading(true);
-    setUploadProgress(0);
+    if (file.size > maxSize) {
+      toast.error(`File too large. Max size: ${Math.round(maxSize / 1024 / 1024)}MB`);
+      return;
+    }
 
     try {
-      // Get signer from wallet
-      if (!window.ethereum) {
-        throw new Error('No wallet found');
-      }
-
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      resetUploadState();
       
-      setUploadProgress(20);
-
       // Create blob from file
       const blob = await createBlobFromFile(file);
-      setUploadProgress(40);
+      
+      // Upload to 0G
+      const resultTxHash = await uploadFile(blob);
+      
+      if (resultTxHash) {
+        // Add file to store
+        const fileMetadata = {
+          id: `file-${Date.now()}`,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          category: 'medical',
+          description: `Medical file: ${file.name}`,
+          uploadDate: new Date().toISOString(),
+          walletAddress: address,
+          txHash: resultTxHash,
+          rootHash: blob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`,
+          isTextRecord: false,
+          shared: false,
+          tags: ['uploaded', 'medical']
+        };
 
-      // Upload to 0G storage
-      const storageRpc = 'https://rpc-storage-testnet.0g.ai';
-      const l1Rpc = 'https://evmrpc-testnet.0g.ai';
-      
-      setUploadProgress(60);
-      
-      const [success, error] = await uploadToStorage(blob, storageRpc, l1Rpc, signer);
-      
-      if (!success || error) {
-        throw error || new Error('Upload failed');
+        addFile(fileMetadata);
+        toast.success('File uploaded to 0G Network successfully!');
+        onUploadComplete?.(fileMetadata.id);
       }
-
-      setUploadProgress(100);
-
-      // Generate mock hashes for demo (in production, get from 0G response)
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      const mockRootHash = blob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
-
-      // Add file to store
-      const fileMetadata = {
-        id: `file-${Date.now()}`,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        category: 'medical',
-        description: `Medical file: ${file.name}`,
-        uploadDate: new Date().toISOString(),
-        walletAddress: address,
-        txHash: mockTxHash,
-        rootHash: mockRootHash,
-        isTextRecord: false,
-        shared: false,
-        tags: ['uploaded', 'medical']
-      };
-
-      addFile(fileMetadata);
       
-      toast.success('File uploaded to 0G Network successfully!');
-      onUploadComplete?.(fileMetadata.id);
-      
-    } catch (error) {
-      console.error('Upload failed:', error);
-      toast.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
+    } catch (err) {
+      console.error('Upload failed:', err);
+      toast.error('Upload failed. Please try again.');
     }
-  }, [address, addFile, onUploadComplete]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: acceptedTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {}),
-    maxSize,
-    multiple: false
-  });
+    // Reset input
+    event.target.value = '';
+  }, [address, addFile, onUploadComplete, maxSize, uploadFile, resetUploadState]);
 
   return (
     <Card className="w-full">
       <CardContent className="p-6">
-        <div
-          {...getRootProps()}
-          className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-            ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-            ${uploading ? 'pointer-events-none opacity-50' : ''}
-          `}
-        >
-          <input {...getInputProps()} />
+        <div className="space-y-4">
+          <div className="text-center">
+            <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-lg font-medium text-gray-900">Upload to 0G Network</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Select a medical file to upload securely
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Max size: {Math.round(maxSize / 1024 / 1024)}MB
+            </p>
+          </div>
           
-          {uploading ? (
-            <div className="space-y-4">
-              <div className="animate-spin mx-auto">
-                <Upload className="h-8 w-8 text-blue-500" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Uploading to 0G Network...</p>
-                <Progress value={uploadProgress} className="w-full max-w-xs mx-auto" />
-                <p className="text-xs text-gray-500">{uploadProgress}%</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <Upload className="h-12 w-12 text-gray-400 mx-auto" />
-              <div>
-                <p className="text-lg font-medium text-gray-900">
-                  {isDragActive ? 'Drop your file here' : 'Upload to 0G Network'}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Drag and drop or click to select a medical file
-                </p>
-                <p className="text-xs text-gray-400 mt-2">
-                  Supported: Images, PDF, Documents (max {Math.round(maxSize / 1024 / 1024)}MB)
-                </p>
-              </div>
+          {loading && (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600 text-center">{uploadStatus}</p>
+              <Progress value={loading ? 50 : 0} className="w-full" />
             </div>
           )}
+          
+          {error && (
+            <div className="text-sm text-red-600 text-center">{error}</div>
+          )}
+          
+          {txHash && (
+            <div className="text-sm text-green-600 text-center">
+              ✓ Uploaded! TX: {txHash.slice(0, 10)}...
+            </div>
+          )}
+          
+          <div className="text-center">
+            <input
+              type="file"
+              ref={(input) => input}
+              onChange={handleFileSelect}
+              accept="image/*,application/pdf,.doc,.docx"
+              className="hidden"
+              id="file-upload"
+              disabled={loading}
+            />
+            <Button 
+              onClick={() => document.getElementById('file-upload')?.click()}
+              disabled={loading || !address}
+              className="w-full"
+            >
+              <File className="h-4 w-4 mr-2" />
+              {loading ? 'Uploading...' : 'Choose File'}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
