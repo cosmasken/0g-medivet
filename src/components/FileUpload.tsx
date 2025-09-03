@@ -20,8 +20,8 @@ interface FileUploadProps {
   maxSize?: number;
 }
 
-const FileUpload = ({ 
-  onUploadComplete, 
+const FileUpload = ({
+  onUploadComplete,
   maxSize = 10 * 1024 * 1024 // 10MB
 }: FileUploadProps) => {
   const { address } = useWallet();
@@ -29,7 +29,7 @@ const FileUpload = ({
   const { addFile } = useMedicalFilesStore();
   const { loading, error, uploadStatus, txHash, uploadFile, resetUploadState } = useUpload();
   const createRecordMutation = useCreateRecordMutation();
-  
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [estimatedFee, setEstimatedFee] = useState<string>('');
   const [category, setCategory] = useState<string>('Other');
@@ -38,17 +38,17 @@ const FileUpload = ({
 
   const handleGenerateAnalysis = useCallback(async () => {
     if (!selectedFile || !address) return;
-    
+
     try {
       // Generate mock AI analysis
       const analysis = generateMockAnalysis(selectedFile.name, selectedFile.type);
       const analysisFile = createAnalysisFile(analysis);
-      
+
       // Upload the analysis file
       const blob = await createBlobFromFile(analysisFile);
       const uploadResult = await uploadFile(blob, 'turbo', analysisFile.size, analysisFile);
       const resultTxHash = uploadResult?.txHash || 'direct-upload';
-      
+
       // Save analysis to database
       if (currentUser?.id) {
         createRecordMutation.mutate({
@@ -62,7 +62,7 @@ const FileUpload = ({
           tags: ['ai-generated', 'analysis']
         });
       }
-      
+
       toast.success('AI Analysis generated and uploaded successfully!');
     } catch (error) {
       console.error('Analysis generation failed:', error);
@@ -91,14 +91,14 @@ const FileUpload = ({
 
   const handleConfirmFile = useCallback(async () => {
     if (!selectedFile) return;
-    
+
     setStep('estimate');
     setEstimatedFee('Calculating...');
-    
+
     try {
       // Create blob for fee calculation
       const blob = createBlobFromFile(selectedFile);
-      
+
       // Create submission object using file size instead of blob.data.length
       const submission = {
         length: selectedFile.size,
@@ -108,17 +108,17 @@ const FileUpload = ({
           height: 1
         }]
       };
-      
+
       // Calculate actual fees using turbo network
       const { calculateFees } = await import('@/lib/0g/fees');
       const [feeInfo, error] = await calculateFees(submission, 'turbo');
-      
+
       if (error || !feeInfo) {
         throw error || new Error('Failed to calculate fees');
       }
-      
+
       setEstimatedFee(feeInfo.totalFee);
-      
+
     } catch (error) {
       console.error('Fee calculation failed:', error);
       throw new Error('Unable to calculate fees. Please try again.');
@@ -127,22 +127,22 @@ const FileUpload = ({
 
   const handleConfirmUpload = useCallback(async () => {
     if (!selectedFile) return;
-    
+
     setStep('upload');
-    
+
     try {
       resetUploadState();
-      
+
       // Create blob from file
       const blob = createBlobFromFile(selectedFile);
-      
+
       // Upload to 0G
       const uploadResult = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
       console.log('Upload result:', uploadResult);
-      
+
       // Extract the correct hash from upload result
       const resultTxHash = uploadResult?.root || uploadResult?.txHash || uploadResult?.hash || `upload-${Date.now()}`;
-      
+
       // Save to backend database
       if (currentUser?.id) {
         console.log('Saving to database:', {
@@ -151,7 +151,7 @@ const FileUpload = ({
           category: category || 'Other',
           zero_g_hash: resultTxHash
         });
-        
+
         createRecordMutation.mutate({
           user_id: currentUser.id,
           title: selectedFile.name,
@@ -162,9 +162,8 @@ const FileUpload = ({
           zero_g_hash: resultTxHash,
           tags: tags.filter(tag => tag.trim())
         });
-        });
       }
-      
+
       if (uploadResult?.success) {
         // Add file to store
         const fileMetadata = {
@@ -184,23 +183,23 @@ const FileUpload = ({
         };
 
         addFile(fileMetadata);
-        
+
         // Log audit trail
         try {
           await auditService.logFileUpload(address!, fileMetadata.id, selectedFile.name);
         } catch (error) {
           console.error('Failed to log audit trail:', error);
         }
-        
+
         toast.success('File uploaded to 0G Network successfully!');
         onUploadComplete?.(fileMetadata.id);
-        
+
         // Reset state
         setSelectedFile(null);
         setEstimatedFee('');
         setStep('select');
       }
-      
+
     } catch (err) {
       console.error('Upload failed:', err);
       toast.error('Upload failed. Please try again.');
@@ -224,7 +223,7 @@ const FileUpload = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        
+
         {step === 'select' && (
           <div className="space-y-4">
             <div className="text-center">
@@ -237,7 +236,7 @@ const FileUpload = ({
                 Max size: {Math.round(maxSize / 1024 / 1024)}MB
               </p>
             </div>
-            
+
             <div className="text-center">
               <input
                 type="file"
@@ -247,7 +246,7 @@ const FileUpload = ({
                 id="file-upload"
                 disabled={!address}
               />
-              <Button 
+              <Button
                 onClick={() => document.getElementById('file-upload')?.click()}
                 disabled={!address}
                 className="w-full"
@@ -265,7 +264,7 @@ const FileUpload = ({
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
               <p className="text-lg font-medium text-gray-900">Confirm File Selection</p>
             </div>
-            
+
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="font-medium">{selectedFile.name}</p>
               <p className="text-sm text-gray-600">
@@ -275,13 +274,13 @@ const FileUpload = ({
                 Type: {selectedFile.type}
               </p>
             </div>
-            
+
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleCancel} className="flex-1">
                 Cancel
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleGenerateAnalysis}
                 disabled={loading}
                 className="flex-1"
@@ -302,14 +301,14 @@ const FileUpload = ({
               <DollarSign className="h-12 w-12 text-blue-500 mx-auto mb-4" />
               <p className="text-lg font-medium text-gray-900">Estimated Upload Fee</p>
             </div>
-            
+
             <div className="bg-blue-50 p-4 rounded-lg text-center">
               <p className="text-2xl font-bold text-blue-600">{estimatedFee} ETH</p>
               <p className="text-sm text-gray-600 mt-1">
                 Fee for storing on 0G Network
               </p>
             </div>
-            
+
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="font-medium mb-2">File Details:</p>
               <p className="text-sm text-gray-600">{selectedFile?.name}</p>
@@ -317,7 +316,7 @@ const FileUpload = ({
                 Size: {selectedFile ? (selectedFile.size / 1024 / 1024).toFixed(2) : 0} MB
               </p>
             </div>
-            
+
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleCancel} className="flex-1">
                 Cancel
@@ -336,15 +335,15 @@ const FileUpload = ({
               <p className="text-lg font-medium text-gray-900">Uploading to 0G Network</p>
               <p className="text-sm text-gray-600">{uploadStatus}</p>
             </div>
-            
+
             {loading && (
               <Progress value={50} className="w-full" />
             )}
-            
+
             {error && (
               <div className="text-sm text-red-600 text-center">{error}</div>
             )}
-            
+
             {txHash && (
               <div className="text-sm text-green-600 text-center">
                 ✓ Uploaded! TX: {txHash.slice(0, 10)}...
@@ -352,7 +351,7 @@ const FileUpload = ({
             )}
           </div>
         )}
-        
+
       </CardContent>
     </Card>
   );

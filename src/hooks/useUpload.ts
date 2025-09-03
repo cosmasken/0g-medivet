@@ -78,10 +78,15 @@ export function useUpload() {
       console.log('✅ Upload completed successfully');
       setUploadStatus('Upload completed successfully!');
       
+      // Get the root hash from the submission data
+      const rootHash = submission?.root || submission?.merkleRoot || submission?.nodes?.[0]?.root;
+      console.log('📋 Root hash extracted:', rootHash);
+      
       return {
         success: true,
-        txHash: 'direct-upload', // Placeholder since no transaction
-        merkleRoot: submission?.nodes?.[0]?.root || 'unknown'
+        root: rootHash,
+        txHash: rootHash || 'direct-upload',
+        merkleRoot: rootHash || 'unknown'
       };
       
     } catch (err) {
