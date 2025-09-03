@@ -21,6 +21,7 @@ import AuditTrail from "@/pages/AuditTrail";
 import { TrendingUp, Upload } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import { useWallet } from "@/hooks/useWallet";
+import { useAuthStore } from "@/stores/authStore";
 import WelcomeBanner from '@/components/WelcomeBanner';
 import { generateMockAttachments } from "@/lib/mock-attachments";
 import {
@@ -110,13 +111,26 @@ const emptyPatient = {
 
 export default function PatientDashboard({ patientId = '1' }: PatientDashboardProps = {}) {
   const { address } = useWallet();
+  const { currentUser } = useAuthStore();
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [patientData, setPatientData] = useState(emptyPatient); // Use empty state
-  const [providers, setProviders] = useState([]); // Empty providers
+  const [patientData, setPatientData] = useState(emptyPatient);
+  const [providers, setProviders] = useState([]);
   const [copiedAddress, setCopiedAddress] = useState(false);
 
   // Dev toggle for empty states
   const [isEmptyState, setIsEmptyState] = useState(true);
+
+  // Use real user data if available
+  const patient = currentUser?.profile ? {
+    id: patientId,
+    name: currentUser.profile.fullName || 'User',
+    email: (currentUser.profile as any).email || currentUser.profile.contact || 'user@example.com',
+    phone: (currentUser.profile as any).phone || 'Not provided',
+    avatar: '',
+    dateOfBirth: currentUser.profile.dob || 'Not provided',
+    address: '123 Main St, Anytown, ST 12345', // This would come from profile in real app
+    ...patientData
+  } : patientData;
 
   // Modal states
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
@@ -497,10 +511,11 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
         </div>
       </header>
 
-      <WelcomeBanner />
+
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        <WelcomeBanner />
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -1156,13 +1171,13 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                     Upload your medical documents securely to 0G decentralized storage
                   </p>
                 </div>
-                
-                <FileUpload 
+
+                <FileUpload
                   onUploadComplete={(fileId) => {
                     console.log('File uploaded:', fileId);
                   }}
                 />
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Recent Uploads</CardTitle>
