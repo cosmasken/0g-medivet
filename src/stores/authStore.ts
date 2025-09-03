@@ -28,6 +28,7 @@ export interface User {
   role: Role;
   walletAddress: string;
   profile: PatientProfile | ProviderProfile;
+  isOnboarded?: boolean;
 }
 
 interface AuthState {
@@ -36,6 +37,7 @@ interface AuthState {
   login: (role: Role, profile: PatientProfile | ProviderProfile, walletAddress: string) => void;
   logout: () => void;
   updateProfile: (profile: PatientProfile | ProviderProfile) => void;
+  completeOnboarding: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -49,7 +51,8 @@ export const useAuthStore = create<AuthState>()(
           id: `${role}_${Date.now()}`,
           role,
           walletAddress,
-          profile
+          profile,
+          isOnboarded: false
         };
 
         set({
@@ -71,6 +74,17 @@ export const useAuthStore = create<AuthState>()(
           const updatedUser = {
             ...currentUser,
             profile
+          };
+          set({ currentUser: updatedUser });
+        }
+      },
+
+      completeOnboarding: () => {
+        const currentUser = get().currentUser;
+        if (currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            isOnboarded: true
           };
           set({ currentUser: updatedUser });
         }
