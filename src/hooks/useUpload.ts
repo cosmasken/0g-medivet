@@ -68,6 +68,11 @@ export function useUpload() {
       
       // Upload file to storage using original File object
       const [uploadSuccess, uploadErr] = await uploadToStorage(
+        file, // Use original file instead of blob
+        network.storageRpc,
+        network.l1Rpc,
+        signer
+      );
         originalFile || blob, 
         network.storageRpc,
         network.l1Rpc,
