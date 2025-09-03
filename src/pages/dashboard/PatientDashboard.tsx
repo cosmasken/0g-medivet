@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,11 +21,18 @@ export default function PatientDashboard() {
   const { address, disconnect } = useWallet();
   const { currentUser, logout } = useAuthStore();
   const { providers } = useProviderStore();
-  const { textRecords } = useRecordsStore();
+  const { textRecords, fileRecords, loadFileRecords } = useRecordsStore();
   const { data: recordsData } = useRecordsQuery(currentUser?.id);
   const [showAddProvider, setShowAddProvider] = useState(false);
   const [showHealthEditor, setShowHealthEditor] = useState(false);
   const [showAddRecord, setShowAddRecord] = useState(false);
+
+  // Load file records from localStorage
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadFileRecords(currentUser.id);
+    }
+  }, [currentUser?.id, loadFileRecords]);
 
   // Real patient data from user profile
   const patient = {
@@ -387,22 +394,23 @@ export default function PatientDashboard() {
                 <CardDescription>Files uploaded to 0G storage</CardDescription>
               </CardHeader>
               <CardContent>
-                {medicalRecords.length > 0 ? (
+                {fileRecords.length > 0 ? (
                   <div className="space-y-4">
-                    {medicalRecords.map((record) => (
+                    {fileRecords.map((record) => (
                       <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center gap-4">
                           <FileText className="h-8 w-8 text-muted-foreground" />
                           <div>
                             <h4 className="font-medium">{record.title}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {record.provider} • {new Date(record.date).toLocaleDateString()}
+                              {record.category} • {new Date(record.created_at).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Size: {(record.file_size / 1024 / 1024).toFixed(2)} MB
                             </p>
                           </div>
                         </div>
-                        <Badge variant={record.status === 'Completed' ? 'default' : 'secondary'}>
-                          {record.status}
-                        </Badge>
+                        <Badge variant="default">File</Badge>
                       </div>
                     ))}
                   </div>

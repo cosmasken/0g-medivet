@@ -1,26 +1,43 @@
 import { create } from 'zustand';
 
+export interface FileRecord {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  category: string;
+  file_type: string;
+  file_size: number;
+  zero_g_hash: string;
+  tags: string[];
+  created_at: string;
+  type: 'file';
+}
+
 export interface TextRecord {
   id: string;
   title: string;
   description: string;
   content: string;
   category: string;
-  type: 'text' | 'file';
+  type: 'text';
   createdAt: string;
   updatedAt: string;
 }
 
 interface RecordsStore {
   textRecords: TextRecord[];
+  fileRecords: FileRecord[];
   addTextRecord: (record: Omit<TextRecord, 'id' | 'createdAt' | 'updatedAt' | 'type'>) => void;
+  loadFileRecords: (userId: string) => void;
   updateTextRecord: (id: string, updates: Partial<TextRecord>) => void;
   deleteTextRecord: (id: string) => void;
-  getRecordsByCategory: (category: string) => TextRecord[];
+  getRecordsByCategory: (category: string) => (TextRecord | FileRecord)[];
 }
 
 export const useRecordsStore = create<RecordsStore>((set, get) => ({
   textRecords: [],
+  fileRecords: [],
   
   addTextRecord: (record) => {
     const newRecord: TextRecord = {
@@ -34,6 +51,12 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
     set(state => ({
       textRecords: [...state.textRecords, newRecord]
     }));
+  },
+  
+  loadFileRecords: (userId) => {
+    const fileRecordsKey = `fileRecords_${userId}`;
+    const fileRecords = JSON.parse(localStorage.getItem(fileRecordsKey) || '[]');
+    set({ fileRecords });
   },
   
   updateTextRecord: (id, updates) => {
@@ -53,7 +76,7 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
   },
   
   getRecordsByCategory: (category) => {
-    const { textRecords } = get();
-    return textRecords.filter(record => record.category === category);
+    const { textRecords, fileRecords } = get();
+    return [...textRecords, ...fileRecords].filter(record => record.category === category);
   }
 }));

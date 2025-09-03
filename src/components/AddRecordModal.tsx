@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileUpload } from './FileUpload';
+import FileUpload from './FileUpload';
 import { useRecordsStore } from '@/stores/recordsStore';
 import { FileText, Upload, Heart, Activity, Pill, Calendar } from 'lucide-react';
 
@@ -167,14 +167,14 @@ export function AddRecordModal({ open, onOpenChange }: AddRecordModalProps) {
       alert('Please fill in title and content');
       return;
     }
-    
+
     addTextRecord({
       title: formData.title,
       description: formData.description,
       content: formData.content,
       category: formData.category || 'General'
     });
-    
+
     handleReset();
     onOpenChange(false);
   };
@@ -208,8 +208,8 @@ export function AddRecordModal({ open, onOpenChange }: AddRecordModalProps) {
                   {Object.entries(recordTemplates).map(([key, template]) => {
                     const IconComponent = template.icon;
                     return (
-                      <Card 
-                        key={key} 
+                      <Card
+                        key={key}
                         className="cursor-pointer hover:shadow-md transition-shadow"
                         onClick={() => handleTemplateSelect(key)}
                       >
@@ -241,7 +241,7 @@ export function AddRecordModal({ open, onOpenChange }: AddRecordModalProps) {
                     <Input
                       id="title"
                       value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       placeholder="Record title"
                     />
                   </div>
@@ -250,7 +250,7 @@ export function AddRecordModal({ open, onOpenChange }: AddRecordModalProps) {
                     <Input
                       id="category"
                       value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       placeholder="Record category"
                     />
                   </div>
@@ -261,7 +261,7 @@ export function AddRecordModal({ open, onOpenChange }: AddRecordModalProps) {
                   <Input
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Brief description"
                   />
                 </div>
@@ -271,7 +271,7 @@ export function AddRecordModal({ open, onOpenChange }: AddRecordModalProps) {
                   <Textarea
                     id="content"
                     value={formData.content}
-                    onChange={(e) => setFormData({...formData, content: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     placeholder="Record details"
                     className="min-h-[300px] font-mono text-sm"
                   />
