@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['buffer', 'crypto-browserify', 'stream-browserify', 'util', 'events', 'path-browserify', 'vm-browserify', 'js-sha3', 'axios'],
-    exclude: ['@0glabs/0g-ts-sdk']
+    exclude: ['@0glabs/0g-ts-sdk', '@0glabs/0g-ts-sdk/browser']
   },
   build: {
     commonjsOptions: {
