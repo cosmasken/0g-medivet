@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://medivet-production.up.railway.app/api';
+const API_BASE_URL = 'http://localhost:3001/api';
 
 // User management
 export const authenticateUser = async (walletAddress: string, role: 'patient' | 'provider' = 'patient') => {
