@@ -23,6 +23,7 @@ import FileUpload from "@/components/FileUpload";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuthStore } from "@/stores/authStore";
 import WelcomeBanner from '@/components/WelcomeBanner';
+import { useRecordsQuery, useCreateRecordMutation } from '@/hooks/useRecordsQuery';
 import { getUserMedicalRecords, createMedicalRecord, updateRecordStatus, createProviderPermission, updateUserProfile, authenticateUser } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { generateMockAttachments } from "@/lib/mock-attachments";
@@ -114,34 +115,17 @@ const emptyPatient = {
 export default function PatientDashboard({ patientId = '1' }: PatientDashboardProps = {}) {
   const { address } = useWallet();
   const { currentUser, logout } = useAuthStore();
+  const { data: recordsData, isLoading: isLoadingRecords, error: recordsError } = useRecordsQuery();
+  const createRecordMutation = useCreateRecordMutation();
+  
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [medicalRecords, setMedicalRecords] = useState([]);
-  const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [isRequestsManagerOpen, setIsRequestsManagerOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isTextRecordDialogOpen, setIsTextRecordDialogOpen] = useState(false);
   const [isEmptyState, setIsEmptyState] = useState(false);
 
-  // Load real medical records
-  useEffect(() => {
-    const loadMedicalRecords = async () => {
-      if (currentUser?.id) {
-        try {
-          setIsLoadingRecords(true);
-          const { records } = await getUserMedicalRecords(currentUser.id);
-          setMedicalRecords(records || []);
-        } catch (error) {
-          console.error('Failed to load medical records:', error);
-          toast.error('Failed to load medical records');
-        } finally {
-          setIsLoadingRecords(false);
-        }
-      }
-    };
-
-    loadMedicalRecords();
-  }, [currentUser?.id]);
+  const medicalRecords = recordsData?.records || [];
 
   // Use real user data if available
   const patient = currentUser?.profile ? {
@@ -169,12 +153,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   };
 
   const handleRecordCreated = () => {
-    // Reload records after creation
-    if (currentUser?.id) {
-      getUserMedicalRecords(currentUser.id).then(({ records }) => {
-        setMedicalRecords(records || []);
-      });
-    }
+    // TanStack Query will auto-refresh via invalidateQueries
     setIsUploadDialogOpen(false);
     setIsTextRecordDialogOpen(false);
   };
@@ -289,22 +268,15 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     };
 
     console.log('Adding new record:', newRecord);
-    try {
-      if (currentUser?.id) {
-        createMedicalRecord({
-          user_id: currentUser.id,
-          title: newRecord.title,
-          description: newRecord.description,
-          category: newRecord.type,
-          zero_g_hash: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          tags: []
-        });
-        toast.success('Record added successfully');
-        handleRecordCreated(); // Refresh records
-      }
-    } catch (error) {
-      console.error('Failed to add record:', error);
-      toast.error('Failed to add record');
+    if (currentUser?.id) {
+      createRecordMutation.mutate({
+        user_id: currentUser.id,
+        title: newRecord.title,
+        description: newRecord.description,
+        category: newRecord.type,
+        zero_g_hash: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        tags: []
+      });
     }
 
     // Reset form and close modal

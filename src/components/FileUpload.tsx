@@ -6,6 +6,7 @@ import { Upload, File, DollarSign, CheckCircle } from 'lucide-react';
 import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useUpload } from '@/hooks/useUpload';
+import { useCreateRecordMutation } from '@/hooks/useRecordsQuery';
 import { createBlobFromFile } from '@/lib/0g/blob';
 import { createMedicalRecord } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
@@ -23,8 +24,10 @@ const FileUpload = ({
   maxSize = 10 * 1024 * 1024 // 10MB
 }: FileUploadProps) => {
   const { address } = useWallet();
+  const { currentUser } = useAuthStore();
   const { addFile } = useMedicalFilesStore();
   const { loading, error, uploadStatus, txHash, uploadFile, resetUploadState } = useUpload();
+  const createRecordMutation = useCreateRecordMutation();
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [estimatedFee, setEstimatedFee] = useState<string>('');
@@ -101,23 +104,16 @@ const FileUpload = ({
       
       // Save to backend database
       if (currentUser?.id && resultTxHash) {
-        try {
-          await createMedicalRecord({
-            user_id: currentUser.id,
-            title: selectedFile.name,
-            description: `Uploaded file: ${selectedFile.name}`,
-            category: category || 'Other',
-            file_type: selectedFile.type,
-            file_size: selectedFile.size,
-            zero_g_hash: resultTxHash,
-            tags: tags.filter(tag => tag.trim())
-          });
-          
-          console.log('✅ Record saved to database');
-        } catch (dbError) {
-          console.error('Failed to save to database:', dbError);
-          // Don't fail the upload if DB save fails
-        }
+        createRecordMutation.mutate({
+          user_id: currentUser.id,
+          title: selectedFile.name,
+          description: `Uploaded file: ${selectedFile.name}`,
+          category: category || 'Other',
+          file_type: selectedFile.type,
+          file_size: selectedFile.size,
+          zero_g_hash: resultTxHash,
+          tags: tags.filter(tag => tag.trim())
+        });
       }
       
       if (resultTxHash) {

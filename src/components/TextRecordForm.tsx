@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, FileText } from 'lucide-react';
+import { useCreateRecordMutation } from '@/hooks/useRecordsQuery';
 import { createMedicalRecord } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'react-hot-toast';
@@ -18,7 +19,7 @@ interface TextRecordFormProps {
 
 const TextRecordForm = ({ onSuccess, onCancel }: TextRecordFormProps) => {
   const { currentUser } = useAuthStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createRecordMutation = useCreateRecordMutation();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -65,45 +66,30 @@ const TextRecordForm = ({ onSuccess, onCancel }: TextRecordFormProps) => {
       return;
     }
 
-    setIsSubmitting(true);
+    // Generate a simple hash for text content
+    const textHash = `text_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    createRecordMutation.mutate({
+      user_id: currentUser.id,
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      file_type: 'text/plain',
+      file_size: new Blob([formData.content]).size,
+      zero_g_hash: textHash,
+      tags: formData.tags
+    });
 
-    try {
-      // Create text record with content as "file"
-      const textContent = `Title: ${formData.title}\n\nDescription: ${formData.description}\n\nContent:\n${formData.content}`;
-      const textBlob = new Blob([textContent], { type: 'text/plain' });
-      
-      // Generate a simple hash for text content (in real app, this would be the 0G hash)
-      const textHash = `text_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      await createMedicalRecord({
-        user_id: currentUser.id,
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        file_type: 'text/plain',
-        file_size: textBlob.size,
-        zero_g_hash: textHash,
-        tags: formData.tags
-      });
-
-      toast.success('Text record created successfully!');
-      
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        category: '',
-        content: '',
-        tags: []
-      });
-      
-      onSuccess?.();
-    } catch (error) {
-      console.error('Failed to create text record:', error);
-      toast.error('Failed to create text record');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Reset form
+    setFormData({
+      title: '',
+      description: '',
+      category: '',
+      content: '',
+      tags: []
+    });
+    
+    onSuccess?.();
   };
 
   return (
@@ -192,8 +178,8 @@ const TextRecordForm = ({ onSuccess, onCancel }: TextRecordFormProps) => {
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={isSubmitting} className="flex-1">
-              {isSubmitting ? 'Creating...' : 'Create Record'}
+            <Button type="submit" disabled={createRecordMutation.isPending} className="flex-1">
+              {createRecordMutation.isPending ? 'Creating...' : 'Create Record'}
             </Button>
             {onCancel && (
               <Button type="button" variant="outline" onClick={onCancel}>
