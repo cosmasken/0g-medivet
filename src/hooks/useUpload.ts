@@ -81,7 +81,7 @@ export function useUpload() {
       return {
         success: true,
         txHash: 'direct-upload', // Placeholder since no transaction
-        merkleRoot: submission.nodes[0]?.root
+        merkleRoot: submission?.nodes?.[0]?.root || 'unknown'
       };
       
     } catch (err) {
