@@ -140,34 +140,25 @@ const FileUpload = ({
       const uploadResult = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
       const resultTxHash = uploadResult?.txHash || 'direct-upload';
       
-      // Save to local storage instead of backend to avoid API issues
+      // Save to backend database with correct field names
       if (currentUser?.id) {
-        console.log('Saving to local storage:', {
-          user_id: currentUser.id,
+        console.log('Saving to database:', {
+          userId: currentUser.id,
           title: selectedFile.name,
           category: category || 'Other',
-          zero_g_hash: resultTxHash
+          zeroGHash: resultTxHash
         });
         
-        // Store file record in localStorage
-        const fileRecordsKey = `fileRecords_${currentUser.id}`;
-        const existingRecords = JSON.parse(localStorage.getItem(fileRecordsKey) || '[]');
-        const newRecord = {
-          id: `file-${Date.now()}`,
-          user_id: currentUser.id,
+        createRecordMutation.mutate({
+          userId: currentUser.id,
           title: selectedFile.name,
           description: `Uploaded file: ${selectedFile.name}`,
           category: category || 'Other',
-          file_type: selectedFile.type,
-          file_size: selectedFile.size,
-          zero_g_hash: resultTxHash,
-          tags: tags.filter(tag => tag.trim()),
-          created_at: new Date().toISOString(),
-          type: 'file'
-        };
-        
-        existingRecords.push(newRecord);
-        localStorage.setItem(fileRecordsKey, JSON.stringify(existingRecords));
+          fileType: selectedFile.type,
+          fileSize: selectedFile.size,
+          zeroGHash: resultTxHash,
+          tags: tags.filter(tag => tag.trim()).join(',')
+        });
       }
       
       if (uploadResult?.success) {
