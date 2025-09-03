@@ -102,10 +102,18 @@ const FileUpload = ({
       const blob = createBlobFromFile(selectedFile);
       
       // Upload to 0G
-      const resultTxHash = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
+      const uploadResult = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
+      const resultTxHash = uploadResult?.txHash || 'direct-upload';
       
       // Save to backend database
-      if (currentUser?.id && resultTxHash) {
+      if (currentUser?.id) {
+        console.log('Saving to database:', {
+          user_id: currentUser.id,
+          title: selectedFile.name,
+          category: category || 'Other',
+          zero_g_hash: resultTxHash
+        });
+        
         createRecordMutation.mutate({
           user_id: currentUser.id,
           title: selectedFile.name,
@@ -118,7 +126,7 @@ const FileUpload = ({
         });
       }
       
-      if (resultTxHash) {
+      if (uploadResult?.success) {
         // Add file to store
         const fileMetadata = {
           id: `file-${Date.now()}`,
