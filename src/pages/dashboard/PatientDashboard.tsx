@@ -179,7 +179,6 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   // Modal states
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
-  const [isRequestsManagerOpen, setIsRequestsManagerOpen] = useState(false);
   const [showProfileSettingsDialog, setShowProfileSettingsDialog] = useState(false);
   const [showPrivacySettingsDialog, setShowPrivacySettingsDialog] = useState(false);
   const [showAccountSettingsDialog, setShowAccountSettingsDialog] = useState(false);
@@ -202,13 +201,10 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     phone: ''
   });
 
-  const patient = patientData;
-  const connectedProviders = providers;
+  const connectedProviders = [];
 
   // Get pending provider requests count
-  const pendingRequestsCount = mockProviderRequests.filter(
-    req => req.patientId === patient.id && req.status === 'pending'
-  ).length;
+  const pendingRequestsCount = 0;
 
   // Get patient earnings for display
   const patientEarnings = mockPatientEarnings.find(pe => pe.patientId === patientId) || {
@@ -411,12 +407,6 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
    */
   const mockOpenAccountSettings = () => {
     setShowAccountSettingsDialog(true);
-  };
-
-  const handleLogout = () => {
-    console.log('Logging out patient:', patient.email);
-    // In a real app, this would clear auth tokens and redirect to login
-    window.location.href = '/';
   };
 
   const handleCopyAddress = async () => {
