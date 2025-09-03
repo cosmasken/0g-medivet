@@ -54,9 +54,16 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
   },
   
   loadFileRecords: (userId) => {
+    // Load from both old and new localStorage keys
     const fileRecordsKey = `fileRecords_${userId}`;
+    const medicalRecordsKey = `medicalRecords_${userId}`;
+    
     const fileRecords = JSON.parse(localStorage.getItem(fileRecordsKey) || '[]');
-    set({ fileRecords });
+    const medicalRecords = JSON.parse(localStorage.getItem(medicalRecordsKey) || '[]');
+    
+    // Combine both sources
+    const allRecords = [...fileRecords, ...medicalRecords];
+    set({ fileRecords: allRecords });
   },
   
   updateTextRecord: (id, updates) => {

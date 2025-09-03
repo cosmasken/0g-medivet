@@ -140,16 +140,20 @@ const FileUpload = ({
       const uploadResult = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
       const resultTxHash = uploadResult?.txHash || 'direct-upload';
       
-      // Save to backend database with correct field names
+      // Save record - use localStorage since backend endpoint doesn't exist yet
       if (currentUser?.id) {
-        console.log('Saving to database:', {
+        console.log('Saving record locally:', {
           userId: currentUser.id,
           title: selectedFile.name,
           category: category || 'Other',
           zeroGHash: resultTxHash
         });
         
-        createRecordMutation.mutate({
+        // Store in localStorage for now
+        const recordsKey = `medicalRecords_${currentUser.id}`;
+        const existingRecords = JSON.parse(localStorage.getItem(recordsKey) || '[]');
+        const newRecord = {
+          id: `record-${Date.now()}`,
           userId: currentUser.id,
           title: selectedFile.name,
           description: `Uploaded file: ${selectedFile.name}`,
@@ -157,8 +161,16 @@ const FileUpload = ({
           fileType: selectedFile.type,
           fileSize: selectedFile.size,
           zeroGHash: resultTxHash,
-          tags: tags.filter(tag => tag.trim()).join(',')
-        });
+          tags: tags.filter(tag => tag.trim()),
+          createdAt: new Date().toISOString(),
+          type: 'file'
+        };
+        
+        existingRecords.push(newRecord);
+        localStorage.setItem(recordsKey, JSON.stringify(existingRecords));
+        
+        // Show success message
+        console.log('✅ Record saved successfully to local storage');
       }
       
       if (uploadResult?.success) {
