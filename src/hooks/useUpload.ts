@@ -21,7 +21,7 @@ export function useUpload() {
     setUploadStatus('Preparing file...');
     setTxHash('');
     
-    let transactionHash = '';
+    const transactionHash = '';
     
     try {
       // Get provider and signer
@@ -68,16 +68,16 @@ export function useUpload() {
       
       // Upload file to storage using original File object
       const [uploadSuccess, uploadErr] = await uploadToStorage(
-        file, // Use original file instead of blob
+        originalFile || blob, // Use originalFile if available, fallback to blob
         network.storageRpc,
         network.l1Rpc,
         signer
       );
-        originalFile || blob, 
-        network.storageRpc,
-        network.l1Rpc,
-        signer
-      );
+      //   originalFile || blob, 
+      //   network.storageRpc,
+      //   network.l1Rpc,
+      //   signer
+      // );
       
       if (!uploadSuccess) {
         throw new Error(`Storage upload failed: ${uploadErr?.message}`);
