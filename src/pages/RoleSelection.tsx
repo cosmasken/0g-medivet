@@ -2,13 +2,16 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { RoleCard } from "@/components/RoleCard";
 import { AccountSwitcher } from "@/components/AccountSwitcher";
+import { useAuthStore } from "@/stores/authStore";
 import { User, Stethoscope, Shield, Calendar, FileText, Users, Settings, BarChart3, ArrowLeft } from "lucide-react";
 import heroImage from "@/assets/hero-medical.jpg";
 
 export default function RoleSelection() {
   const navigate = useNavigate();
+  const { setSelectedRole } = useAuthStore();
 
   const handleRoleSelect = (role: "patient" | "provider") => {
+    setSelectedRole(role);
     navigate(`/onboarding/${role}`);
   };
 

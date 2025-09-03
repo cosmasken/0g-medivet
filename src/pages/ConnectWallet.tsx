@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,20 @@ import { Wallet, Shield, Users, Activity, LogOut } from 'lucide-react';
 const ConnectWallet = () => {
   const navigate = useNavigate();
   const { connect, disconnect, isConnected, isConnecting, address } = useWallet();
-  const { login, logout } = useAuthStore();
+  const { login, logout, selectedRole, isLoading } = useAuthStore();
+
+  useEffect(() => {
+    if (isConnected && address && selectedRole) {
+      // Auto-login with stored role
+      login(selectedRole, {}, address).then(() => {
+        const dashboardPath = selectedRole === 'patient' ? '/dashboard/patient' : '/dashboard/provider';
+        navigate(dashboardPath);
+      });
+    } else if (isConnected && address && !selectedRole) {
+      // First time user, go to role selection
+      navigate('/role-selection');
+    }
+  }, [isConnected, address, selectedRole, login, navigate]);
 
   const handleConnect = () => {
     if (!isConnected) {

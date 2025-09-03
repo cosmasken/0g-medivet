@@ -40,11 +40,13 @@ interface AuthState {
   currentUser: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  selectedRole: Role | null;
   login: (role: Role, profile: PatientProfile | ProviderProfile, walletAddress: string) => Promise<void>;
   logout: () => void;
   updateProfile: (profile: PatientProfile | ProviderProfile) => Promise<void>;
   completeOnboarding: () => Promise<void>;
   setLoading: (loading: boolean) => void;
+  setSelectedRole: (role: Role) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -53,9 +55,15 @@ export const useAuthStore = create<AuthState>()(
       currentUser: null,
       isAuthenticated: false,
       isLoading: false,
+      selectedRole: localStorage.getItem('selectedRole') as Role | null,
 
       setLoading: (loading: boolean) => {
         set({ isLoading: loading });
+      },
+
+      setSelectedRole: (role: Role) => {
+        localStorage.setItem('selectedRole', role);
+        set({ selectedRole: role });
       },
 
       login: async (role: Role, profile: PatientProfile | ProviderProfile, walletAddress: string) => {
@@ -94,9 +102,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        localStorage.removeItem('selectedRole');
         set({
           currentUser: null,
-          isAuthenticated: false
+          isAuthenticated: false,
+          selectedRole: null
         });
       },
 
