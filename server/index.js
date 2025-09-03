@@ -10,6 +10,14 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Import routes
+const usersRouter = require('./routes/users');
+const recordsRouter = require('./routes/records');
+
+// Use routes
+app.use('/api/users', usersRouter);
+app.use('/api/records', recordsRouter);
+
 // Initialize SQLite database
 const db = new sqlite3.Database(path.join(__dirname, 'audit.db'));
 
