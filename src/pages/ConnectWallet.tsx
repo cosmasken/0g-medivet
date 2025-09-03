@@ -4,18 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useWallet } from '@/hooks/useWallet';
 import { useAuthStore } from '@/stores/authStore';
-import { Wallet, Shield, Users, Activity } from 'lucide-react';
+import { Wallet, Shield, Users, Activity, LogOut } from 'lucide-react';
 
 const ConnectWallet = () => {
   const navigate = useNavigate();
-  const { connect, isConnected, isConnecting, address } = useWallet();
-  const { login } = useAuthStore();
-  const [selectedRole, setSelectedRole] = useState<'patient' | 'provider' | null>(null);
+  const { connect, disconnect, isConnected, isConnecting, address } = useWallet();
+  const { login, logout } = useAuthStore();
 
   const handleConnect = () => {
     if (!isConnected) {
       connect();
     }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    logout();
   };
 
   const handleRoleSelection = (role: 'patient' | 'provider') => {
@@ -72,15 +76,24 @@ const ConnectWallet = () => {
               </Button>
             ) : (
               <div className="space-y-4">
-                <div className="text-sm text-green-600 font-medium">
-                  ✓ Wallet Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-green-600 font-medium">
+                    ✓ Wallet Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDisconnect}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
                 </div>
                 
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-gray-700">Select your role:</p>
                   
                   <Button
-                    variant={selectedRole === 'patient' ? 'default' : 'outline'}
                     onClick={() => handleRoleSelection('patient')}
                     className="w-full justify-start"
                   >
@@ -89,7 +102,6 @@ const ConnectWallet = () => {
                   </Button>
                   
                   <Button
-                    variant={selectedRole === 'provider' ? 'default' : 'outline'}
                     onClick={() => handleRoleSelection('provider')}
                     className="w-full justify-start"
                   >

@@ -18,6 +18,7 @@ import { PermissionControl } from "@/components/PermissionControl";
 import { MonetizationDashboard } from "@/components/MonetizationDashboard";
 import { ProviderRequestsManager } from "@/components/ProviderRequestsManager";
 import AuditTrail from "@/pages/AuditTrail";
+import { TrendingUp } from "lucide-react";
 import { generateMockAttachments } from "@/lib/mock-attachments";
 import {
   FileText,
