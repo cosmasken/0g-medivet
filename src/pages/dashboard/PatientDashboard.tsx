@@ -24,6 +24,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useAuthStore } from "@/stores/authStore";
 import WelcomeBanner from '@/components/WelcomeBanner';
 import { useRecordsQuery, useCreateRecordMutation } from '@/hooks/useRecordsQuery';
+import { useShareRecordMutation } from '@/hooks/useSharingMutations';
 import { getUserMedicalRecords, createMedicalRecord, updateRecordStatus, createProviderPermission, updateUserProfile, authenticateUser } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { generateMockAttachments } from "@/lib/mock-attachments";
@@ -117,6 +118,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   const { currentUser, logout } = useAuthStore();
   const { data: recordsData, isLoading: isLoadingRecords, error: recordsError } = useRecordsQuery();
   const createRecordMutation = useCreateRecordMutation();
+  const shareRecordMutation = useShareRecordMutation();
   
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [copiedAddress, setCopiedAddress] = useState(false);
@@ -200,22 +202,8 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   };
 
   // Record sharing and monetization handlers
-  const handleShareRecord = async (recordId: string, providerIds: string[]) => {
-    console.log(`Sharing record ${recordId} with providers:`, providerIds);
-    try {
-      for (const providerId of providerIds) {
-        await createProviderPermission({
-          patient_id: currentUser?.id,
-          provider_id: providerId,
-          record_id: recordId,
-          permission_level: 'view'
-        });
-      }
-      toast.success('Record shared successfully');
-    } catch (error) {
-      console.error('Failed to share record:', error);
-      toast.error('Failed to share record');
-    }
+  const handleShareRecord = (recordId: string, providerIds: string[]) => {
+    shareRecordMutation.mutate({ recordId, providerIds });
   };
 
   const handleMonetizeRecord = (recordId: string, enabled: boolean) => {

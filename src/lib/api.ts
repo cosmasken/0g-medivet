@@ -184,7 +184,52 @@ export const updateRecordStatus = async (recordId: string, status: string, trans
   return response.json();
 };
 
+// Provider permissions
+export const createProviderPermission = async (permissionData: {
+  patient_id: string;
+  provider_id: string;
+  record_id: string;
+  permission_level: string;
+}) => {
+  const response = await fetch(`${API_BASE_URL}/provider-permissions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(permissionData)
+  });
+  
+  if (!response.ok) throw new Error('Failed to create provider permission');
+  return response.json();
+};
+
+export const getProviderPermissions = async (providerId: string) => {
+  const response = await fetch(`${API_BASE_URL}/provider-permissions/${providerId}`);
+  if (!response.ok) throw new Error('Failed to get provider permissions');
+  return response.json();
+};
+
 // Audit logs
+export const createAuditLog = async (logData: {
+  user_id: string;
+  action: string;
+  resource_type: string;
+  resource_id: string;
+  details?: any;
+}) => {
+  const response = await fetch(`${API_BASE_URL}/audit-logs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(logData)
+  });
+  
+  if (!response.ok) throw new Error('Failed to create audit log');
+  return response.json();
+};
+
+export const getAuditLogs = async (userId: string) => {
+  const response = await fetch(`${API_BASE_URL}/audit-logs/${userId}`);
+  if (!response.ok) throw new Error('Failed to get audit logs');
+  return response.json();
+};
 export const createAuditLog = async (logData: any) => {
   const response = await fetch(`${API_BASE_URL}/audit`, {
     method: 'POST',

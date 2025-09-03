@@ -15,12 +15,14 @@ const usersRouter = require('./routes/users');
 const recordsRouter = require('./routes/records');
 const healthRouter = require('./routes/health');
 const providersRouter = require('./routes/providers');
+const sharingRouter = require('./routes/sharing');
 
 // Use routes
 app.use('/api/users', usersRouter);
 app.use('/api/records', recordsRouter);
 app.use('/api/health', healthRouter);
 app.use('/api/providers', providersRouter);
+app.use('/api', sharingRouter);
 
 // Initialize SQLite database
 const db = new sqlite3.Database(path.join(__dirname, 'audit.db'));
