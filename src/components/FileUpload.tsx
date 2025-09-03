@@ -8,6 +8,7 @@ import { useWallet } from '@/hooks/useWallet';
 import { useUpload } from '@/hooks/useUpload';
 import { createBlobFromFile } from '@/lib/0g/blob';
 import { BrowserProvider } from 'ethers';
+import { auditService } from '@/services/auditService';
 import toast from 'react-hot-toast';
 
 interface FileUploadProps {
@@ -126,6 +127,14 @@ const FileUpload = ({
         };
 
         addFile(fileMetadata);
+        
+        // Log audit trail
+        try {
+          await auditService.logFileUpload(address!, fileMetadata.id, selectedFile.name);
+        } catch (error) {
+          console.error('Failed to log audit trail:', error);
+        }
+        
         toast.success('File uploaded to 0G Network successfully!');
         onUploadComplete?.(fileMetadata.id);
         
