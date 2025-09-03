@@ -57,12 +57,12 @@ const FileUpload = ({
       // Create blob for fee calculation
       const blob = await createBlobFromFile(selectedFile);
       
-      // Create submission object
+      // Create submission object using file size instead of blob.data.length
       const submission = {
-        length: blob.data.length,
+        length: selectedFile.size,
         tags: '0x',
         nodes: [{
-          root: blob.merkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000',
+          root: '0x0000000000000000000000000000000000000000000000000000000000000000',
           height: 1
         }]
       };

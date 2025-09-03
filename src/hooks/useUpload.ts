@@ -38,10 +38,10 @@ export function useUpload() {
       
       // Create submission object
       const submission = {
-        length: blob.data.length,
+        length: blob.size || blob.data?.length || 0,
         tags: '0x',
         nodes: [{
-          root: blob.merkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000',
+          root: '0x0000000000000000000000000000000000000000000000000000000000000000',
           height: 1
         }]
       };
