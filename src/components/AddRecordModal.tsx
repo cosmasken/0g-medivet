@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FileUpload from './FileUpload';
 import { useRecordsStore } from '@/stores/recordsStore';
+import { useCreateRecordMutation } from '@/hooks/useRecordsQuery';
+import { useAuthStore } from '@/stores/authStore';
 import { FileText, Upload, Heart, Activity, Pill, Calendar } from 'lucide-react';
 
 interface AddRecordModalProps {
@@ -143,6 +145,8 @@ RESULTS:
 
 export function AddRecordModal({ open, onOpenChange }: AddRecordModalProps) {
   const { addTextRecord } = useRecordsStore();
+  const createRecordMutation = useCreateRecordMutation();
+  const { currentUser } = useAuthStore();
   const [recordType, setRecordType] = useState<string>('');
   const [formData, setFormData] = useState({
     title: '',
@@ -168,11 +172,20 @@ export function AddRecordModal({ open, onOpenChange }: AddRecordModalProps) {
       return;
     }
 
-    addTextRecord({
+    if (!currentUser?.id) {
+      alert('User not authenticated');
+      return;
+    }
+
+    // Save text record to backend
+    createRecordMutation.mutate({
+      user_id: currentUser.id,
       title: formData.title,
       description: formData.description,
-      content: formData.content,
-      category: formData.category || 'General'
+      category: formData.category || 'General',
+      file_type: 'text/plain',
+      zero_g_hash: `text-record-${Date.now()}`,
+      tags: ['text-record', formData.category.toLowerCase()]
     });
 
     handleReset();

@@ -206,8 +206,8 @@ export default function PatientDashboard() {
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{medicalRecords.length}</div>
-                  <p className="text-xs text-muted-foreground">Medical files uploaded</p>
+                  <div className="text-2xl font-bold">{fileRecords.length}</div>
+                  <p className="text-xs text-muted-foreground">Medical records created</p>
                 </CardContent>
               </Card>
 
@@ -352,42 +352,11 @@ export default function PatientDashboard() {
               </Button>
             </div>
 
-            {/* Text Records */}
-            {textRecords.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Text Records</CardTitle>
-                  <CardDescription>Records created using templates</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {textRecords.map((record) => (
-                      <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <FileText className="h-8 w-8 text-muted-foreground" />
-                          <div>
-                            <h4 className="font-medium">{record.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {record.category} • {new Date(record.createdAt).toLocaleDateString()}
-                            </p>
-                            {record.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{record.description}</p>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant="secondary">Text</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* File Records */}
+            {/* All Records from API */}
             <Card>
               <CardHeader>
-                <CardTitle>Uploaded Files</CardTitle>
-                <CardDescription>Files uploaded to 0G storage</CardDescription>
+                <CardTitle>My Medical Records</CardTitle>
+                <CardDescription>All your medical records and files</CardDescription>
               </CardHeader>
               <CardContent>
                 {fileRecords.length > 0 ? (
@@ -401,6 +370,9 @@ export default function PatientDashboard() {
                             <p className="text-sm text-muted-foreground">
                               {record.category} • {new Date(record.created_at).toLocaleDateString()}
                             </p>
+                            {record.description && (
+                              <p className="text-sm text-muted-foreground">{record.description}</p>
+                            )}
                             {record.file_size && (
                               <p className="text-sm text-muted-foreground">
                                 Size: {(record.file_size / 1024 / 1024).toFixed(2)} MB
@@ -408,15 +380,17 @@ export default function PatientDashboard() {
                             )}
                           </div>
                         </div>
-                        <Badge variant="default">File</Badge>
+                        <Badge variant={record.file_type === 'text/plain' ? 'secondary' : 'default'}>
+                          {record.file_type === 'text/plain' ? 'Text' : 'File'}
+                        </Badge>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-4" />
-                    <p>No uploaded files found.</p>
-                    <p className="text-sm">Upload your first medical file to get started.</p>
+                    <p>No medical records found.</p>
+                    <p className="text-sm">Create your first record to get started.</p>
                   </div>
                 )}
               </CardContent>
