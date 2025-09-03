@@ -1,6 +1,13 @@
-import { Indexer, Blob } from '@0glabs/0g-ts-sdk/browser';
+import { Indexer, Blob } from '@0glabs/0g-ts-sdk';
 import { Contract } from 'ethers';
 
+/**
+ * Submits a transaction to the flow contract
+ * @param flowContract The flow contract
+ * @param submission The submission object
+ * @param value The value to send with the transaction
+ * @returns A promise that resolves to the transaction result and any error
+ */
 export async function submitTransaction(
   flowContract: Contract, 
   submission: any, 
@@ -8,10 +15,11 @@ export async function submitTransaction(
 ): Promise<[any | null, Error | null]> {
   try {
     console.log('🔗 Submitting transaction to flow contract:', {
-      flowAddress: flowContract.address || 'unknown',
+      flowAddress: await flowContract.getAddress(),
       value: value.toString(),
       submissionData: {
         ...submission,
+        // Don't log the actual data, just structure
         nodes: submission.nodes?.length || 0,
         length: submission.length
       }
@@ -34,8 +42,16 @@ export async function submitTransaction(
   }
 }
 
+/**
+ * Uploads a file to 0G storage using the exact same pattern as working starter kit
+ * @param blob The blob to upload
+ * @param storageRpc The storage RPC URL (may be proxied)
+ * @param l1Rpc The L1 RPC URL
+ * @param signer The signer
+ * @returns A promise that resolves to a success flag and any error
+ */
 export async function uploadToStorage(
-  fileOrBlob: Blob | File, 
+  blob: Blob, 
   storageRpc: string, 
   l1Rpc: string, 
   signer: any
@@ -44,12 +60,14 @@ export async function uploadToStorage(
     console.log('☁️ Starting storage upload to 0G:', {
       storageRpc,
       l1Rpc,
-      blobSize: fileOrBlob instanceof File ? fileOrBlob.size : 'unknown',
+      blobSize: blob?.data?.length || 'unknown',
       signerAddress: await signer.getAddress()
     });
     
+    // Create indexer with the RPC URL (which may be proxied in dev)
     const indexer = new Indexer(storageRpc);
     
+    // Use the exact same upload options as working starter kit
     const uploadOptions = {
       taskSize: 10,
       expectedReplica: 1,
@@ -61,10 +79,7 @@ export async function uploadToStorage(
     
     console.log('⬆️ Uploading with options:', uploadOptions);
     
-    // Use File directly if available, otherwise use Blob
-    const uploadTarget = fileOrBlob instanceof File ? fileOrBlob : fileOrBlob;
-    
-    await indexer.upload(uploadTarget, l1Rpc, signer, uploadOptions);
+    await indexer.upload(blob, l1Rpc, signer, uploadOptions);
     
     console.log('✅ Storage upload completed successfully');
     return [true, null];
