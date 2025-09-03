@@ -1,5 +1,5 @@
 const express = require('express');
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../supabase');
 const router = express.Router();
 
 // Create provider permission
