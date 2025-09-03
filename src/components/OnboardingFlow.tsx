@@ -18,7 +18,7 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     email: '',
     phone: ''
   });
-  const { currentUser, updateProfile } = useAuthStore();
+  const { currentUser, updateProfile, completeOnboarding } = useAuthStore();
 
   const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
@@ -27,8 +27,18 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      // Update user profile and complete onboarding
-      updateProfile(profile);
+      // Update user profile with onboarding data and complete onboarding
+      const updatedProfile = {
+        ...currentUser?.profile,
+        fullName: profile.name || currentUser?.profile?.fullName || '',
+        email: profile.email,
+        phone: profile.phone,
+        profileCompleted: true,
+        contact: profile.email || currentUser?.profile?.contact || '',
+      };
+      
+      updateProfile(updatedProfile);
+      completeOnboarding();
       onComplete();
     }
   };

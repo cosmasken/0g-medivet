@@ -12,6 +12,10 @@ export interface PatientProfile {
   allergies?: string;
   medications?: string;
   monetizeEnabled?: boolean;
+  // Onboarding data
+  email?: string;
+  phone?: string;
+  profileCompleted?: boolean;
 }
 
 export interface ProviderProfile {

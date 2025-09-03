@@ -21,6 +21,7 @@ import AuditTrail from "@/pages/AuditTrail";
 import { TrendingUp, Upload } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import { useWallet } from "@/hooks/useWallet";
+import WelcomeBanner from '@/components/WelcomeBanner';
 import { generateMockAttachments } from "@/lib/mock-attachments";
 import {
   FileText,
@@ -495,6 +496,8 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
           </div>
         </div>
       </header>
+
+      <WelcomeBanner />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
