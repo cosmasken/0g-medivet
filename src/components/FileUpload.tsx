@@ -2,7 +2,8 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Upload, File, DollarSign, CheckCircle } from 'lucide-react';
+import { generateMockAnalysis, createAnalysisFile } from '@/lib/ai/mockAnalysis';
+import { Upload, File, DollarSign, CheckCircle, Brain } from 'lucide-react';
 import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useUpload } from '@/hooks/useUpload';
@@ -34,6 +35,40 @@ const FileUpload = ({
   const [category, setCategory] = useState<string>('Other');
   const [tags, setTags] = useState<string[]>([]);
   const [step, setStep] = useState<'select' | 'confirm' | 'estimate' | 'upload'>('select');
+
+  const handleGenerateAnalysis = useCallback(async () => {
+    if (!selectedFile || !address) return;
+    
+    try {
+      // Generate mock AI analysis
+      const analysis = generateMockAnalysis(selectedFile.name, selectedFile.type);
+      const analysisFile = createAnalysisFile(analysis);
+      
+      // Upload the analysis file
+      const blob = await createBlobFromFile(analysisFile);
+      const uploadResult = await uploadFile(blob, 'turbo', analysisFile.size, analysisFile);
+      const resultTxHash = uploadResult?.txHash || 'direct-upload';
+      
+      // Save analysis to database
+      if (currentUser?.id) {
+        createRecordMutation.mutate({
+          user_id: currentUser.id,
+          title: analysis.filename,
+          description: `AI Analysis for ${selectedFile.name}`,
+          category: 'AI Analysis',
+          file_type: analysisFile.type,
+          file_size: analysisFile.size,
+          zero_g_hash: resultTxHash,
+          tags: ['ai-generated', 'analysis']
+        });
+      }
+      
+      toast.success('AI Analysis generated and uploaded successfully!');
+    } catch (error) {
+      console.error('Analysis generation failed:', error);
+      toast.error('Failed to generate AI analysis');
+    }
+  }, [selectedFile, address, currentUser, uploadFile, createRecordMutation]);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -240,6 +275,15 @@ const FileUpload = ({
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleCancel} className="flex-1">
                 Cancel
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleGenerateAnalysis}
+                disabled={loading}
+                className="flex-1"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                Generate AI Analysis
               </Button>
               <Button onClick={handleConfirmFile} className="flex-1">
                 Continue
