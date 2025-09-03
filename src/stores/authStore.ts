@@ -144,21 +144,23 @@ export const useAuthStore = create<AuthState>()(
     if (!currentUser) return;
 
     try {
-      // Store health data in the existing profile JSON structure
-      const updatedProfile = {
-        ...currentUser.profile,
+      // Only send the health profile data, not the entire existing profile
+      const profileUpdate = {
         healthProfile: {
           ...currentUser.profile?.healthProfile,
           ...healthData
         }
       };
       
-      await apiUpdateProfile(currentUser.id, updatedProfile);
+      await apiUpdateProfile(currentUser.id, profileUpdate);
       
       set(state => ({
         currentUser: state.currentUser ? {
           ...state.currentUser,
-          profile: updatedProfile
+          profile: {
+            ...state.currentUser.profile,
+            ...profileUpdate
+          }
         } : null
       }));
     } catch (error) {
