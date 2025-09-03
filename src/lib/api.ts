@@ -159,6 +159,21 @@ export const getMarketplaceRecords = async (category?: string, limit = 50, offse
   return response.json();
 };
 
+export const updateRecordStatus = async (recordId: string, status: string, transactionHash?: string, merkleRoot?: string) => {
+  const response = await fetch(`${API_BASE_URL}/records/${recordId}/status`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      upload_status: status,
+      transaction_hash: transactionHash,
+      merkle_root: merkleRoot
+    })
+  });
+  
+  if (!response.ok) throw new Error('Record status update failed');
+  return response.json();
+};
+
 // Audit logs
 export const createAuditLog = async (logData: any) => {
   const response = await fetch(`${API_BASE_URL}/audit`, {

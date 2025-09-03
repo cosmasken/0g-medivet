@@ -23,6 +23,8 @@ import FileUpload from "@/components/FileUpload";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuthStore } from "@/stores/authStore";
 import WelcomeBanner from '@/components/WelcomeBanner';
+import { getUserMedicalRecords, createMedicalRecord, updateRecordStatus, createProviderPermission, updateUserProfile } from '@/lib/api';
+import { toast } from 'react-hot-toast';
 import { generateMockAttachments } from "@/lib/mock-attachments";
 import {
   FileText,
@@ -219,9 +221,22 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   };
 
   // Record sharing and monetization handlers
-  const handleShareRecord = (recordId: string, providerIds: string[]) => {
+  const handleShareRecord = async (recordId: string, providerIds: string[]) => {
     console.log(`Sharing record ${recordId} with providers:`, providerIds);
-    // TODO: Implement backend API call to share record
+    try {
+      for (const providerId of providerIds) {
+        await createProviderPermission({
+          patient_id: currentUser?.id,
+          provider_id: providerId,
+          record_id: recordId,
+          permission_level: 'view'
+        });
+      }
+      toast.success('Record shared successfully');
+    } catch (error) {
+      console.error('Failed to share record:', error);
+      toast.error('Failed to share record');
+    }
   };
 
   const handleMonetizeRecord = (recordId: string, enabled: boolean) => {
@@ -229,9 +244,16 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     // In a real app, this would create/remove the monetized record
   };
 
-  const handleUpdateRecord = (recordId: string, updates: Partial<any>) => {
+  const handleUpdateRecord = async (recordId: string, updates: Partial<any>) => {
     console.log(`Updating record ${recordId}:`, updates);
-    // TODO: Implement backend API call to update record
+    try {
+      await updateRecordStatus(recordId, 'completed', updates.transaction_hash, updates.merkle_root);
+      toast.success('Record updated successfully');
+      handleRecordCreated(); // Refresh records
+    } catch (error) {
+      console.error('Failed to update record:', error);
+      toast.error('Failed to update record');
+    }
   };
 
   const handleProviderRequestUpdate = (requestId: string, status: 'approved' | 'denied') => {
@@ -267,7 +289,23 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     };
 
     console.log('Adding new record:', newRecord);
-    // TODO: Implement backend API call to add record
+    try {
+      if (currentUser?.id) {
+        await createMedicalRecord({
+          user_id: currentUser.id,
+          title: newRecord.title,
+          description: newRecord.description,
+          category: newRecord.type,
+          zero_g_hash: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          tags: []
+        });
+        toast.success('Record added successfully');
+        handleRecordCreated(); // Refresh records
+      }
+    } catch (error) {
+      console.error('Failed to add record:', error);
+      toast.error('Failed to add record');
+    }
 
     // Reset form and close modal
     setRecordForm({
@@ -312,21 +350,49 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   };
 
   // Update privacy setting
-  const updatePrivacySetting = (key: string, value: boolean) => {
+  const updatePrivacySetting = async (key: string, value: boolean) => {
     console.log(`Updating privacy setting ${key}:`, value);
-    // TODO: Implement backend API call
+    try {
+      if (currentUser?.id) {
+        await updateUserProfile(currentUser.id, { [key]: value });
+        toast.success('Privacy setting updated');
+      }
+    } catch (error) {
+      console.error('Failed to update privacy setting:', error);
+      toast.error('Failed to update privacy setting');
+    }
   };
 
   // Update default permission level
-  const updateDefaultPermission = (categoryId: string, level: string) => {
+  const updateDefaultPermission = async (categoryId: string, level: string) => {
     console.log(`Updating default permission for ${categoryId}:`, level);
-    // TODO: Implement backend API call
+    try {
+      if (currentUser?.id) {
+        await updateUserProfile(currentUser.id, { 
+          default_permissions: { [categoryId]: level }
+        });
+        toast.success('Default permission updated');
+      }
+    } catch (error) {
+      console.error('Failed to update default permission:', error);
+      toast.error('Failed to update default permission');
+    }
   };
 
   // Update emergency permission level
-  const updateEmergencyPermission = (categoryId: string, level: string) => {
+  const updateEmergencyPermission = async (categoryId: string, level: string) => {
     console.log(`Updating emergency permission for ${categoryId}:`, level);
-    // TODO: Implement backend API call
+    try {
+      if (currentUser?.id) {
+        await updateUserProfile(currentUser.id, { 
+          emergency_permissions: { [categoryId]: level }
+        });
+        toast.success('Emergency permission updated');
+      }
+    } catch (error) {
+      console.error('Failed to update emergency permission:', error);
+      toast.error('Failed to update emergency permission');
+    }
   };
 
   const getSharedRecords = () => {
