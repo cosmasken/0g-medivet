@@ -9,7 +9,9 @@ import FileUpload from '@/components/FileUpload';
 import { AddProviderModal } from '@/components/AddProviderModal';
 import { ProviderSearch } from '@/components/ProviderSearch';
 import { HealthProfileEditor } from '@/components/HealthProfileEditor';
+import { AddRecordModal } from '@/components/AddRecordModal';
 import { useProviderStore } from '@/stores/providerStore';
+import { useRecordsStore } from '@/stores/recordsStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useAuthStore } from '@/stores/authStore';
 import { useRecordsQuery } from '@/hooks/useRecordsQuery';
@@ -19,9 +21,11 @@ export default function PatientDashboard() {
   const { address, disconnect } = useWallet();
   const { currentUser, logout } = useAuthStore();
   const { providers } = useProviderStore();
+  const { textRecords } = useRecordsStore();
   const { data: recordsData } = useRecordsQuery(currentUser?.id);
   const [showAddProvider, setShowAddProvider] = useState(false);
   const [showHealthEditor, setShowHealthEditor] = useState(false);
+  const [showAddRecord, setShowAddRecord] = useState(false);
 
   // Real patient data from user profile
   const patient = {
@@ -334,12 +338,53 @@ export default function PatientDashboard() {
           </TabsContent>
 
           <TabsContent value="records" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium">My Medical Records</h3>
+                <p className="text-sm text-muted-foreground">View and manage your medical files and records</p>
+              </div>
+              <Button onClick={() => setShowAddRecord(true)}>
+                <FileText className="h-4 w-4 mr-2" />
+                Add Record
+              </Button>
+            </div>
+
+            {/* Text Records */}
+            {textRecords.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Text Records</CardTitle>
+                  <CardDescription>Records created using templates</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {textRecords.map((record) => (
+                      <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                          <div>
+                            <h4 className="font-medium">{record.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {record.category} • {new Date(record.createdAt).toLocaleDateString()}
+                            </p>
+                            {record.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{record.description}</p>
+                            )}
+                          </div>
+                        </div>
+                        <Badge variant="secondary">Text</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* File Records */}
             <Card>
               <CardHeader>
-                <CardTitle>My Medical Records</CardTitle>
-                <CardDescription>
-                  View and manage your uploaded medical files
-                </CardDescription>
+                <CardTitle>Uploaded Files</CardTitle>
+                <CardDescription>Files uploaded to 0G storage</CardDescription>
               </CardHeader>
               <CardContent>
                 {medicalRecords.length > 0 ? (
@@ -364,7 +409,7 @@ export default function PatientDashboard() {
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-4" />
-                    <p>No medical records found.</p>
+                    <p>No uploaded files found.</p>
                     <p className="text-sm">Upload your first medical file to get started.</p>
                   </div>
                 )}
@@ -473,6 +518,11 @@ export default function PatientDashboard() {
         <HealthProfileEditor
           open={showHealthEditor}
           onOpenChange={setShowHealthEditor}
+        />
+
+        <AddRecordModal
+          open={showAddRecord}
+          onOpenChange={setShowAddRecord}
         />
       </div>
     </div>
