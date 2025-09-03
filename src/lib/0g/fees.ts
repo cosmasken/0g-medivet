@@ -61,9 +61,33 @@ export async function calculateFees(
     console.log('Flow contract address:', await flowContract.getAddress());
     
     // Calculate basic storage fee (fallback approach)
+    console.log('Submission object:', submission);
     const fileSizeInBytes = Number(submission.length) || 0;
+    console.log('File size in bytes:', fileSizeInBytes);
+    
     if (fileSizeInBytes === 0) {
-      throw new Error('Invalid file size');
+      // Use a default minimum size if length is 0
+      console.warn('File size is 0, using minimum size of 1KB');
+      const minSize = 1024; // 1KB minimum
+      const sectorSize = 256;
+      const sectorsNeeded = Math.ceil(minSize / sectorSize);
+      const actualStorageFee = BigInt(sectorsNeeded) * BigInt('1000000000000000');
+      
+      // Return minimal fee calculation
+      const gasEstimate = BigInt(300000);
+      const feeData = await provider.getFeeData();
+      const gasPrice = feeData.gasPrice || BigInt('20000000000');
+      const estimatedGasFee = gasEstimate * gasPrice;
+      const totalFee = actualStorageFee + estimatedGasFee;
+      
+      return [{
+        storageFee: formatEther(actualStorageFee),
+        estimatedGas: formatEther(estimatedGasFee),
+        totalFee: formatEther(totalFee),
+        rawStorageFee: actualStorageFee,
+        rawGasFee: estimatedGasFee,
+        rawTotalFee: totalFee
+      }, null];
     }
     
     const sectorSize = 256;
