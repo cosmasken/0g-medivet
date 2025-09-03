@@ -60,51 +60,41 @@ export async function calculateFees(
     const flowContract = getFlowContract(networkType, signer);
     console.log('Flow contract address:', await flowContract.getAddress());
     
-    // Get market address and contract
-    const marketAddr = await flowContract.market();
-    console.log('Market address:', marketAddr);
+    // Calculate basic storage fee (fallback approach)
+    const fileSizeInBytes = submission.length;
+    const sectorSize = 256;
+    const sectorsNeeded = Math.ceil(fileSizeInBytes / sectorSize);
+    let actualStorageFee = BigInt(sectorsNeeded * 1000000000000000); // 0.001 ETH per sector
     
-    const market = getMarketContract(marketAddr, provider);
-    
-    // Get price per sector
-    const pricePerSector = await market.pricePerSector();
-    console.log('Price per sector:', pricePerSector.toString());
-    
-    // Calculate storage fee
-    const storageFee = calculatePrice(submission, pricePerSector);
-    console.log('Storage fee calculated:', storageFee.toString());
-    
-    // Ensure minimum storage fee
-    const actualStorageFee = storageFee === BigInt(0) ? BigInt('1000000000000000') : storageFee; // 0.001 ETH minimum
+    try {
+      // Try to get market pricing
+      const marketAddr = await flowContract.market();
+      console.log('Market address:', marketAddr);
+      
+      if (marketAddr && marketAddr !== '0x0000000000000000000000000000000000000000') {
+        const market = getMarketContract(marketAddr, provider);
+        const pricePerSector = await market.pricePerSector();
+        console.log('Price per sector:', pricePerSector.toString());
+        
+        const storageFee = calculatePrice(submission, pricePerSector);
+        if (storageFee > BigInt(0)) {
+          actualStorageFee = storageFee;
+        }
+      }
+    } catch (contractError) {
+      console.warn('Market contract call failed, using fallback pricing');
+    }
     
     // Get gas price
     const feeData = await provider.getFeeData();
-    const gasPrice = feeData.gasPrice || BigInt('20000000000'); // 20 gwei fallback
-    console.log('Gas price:', gasPrice.toString());
+    const gasPrice = feeData.gasPrice || BigInt('20000000000'); // 20 gwei
     
-    // Estimate gas
-    let gasEstimate = BigInt(500000); // Default fallback
-    try {
-      console.log('Estimating gas for submission...');
-      gasEstimate = await flowContract.submit.estimateGas(submission, { value: actualStorageFee });
-      console.log('Gas estimate:', gasEstimate.toString());
-      // Add 20% buffer
-      gasEstimate = gasEstimate * BigInt(120) / BigInt(100);
-    } catch (error) {
-      console.warn('Gas estimation failed, using fallback:', error);
-    }
+    // Conservative gas estimate
+    const gasEstimate = BigInt(300000);
     
     // Calculate fees
     const estimatedGasFee = gasEstimate * gasPrice;
     const totalFee = actualStorageFee + estimatedGasFee;
-    
-    console.log('Final fee calculation:', {
-      storageFee: actualStorageFee.toString(),
-      gasEstimate: gasEstimate.toString(),
-      gasPrice: gasPrice.toString(),
-      estimatedGasFee: estimatedGasFee.toString(),
-      totalFee: totalFee.toString()
-    });
     
     return [{
       storageFee: formatEther(actualStorageFee),

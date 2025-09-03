@@ -258,9 +258,7 @@ const FileUpload = ({
         {step === 'upload' && (
           <div className="space-y-4">
             <div className="text-center">
-              <div className="animate-spin mx-auto mb-4">
-                <Upload className="h-12 w-12 text-blue-500" />
-              </div>
+              <div className="animate-spin mx-auto mb-4 w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
               <p className="text-lg font-medium text-gray-900">Uploading to 0G Network</p>
               <p className="text-sm text-gray-600">{uploadStatus}</p>
             </div>
