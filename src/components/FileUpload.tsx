@@ -7,6 +7,8 @@ import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useUpload } from '@/hooks/useUpload';
 import { createBlobFromFile } from '@/lib/0g/blob';
+import { createMedicalRecord } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
 import { BrowserProvider } from 'ethers';
 import { auditService } from '@/services/auditService';
 import toast from 'react-hot-toast';
@@ -96,6 +98,27 @@ const FileUpload = ({
       
       // Upload to 0G
       const resultTxHash = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
+      
+      // Save to backend database
+      if (currentUser?.id && resultTxHash) {
+        try {
+          await createMedicalRecord({
+            user_id: currentUser.id,
+            title: selectedFile.name,
+            description: `Uploaded file: ${selectedFile.name}`,
+            category: category || 'Other',
+            file_type: selectedFile.type,
+            file_size: selectedFile.size,
+            zero_g_hash: resultTxHash,
+            tags: tags.filter(tag => tag.trim())
+          });
+          
+          console.log('✅ Record saved to database');
+        } catch (dbError) {
+          console.error('Failed to save to database:', dbError);
+          // Don't fail the upload if DB save fails
+        }
+      }
       
       if (resultTxHash) {
         // Add file to store

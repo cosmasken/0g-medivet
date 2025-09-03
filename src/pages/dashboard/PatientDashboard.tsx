@@ -111,26 +111,70 @@ const emptyPatient = {
 
 export default function PatientDashboard({ patientId = '1' }: PatientDashboardProps = {}) {
   const { address } = useWallet();
-  const { currentUser } = useAuthStore();
+  const { currentUser, logout } = useAuthStore();
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [patientData, setPatientData] = useState(emptyPatient);
-  const [providers, setProviders] = useState([]);
+  const [medicalRecords, setMedicalRecords] = useState([]);
+  const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [isRequestsManagerOpen, setIsRequestsManagerOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isTextRecordDialogOpen, setIsTextRecordDialogOpen] = useState(false);
 
-  // Dev toggle for empty states
-  const [isEmptyState, setIsEmptyState] = useState(true);
+  // Load real medical records
+  useEffect(() => {
+    const loadMedicalRecords = async () => {
+      if (currentUser?.id) {
+        try {
+          setIsLoadingRecords(true);
+          const { records } = await getUserMedicalRecords(currentUser.id);
+          setMedicalRecords(records || []);
+        } catch (error) {
+          console.error('Failed to load medical records:', error);
+          toast.error('Failed to load medical records');
+        } finally {
+          setIsLoadingRecords(false);
+        }
+      }
+    };
+
+    loadMedicalRecords();
+  }, [currentUser?.id]);
 
   // Use real user data if available
   const patient = currentUser?.profile ? {
-    id: patientId,
+    id: currentUser.id,
     name: currentUser.profile.fullName || 'User',
     email: (currentUser.profile as any).email || currentUser.profile.contact || 'user@example.com',
     phone: (currentUser.profile as any).phone || 'Not provided',
     avatar: '',
     dateOfBirth: currentUser.profile.dob || 'Not provided',
-    address: '123 Main St, Anytown, ST 12345', // This would come from profile in real app
-    ...patientData
-  } : patientData;
+    address: address || 'Not connected',
+    medicalHistory: medicalRecords
+  } : {
+    id: patientId,
+    name: 'User',
+    email: 'user@example.com',
+    phone: 'Not provided',
+    avatar: '',
+    dateOfBirth: 'Not provided',
+    address: address || 'Not connected',
+    medicalHistory: []
+  };
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const handleRecordCreated = () => {
+    // Reload records after creation
+    if (currentUser?.id) {
+      getUserMedicalRecords(currentUser.id).then(({ records }) => {
+        setMedicalRecords(records || []);
+      });
+    }
+    setIsUploadDialogOpen(false);
+    setIsTextRecordDialogOpen(false);
+  };
 
   // Modal states
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
