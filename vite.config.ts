@@ -33,8 +33,8 @@ export default defineConfig(({ mode }) => ({
       events: 'events',
       path: 'path-browserify',
       vm: 'vm-browserify',
-      'node:fs/promises': 'node-stdlib-browser/mock/empty',
-      'fs/promises': 'node-stdlib-browser/mock/empty',
+      'node:fs/promises': path.resolve(__dirname, './src/lib/mocks/fs-promises.js'),
+      'fs/promises': path.resolve(__dirname, './src/lib/mocks/fs-promises.js'),
     },
   },
   define: {
