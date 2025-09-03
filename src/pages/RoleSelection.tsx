@@ -2,15 +2,29 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/stores/authStore";
+import { useWallet } from "@/hooks/useWallet";
 import { User, Stethoscope, ArrowLeft } from "lucide-react";
 
 export default function RoleSelection() {
   const navigate = useNavigate();
-  const { setSelectedRole } = useAuthStore();
+  const { setSelectedRole, login } = useAuthStore();
+  const { address } = useWallet();
 
-  const handleRoleSelect = (role: "patient" | "provider") => {
+  const handleRoleSelect = async (role: "patient" | "provider") => {
     setSelectedRole(role);
-    navigate(`/onboarding/${role}`);
+    
+    if (address) {
+      try {
+        await login(role, {}, address);
+        const dashboardPath = role === 'patient' ? '/dashboard/patient' : '/dashboard/provider';
+        navigate(dashboardPath);
+      } catch (error) {
+        console.error('Login failed:', error);
+        navigate(`/onboarding/${role}`);
+      }
+    } else {
+      navigate(`/onboarding/${role}`);
+    }
   };
 
   const handleBackToLanding = () => {
