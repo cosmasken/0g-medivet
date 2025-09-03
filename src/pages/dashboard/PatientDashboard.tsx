@@ -386,11 +386,11 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   };
 
   const getSharedRecords = () => {
-    return patient.medicalHistory.filter(record => record.sharedWith.length > 0);
+    return medicalRecords.filter(record => record.sharedWith?.length > 0);
   };
 
   const getPrivateRecords = () => {
-    return patient.medicalHistory.filter(record => record.sharedWith.length === 0);
+    return medicalRecords.filter(record => !record.sharedWith?.length);
   };
 
   /**

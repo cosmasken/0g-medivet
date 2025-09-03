@@ -27,7 +27,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const { isLoading } = useAuthStore();
-  
+
   return (
     <Web3Provider>
       <QueryClientProvider client={queryClient}>
@@ -37,59 +37,58 @@ const App = () => {
           <HotToast position="top-right" />
           {isLoading && <LoadingSpinner />}
           <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Navigate to="/connect" replace />} />
-            <Route path="/connect" element={<ConnectWallet />} />
-            <Route path="/landing" element={<LandingPage />} />
-            
-            {/* Protected Routes - Require wallet connection */}
-            <Route path="/select-role" element={
-              <RequireWallet><RoleSelection /></RequireWallet>
-            } />
-            <Route path="/onboarding/patient" element={
-              <RequireWallet><PatientOnboarding /></RequireWallet>
-            } />
-            <Route path="/onboarding/provider" element={
-              <RequireWallet><ProviderOnboarding /></RequireWallet>
-            } />
-            <Route path="/dashboard/patient" element={
-              <RequireWallet><PatientDashboard /></RequireWallet>
-            } />
-            <Route path="/dashboard/provider" element={
-              <RequireWallet><ProviderDashboard /></RequireWallet>
-            } />
-            <Route path="/health-insights" element={
-              <RequireWallet><HealthInsights /></RequireWallet>
-            } />
-            <Route path="/audit-trail" element={
-              <RequireWallet><AuditTrail /></RequireWallet>
-            } />
-            <Route path="/medication-manager" element={
-              <RequireWallet><MedicationManager /></RequireWallet>
-            } />
-            <Route path="/health-timeline" element={
-              <RequireWallet><HealthTimeline /></RequireWallet>
-            } />
-            <Route path="/family-health-hub" element={
-              <RequireWallet><FamilyHealthHub /></RequireWallet>
-            } />
-            <Route path="/provider-dashboard" element={
-              <RequireWallet><ProviderDashboard /></RequireWallet>
-            } />
-            <Route path="/notifications" element={
-              <RequireWallet><Notifications /></RequireWallet>
-            } />
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </Web3Provider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Navigate to="/connect" replace />} />
+              <Route path="/connect" element={<ConnectWallet />} />
+              <Route path="/landing" element={<LandingPage />} />
+
+              {/* Protected Routes - Require wallet connection */}
+              <Route path="/select-role" element={
+                <RequireWallet><RoleSelection /></RequireWallet>
+              } />
+              <Route path="/onboarding/patient" element={
+                <RequireWallet><PatientOnboarding /></RequireWallet>
+              } />
+              <Route path="/onboarding/provider" element={
+                <RequireWallet><ProviderOnboarding /></RequireWallet>
+              } />
+              <Route path="/dashboard/patient" element={
+                <RequireWallet><PatientDashboard /></RequireWallet>
+              } />
+              <Route path="/dashboard/provider" element={
+                <RequireWallet><ProviderDashboard /></RequireWallet>
+              } />
+              <Route path="/health-insights" element={
+                <RequireWallet><HealthInsights /></RequireWallet>
+              } />
+              <Route path="/audit-trail" element={
+                <RequireWallet><AuditTrail /></RequireWallet>
+              } />
+              <Route path="/medication-manager" element={
+                <RequireWallet><MedicationManager /></RequireWallet>
+              } />
+              <Route path="/health-timeline" element={
+                <RequireWallet><HealthTimeline /></RequireWallet>
+              } />
+              <Route path="/family-health-hub" element={
+                <RequireWallet><FamilyHealthHub /></RequireWallet>
+              } />
+              <Route path="/provider-dashboard" element={
+                <RequireWallet><ProviderDashboard /></RequireWallet>
+              } />
+              <Route path="/notifications" element={
+                <RequireWallet><Notifications /></RequireWallet>
+              } />
+
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </Web3Provider>
   );
 };
-);
 
 export default App;
