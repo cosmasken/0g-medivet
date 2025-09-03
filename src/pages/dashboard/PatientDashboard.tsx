@@ -21,18 +21,14 @@ export default function PatientDashboard() {
   const { address, disconnect } = useWallet();
   const { currentUser, logout } = useAuthStore();
   const { providers } = useProviderStore();
-  const { textRecords, fileRecords, loadFileRecords } = useRecordsStore();
-  const { data: recordsData } = useRecordsQuery(currentUser?.id);
+  const { textRecords } = useRecordsStore();
+  const { data: recordsData } = useRecordsQuery();
   const [showAddProvider, setShowAddProvider] = useState(false);
   const [showHealthEditor, setShowHealthEditor] = useState(false);
   const [showAddRecord, setShowAddRecord] = useState(false);
 
-  // Load file records from localStorage
-  useEffect(() => {
-    if (currentUser?.id) {
-      loadFileRecords(currentUser.id);
-    }
-  }, [currentUser?.id, loadFileRecords]);
+  // Get file records from API
+  const fileRecords = recordsData?.records || [];
 
   // Real patient data from user profile
   const patient = {
@@ -405,9 +401,11 @@ export default function PatientDashboard() {
                             <p className="text-sm text-muted-foreground">
                               {record.category} • {new Date(record.created_at).toLocaleDateString()}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              Size: {(record.file_size / 1024 / 1024).toFixed(2)} MB
-                            </p>
+                            {record.file_size && (
+                              <p className="text-sm text-muted-foreground">
+                                Size: {(record.file_size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            )}
                           </div>
                         </div>
                         <Badge variant="default">File</Badge>
