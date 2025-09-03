@@ -10,7 +10,7 @@ export function useUpload() {
   const [uploadStatus, setUploadStatus] = useState('');
   const [txHash, setTxHash] = useState('');
 
-  const uploadFile = useCallback(async (blob: Blob, networkType: NetworkType = 'turbo') => {
+  const uploadFile = useCallback(async (blob: Blob, networkType: NetworkType = 'turbo', fileSize?: number) => {
     if (!blob) {
       setError('No file provided');
       return null;
@@ -36,15 +36,17 @@ export function useUpload() {
         throw new Error(`Signer error: ${signerErr?.message}`);
       }
       
-      // Create submission object
+      // Create submission object with proper structure
       const submission = {
-        length: blob.size || blob.data?.length || 0,
+        length: fileSize || blob.size || 0,
         tags: '0x',
         nodes: [{
           root: '0x0000000000000000000000000000000000000000000000000000000000000000',
           height: 1
         }]
       };
+      
+      console.log('Created submission:', JSON.stringify(submission, null, 2));
       
       // Calculate fees
       setUploadStatus('Calculating fees...');
