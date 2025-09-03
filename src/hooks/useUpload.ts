@@ -55,31 +55,14 @@ export function useUpload() {
         throw new Error(`Signer error: ${signerErr?.message}`);
       }
       
-      // 2. Submit transaction to flow contract
-      setUploadStatus('Confirming transaction...');
-      console.log('📝 Submitting transaction to flow contract...');
-      const [txResult, txErr] = await submitTransaction(flowContract, submission, storageFee);
-      if (!txResult) {
-        console.error('❌ Transaction submission failed:', txErr);
-        throw new Error(`Transaction error: ${txErr?.message}`);
-      }
+      // Skip flow contract submission for now - upload directly to storage
+      setUploadStatus('Uploading to storage...');
+      console.log('⚠️ Skipping flow contract submission, uploading directly to storage');
       
-      // 3. Store transaction hash
-      transactionHash = txResult.tx.hash;
-      setTxHash(transactionHash);
-      console.log('✅ Transaction submitted successfully:', {
-        txHash: transactionHash,
-        gasUsed: txResult.receipt?.gasUsed?.toString(),
-        blockNumber: txResult.receipt?.blockNumber
-      });
-      setUploadStatus('Waiting for transaction confirmation...');
-      
-      // 4. Get network configuration
+      // Get network configuration
       const network = getNetworkConfig(networkType);
       
-      // 5. Upload file to storage
-      setUploadStatus('Uploading file to storage...');
-      console.log('☁️ Starting storage upload...');
+      // Upload file to storage
       const [uploadSuccess, uploadErr] = await uploadToStorage(
         blob, 
         network.storageRpc,
@@ -97,7 +80,7 @@ export function useUpload() {
       
       return {
         success: true,
-        txHash: transactionHash,
+        txHash: 'direct-upload', // Placeholder since no transaction
         merkleRoot: submission.nodes[0]?.root
       };
       
