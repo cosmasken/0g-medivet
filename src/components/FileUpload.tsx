@@ -31,6 +31,8 @@ const FileUpload = ({
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [estimatedFee, setEstimatedFee] = useState<string>('');
+  const [category, setCategory] = useState<string>('Other');
+  const [tags, setTags] = useState<string[]>([]);
   const [step, setStep] = useState<'select' | 'confirm' | 'estimate' | 'upload'>('select');
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
