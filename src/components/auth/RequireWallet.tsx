@@ -10,7 +10,19 @@ interface RequireWalletProps {
 
 const RequireWallet: React.FC<RequireWalletProps> = ({ children }) => {
   const { isConnected, address } = useWallet();
-  const { isAuthenticated, currentUser, completeOnboarding, selectedRole } = useAuthStore();
+  const { isAuthenticated, currentUser, completeOnboarding, selectedRole, isLoading } = useAuthStore();
+
+  // Show loading while auth operations are in progress
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Redirect to connect if wallet not connected
   if (!isConnected || !address) {
@@ -27,13 +39,20 @@ const RequireWallet: React.FC<RequireWalletProps> = ({ children }) => {
     return <>{children}</>;
   }
 
-  // Not authenticated - redirect to role selection if no role, otherwise stay on current page
+  // Not authenticated - redirect to role selection if no role
   if (!selectedRole) {
     return <Navigate to="/role-selection" replace />;
   }
 
-  // Has role but not authenticated yet - allow the page to load (login in progress)
-  return <>{children}</>;
+  // Has role but not authenticated yet - show loading
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p>Authenticating...</p>
+      </div>
+    </div>
+  );
 };
 
 export default RequireWallet;

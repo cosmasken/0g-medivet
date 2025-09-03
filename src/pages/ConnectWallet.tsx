@@ -11,19 +11,39 @@ const ConnectWallet = () => {
   const { connect, disconnect, isConnected, isConnecting, address } = useWallet();
   const { login, logout, selectedRole, isLoading } = useAuthStore();
 
+  const [isAutoLogging, setIsAutoLogging] = useState(false);
+
   useEffect(() => {
-    if (isConnected && address && selectedRole) {
+    if (isConnected && address && selectedRole && !isAuthenticated) {
+      setIsAutoLogging(true);
       // Auto-login with stored role
-      login(selectedRole, {}, address).catch((error) => {
-        console.error('Auto-login failed:', error);
-        // If auto-login fails, redirect to role selection
-        navigate('/role-selection');
-      });
+      login(selectedRole, {}, address)
+        .then(() => {
+          const dashboardPath = selectedRole === 'patient' ? '/dashboard/patient' : '/dashboard/provider';
+          navigate(dashboardPath);
+        })
+        .catch((error) => {
+          console.error('Auto-login failed:', error);
+          navigate('/role-selection');
+        })
+        .finally(() => {
+          setIsAutoLogging(false);
+        });
     } else if (isConnected && address && !selectedRole) {
-      // First time user, go to role selection
       navigate('/role-selection');
     }
-  }, [isConnected, address, selectedRole, login, navigate]);
+  }, [isConnected, address, selectedRole, login, navigate, isAuthenticated]);
+
+  if (isAutoLogging || isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Connecting...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleConnect = () => {
     if (!isConnected) {
