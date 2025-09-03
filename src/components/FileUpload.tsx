@@ -55,7 +55,7 @@ const FileUpload = ({
     
     try {
       // Create blob for fee calculation
-      const blob = await createBlobFromFile(selectedFile);
+      const blob = createBlobFromFile(selectedFile);
       
       // Create submission object using file size instead of blob.data.length
       const submission = {
@@ -92,7 +92,7 @@ const FileUpload = ({
       resetUploadState();
       
       // Create blob from file
-      const blob = await createBlobFromFile(selectedFile);
+      const blob = createBlobFromFile(selectedFile);
       
       // Upload to 0G
       const resultTxHash = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
