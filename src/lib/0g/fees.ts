@@ -53,13 +53,53 @@ export function getFlowContract(flowAddress: string, signer: any): Contract {
 }
 
 /**
- * Calculates fees for a submission
+ * Simple calculateFees function for current usage
+ * @param submission The submission object
+ * @param networkType The network type
+ * @returns A promise that resolves to the fee information and any error
+ */
+export async function calculateFees(
+  submission: any, 
+  networkType: string
+): Promise<[FeeInfo | null, Error | null]> {
+  try {
+    console.log('Starting fee calculation...', { submission, networkType });
+    
+    // Get provider and signer
+    const [provider, providerErr] = await getProvider();
+    if (!provider) {
+      throw new Error(`Provider error: ${providerErr?.message}`);
+    }
+    
+    const [signer, signerErr] = await getSigner(provider);
+    if (!signer) {
+      throw new Error(`Signer error: ${signerErr?.message}`);
+    }
+    
+    // Get flow contract address based on network
+    const flowAddress = networkType === 'turbo' 
+      ? '0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628'
+      : '0x0460aA47b41a66694c0a73f667a1b795A5ED3556';
+    
+    console.log('Flow contract address:', flowAddress);
+    
+    const flowContract = getFlowContract(flowAddress, signer);
+    
+    return await calculateFeesWithContract(submission, flowContract, provider);
+  } catch (error) {
+    console.error('Fee calculation error:', error);
+    return [null, error instanceof Error ? error : new Error(String(error))];
+  }
+}
+
+/**
+ * Calculates fees for a submission with contract
  * @param submission The submission object
  * @param flowContract The flow contract
  * @param provider The Ethereum provider
  * @returns A promise that resolves to the fee information and any error
  */
-export async function calculateFees(
+export async function calculateFeesWithContract(
   submission: any, 
   flowContract: Contract, 
   provider: BrowserProvider
