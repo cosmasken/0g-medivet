@@ -39,10 +39,12 @@ export interface User {
 interface AuthState {
   currentUser: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (role: Role, profile: PatientProfile | ProviderProfile, walletAddress: string) => Promise<void>;
   logout: () => void;
   updateProfile: (profile: PatientProfile | ProviderProfile) => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  setLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,9 +52,15 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       currentUser: null,
       isAuthenticated: false,
+      isLoading: false,
+
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
+      },
 
       login: async (role: Role, profile: PatientProfile | ProviderProfile, walletAddress: string) => {
         try {
+          set({ isLoading: true });
           // Authenticate with backend
           const { user } = await authenticateUser(walletAddress, role);
           
@@ -75,9 +83,11 @@ export const useAuthStore = create<AuthState>()(
 
           set({
             currentUser: newUser,
-            isAuthenticated: true
+            isAuthenticated: true,
+            isLoading: false
           });
         } catch (error) {
+          set({ isLoading: false });
           console.error('Login failed:', error);
           throw error;
         }
@@ -94,6 +104,7 @@ export const useAuthStore = create<AuthState>()(
         const currentUser = get().currentUser;
         if (currentUser) {
           try {
+            set({ isLoading: true });
             // Update profile in backend
             await apiUpdateProfile(currentUser.id, {
               full_name: profile.fullName,
@@ -109,8 +120,9 @@ export const useAuthStore = create<AuthState>()(
               ...currentUser,
               profile
             };
-            set({ currentUser: updatedUser });
+            set({ currentUser: updatedUser, isLoading: false });
           } catch (error) {
+            set({ isLoading: false });
             console.error('Profile update failed:', error);
             throw error;
           }
@@ -121,14 +133,16 @@ export const useAuthStore = create<AuthState>()(
         const currentUser = get().currentUser;
         if (currentUser) {
           try {
+            set({ isLoading: true });
             await completeUserOnboarding(currentUser.id);
             
             const updatedUser = {
               ...currentUser,
               isOnboarded: true
             };
-            set({ currentUser: updatedUser });
+            set({ currentUser: updatedUser, isLoading: false });
           } catch (error) {
+            set({ isLoading: false });
             console.error('Onboarding completion failed:', error);
             throw error;
           }

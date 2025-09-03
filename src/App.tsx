@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster as HotToast } from "react-hot-toast";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useAuthStore } from "@/stores/authStore";
 import { Web3Provider } from "@/providers/Web3Provider";
 import RequireWallet from "@/components/auth/RequireWallet";
 import ConnectWallet from "./pages/ConnectWallet";
@@ -23,14 +25,18 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <Web3Provider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <HotToast position="top-right" />
-        <BrowserRouter>
+const App = () => {
+  const { isLoading } = useAuthStore();
+  
+  return (
+    <Web3Provider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <HotToast position="top-right" />
+          {isLoading && <LoadingSpinner />}
+          <BrowserRouter>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Navigate to="/connect" replace />} />
@@ -82,6 +88,8 @@ const App = () => (
       </TooltipProvider>
     </QueryClientProvider>
   </Web3Provider>
+  );
+};
 );
 
 export default App;

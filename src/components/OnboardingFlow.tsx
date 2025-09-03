@@ -23,7 +23,7 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
@@ -37,9 +37,13 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
         contact: profile.email || currentUser?.profile?.contact || '',
       };
       
-      updateProfile(updatedProfile);
-      completeOnboarding();
-      onComplete();
+      try {
+        await updateProfile(updatedProfile);
+        await completeOnboarding();
+        onComplete();
+      } catch (error) {
+        console.error('Onboarding completion failed:', error);
+      }
     }
   };
 
