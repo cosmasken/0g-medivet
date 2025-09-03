@@ -88,6 +88,7 @@ export const MedicalRecordCard = ({
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [isMonetized, setIsMonetized] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const handleShare = (walletAddress: string) => {
     onShareRecord?.(record.id, walletAddress);
