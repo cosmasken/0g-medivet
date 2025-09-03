@@ -91,8 +91,8 @@ export const MedicalRecordCard = ({
   const [showAttachmentViewer, setShowAttachmentViewer] = useState(false);
   const [showSharingModal, setShowSharingModal] = useState(false);
 
-  const Icon = recordTypeIcons[record.type];
-  const colorClass = recordTypeColors[record.type];
+  const Icon = recordTypeIcons[record.category] || recordTypeIcons['Other'] || FileText;
+  const colorClass = recordTypeColors[record.category] || recordTypeColors['Other'] || 'bg-gray-100 text-gray-600';
   const potentialEarnings = calculatePotentialEarnings(record);
 
   const handleViewAttachment = (attachment: MedicalAttachment) => {
@@ -256,7 +256,7 @@ export const MedicalRecordCard = ({
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Shared with {record.sharedWith.length} provider(s)</span>
+                <span>Shared with {record.sharedWith?.length || 0} provider(s)</span>
                 {isPatientView && isMonetized && (
                   <span className="text-green-600">• Est. ${potentialEarnings.estimated}/sale</span>
                 )}
