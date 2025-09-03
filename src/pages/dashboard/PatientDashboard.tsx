@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +119,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   const [isRequestsManagerOpen, setIsRequestsManagerOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isTextRecordDialogOpen, setIsTextRecordDialogOpen] = useState(false);
+  const [isEmptyState, setIsEmptyState] = useState(false);
 
   // Load real medical records
   useEffect(() => {
@@ -261,21 +262,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
    * Dev function to toggle between empty and populated states
    */
   const toggleEmptyState = () => {
-    if (isEmptyState) {
-      // Load populated data
-      const samplePatient = mockPatients.find(p => p.id === patientId) || mockPatients[0];
-      const sampleProviders = mockProviders.filter(provider =>
-        provider.patients.includes(patientId)
-      );
-      setPatientData(samplePatient);
-      setProviders(sampleProviders);
-      setIsEmptyState(false);
-    } else {
-      // Reset to empty state
-      setPatientData(emptyPatient);
-      setProviders([]);
-      setIsEmptyState(true);
-    }
+    setIsEmptyState(!isEmptyState);
   };
 
   // Add new medical record
