@@ -14,9 +14,10 @@ const ConnectWallet = () => {
   useEffect(() => {
     if (isConnected && address && selectedRole) {
       // Auto-login with stored role
-      login(selectedRole, {}, address).then(() => {
-        const dashboardPath = selectedRole === 'patient' ? '/dashboard/patient' : '/dashboard/provider';
-        navigate(dashboardPath);
+      login(selectedRole, {}, address).catch((error) => {
+        console.error('Auto-login failed:', error);
+        // If auto-login fails, redirect to role selection
+        navigate('/role-selection');
       });
     } else if (isConnected && address && !selectedRole) {
       // First time user, go to role selection

@@ -17,16 +17,22 @@ const RequireWallet: React.FC<RequireWalletProps> = ({ children }) => {
     return <Navigate to="/connect" replace />;
   }
 
-  // Redirect to role selection if no role selected (first time users)
-  if (!selectedRole && !isAuthenticated) {
+  // If authenticated, show onboarding or children
+  if (isAuthenticated) {
+    // Show onboarding if user hasn't completed it
+    if (currentUser && !currentUser.isOnboarded) {
+      return <OnboardingFlow onComplete={completeOnboarding} />;
+    }
+    // User is authenticated and onboarded, show protected content
+    return <>{children}</>;
+  }
+
+  // Not authenticated - redirect to role selection if no role, otherwise stay on current page
+  if (!selectedRole) {
     return <Navigate to="/role-selection" replace />;
   }
 
-  // Show onboarding if user hasn't completed it
-  if (currentUser && !currentUser.isOnboarded) {
-    return <OnboardingFlow onComplete={completeOnboarding} />;
-  }
-
+  // Has role but not authenticated yet - allow the page to load (login in progress)
   return <>{children}</>;
 };
 
