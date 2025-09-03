@@ -202,8 +202,8 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   };
 
   // Record sharing and monetization handlers
-  const handleShareRecord = (recordId: string, providerIds: string[]) => {
-    shareRecordMutation.mutate({ recordId, providerIds });
+  const handleShareRecord = (recordId: string, walletAddress: string) => {
+    shareRecordMutation.mutate({ recordId, providerWalletAddress: walletAddress });
   };
 
   const handleMonetizeRecord = (recordId: string, enabled: boolean) => {

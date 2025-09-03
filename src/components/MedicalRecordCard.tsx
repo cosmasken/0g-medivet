@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { AttachmentViewer } from "@/components/AttachmentViewer";
+import { ShareRecordModal } from "@/components/ShareRecordModal";
 import { 
   FileText, 
   TestTube, 
@@ -67,7 +68,7 @@ interface MedicalRecordCardProps {
   compact?: boolean;
   showActions?: boolean;
   isPatientView?: boolean;
-  onShareRecord?: (recordId: string, providerIds: string[]) => void;
+  onShareRecord?: (recordId: string, walletAddress: string) => void;
   onMonetizeRecord?: (recordId: string, enabled: boolean) => void;
   onUpdateRecord?: (recordId: string, updates: Partial<MedicalRecord>) => void;
 }
@@ -86,7 +87,11 @@ export const MedicalRecordCard = ({
   const [editedRecord, setEditedRecord] = useState(record);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [isMonetized, setIsMonetized] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  const handleShare = (walletAddress: string) => {
+    onShareRecord?.(record.id, walletAddress);
+  };
   const [selectedAttachment, setSelectedAttachment] = useState<MedicalAttachment | null>(null);
   const [showAttachmentViewer, setShowAttachmentViewer] = useState(false);
   const [showSharingModal, setShowSharingModal] = useState(false);
@@ -643,6 +648,14 @@ export const MedicalRecordCard = ({
         attachment={selectedAttachment}
         isOpen={showAttachmentViewer}
         onClose={() => setShowAttachmentViewer(false)}
+      />
+
+      {/* Share Record Modal */}
+      <ShareRecordModal
+        open={showShareModal}
+        onOpenChange={setShowShareModal}
+        recordTitle={record.title}
+        onShare={handleShare}
       />
     </>
   );
