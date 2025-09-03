@@ -7,6 +7,7 @@ import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useUpload } from '@/hooks/useUpload';
 import { createBlobFromFile } from '@/lib/0g/blob';
+import { BrowserProvider } from 'ethers';
 import toast from 'react-hot-toast';
 
 interface FileUploadProps {
@@ -45,12 +46,52 @@ const FileUpload = ({
     event.target.value = '';
   }, [address, maxSize]);
 
-  const handleConfirmFile = useCallback(() => {
+  const handleConfirmFile = useCallback(async () => {
+    if (!selectedFile) return;
+    
     setStep('estimate');
-    // Mock fee estimation - in production, calculate actual 0G fees
-    const mockFee = (Math.random() * 0.01 + 0.001).toFixed(6);
-    setEstimatedFee(mockFee);
-  }, []);
+    setEstimatedFee('Calculating...');
+    
+    try {
+      // Create blob and submission for fee calculation
+      const blob = await createBlobFromFile(selectedFile);
+      
+      // Create submission object for fee calculation
+      const submission = {
+        length: blob.data.length,
+        tags: '0x',
+        nodes: [{
+          root: blob.merkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000',
+          height: 1
+        }]
+      };
+      
+      // Get provider and signer
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      // Get flow contract (using testnet address)
+      const flowAddress = '0x0460aA47b41a66694c0a73f667a1b795A5ED3556'; // 0G testnet flow contract
+      const { getFlowContract, calculateFees } = await import('@/lib/0g/fees');
+      const flowContract = getFlowContract(flowAddress, signer);
+      
+      // Calculate actual fees
+      const [feeInfo, error] = await calculateFees(submission, flowContract, provider);
+      
+      if (error || !feeInfo) {
+        throw error || new Error('Failed to calculate fees');
+      }
+      
+      setEstimatedFee(feeInfo.totalFee);
+      
+    } catch (error) {
+      console.error('Fee calculation failed:', error);
+      // Fallback to mock fee if calculation fails
+      const mockFee = (Math.random() * 0.01 + 0.001).toFixed(6);
+      setEstimatedFee(mockFee);
+      toast.error('Fee estimation failed, showing approximate cost');
+    }
+  }, [selectedFile]);
 
   const handleConfirmUpload = useCallback(async () => {
     if (!selectedFile) return;
