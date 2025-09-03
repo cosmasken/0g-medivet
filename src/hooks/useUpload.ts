@@ -3,6 +3,7 @@ import { Blob } from '@0glabs/0g-ts-sdk/browser';
 import { uploadToStorage, submitTransaction } from '@/lib/0g/uploader';
 import { getProvider, getSigner, getFlowContract, calculateFees } from '@/lib/0g/fees';
 import { getNetworkConfig, NetworkType } from '@/lib/0g/network';
+import { Contract } from 'ethers';
 
 export function useUpload() {
   const [loading, setLoading] = useState(false);
@@ -10,9 +11,25 @@ export function useUpload() {
   const [uploadStatus, setUploadStatus] = useState('');
   const [txHash, setTxHash] = useState('');
 
-  const uploadFile = useCallback(async (blob: Blob, networkType: NetworkType = 'turbo', fileSize?: number, originalFile?: File) => {
-    if (!blob) {
-      setError('No file provided');
+  const uploadFile = useCallback(async (
+    blob: Blob | null, 
+    submission: any | null, 
+    flowContract: Contract | null, 
+    storageFee: bigint,
+    networkType: NetworkType = 'turbo'
+  ) => {
+    console.log('🚀 Starting upload process:', {
+      hasBlob: !!blob,
+      hasSubmission: !!submission,
+      hasFlowContract: !!flowContract,
+      storageFee: storageFee.toString(),
+      networkType
+    });
+    
+    if (!blob || !submission || !flowContract) {
+      const error = 'Missing required upload data';
+      console.error('❌ Upload validation failed:', { blob: !!blob, submission: !!submission, flowContract: !!flowContract });
+      setError(error);
       return null;
     }
     
@@ -21,93 +38,84 @@ export function useUpload() {
     setUploadStatus('Preparing file...');
     setTxHash('');
     
-    const transactionHash = '';
+    let transactionHash = '';
     
     try {
-      // Get provider and signer
+      // 1. Get provider and signer
       console.log('📡 Getting provider and signer...');
       const [provider, providerErr] = await getProvider();
       if (!provider) {
+        console.error('❌ Provider failed:', providerErr);
         throw new Error(`Provider error: ${providerErr?.message}`);
       }
       
       const [signer, signerErr] = await getSigner(provider);
       if (!signer) {
+        console.error('❌ Signer failed:', signerErr);
         throw new Error(`Signer error: ${signerErr?.message}`);
       }
       
-      // Create submission object with actual blob data
-      const submission = {
-        length: fileSize || blob.size || 0,
-        tags: '0x',
-        nodes: [{
-          root: blob.merkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000',
-          height: 1
-        }]
-      };
-      
-      console.log('Created submission with merkle root:', {
-        length: submission.length,
-        merkleRoot: blob.merkleRoot,
-        hasValidRoot: !!blob.merkleRoot
-      });
-      
-      // Calculate fees
-      setUploadStatus('Calculating fees...');
-      const [feeInfo, feeErr] = await calculateFees(submission, networkType);
-      if (!feeInfo || feeErr) {
-        throw new Error(`Fee calculation error: ${feeErr?.message}`);
+      // 2. Submit transaction to flow contract
+      setUploadStatus('Confirming transaction...');
+      console.log('📝 Submitting transaction to flow contract...');
+      const [txResult, txErr] = await submitTransaction(flowContract, submission, storageFee);
+      if (!txResult) {
+        console.error('❌ Transaction submission failed:', txErr);
+        throw new Error(`Transaction error: ${txErr?.message}`);
       }
       
-      // Skip flow contract submission for now and go directly to storage
-      setUploadStatus('Uploading to 0G storage...');
-      console.log('⚠️ Skipping flow contract submission, uploading directly to storage');
+      // 3. Store transaction hash
+      transactionHash = txResult.tx.hash;
+      setTxHash(transactionHash);
+      console.log('✅ Transaction submitted successfully:', {
+        txHash: transactionHash,
+        gasUsed: txResult.receipt?.gasUsed?.toString(),
+        blockNumber: txResult.receipt?.blockNumber
+      });
+      setUploadStatus('Waiting for transaction confirmation...');
       
-      // Get network configuration
+      // 4. Get network configuration
       const network = getNetworkConfig(networkType);
       
-      // Upload file to storage using original File object
+      // 5. Upload file to storage
+      setUploadStatus('Uploading file to storage...');
+      console.log('☁️ Starting storage upload...');
       const [uploadSuccess, uploadErr] = await uploadToStorage(
-        originalFile || blob, // Use originalFile if available, fallback to blob
+        blob, 
         network.storageRpc,
         network.l1Rpc,
         signer
       );
-      //   originalFile || blob, 
-      //   network.storageRpc,
-      //   network.l1Rpc,
-      //   signer
-      // );
       
       if (!uploadSuccess) {
-        throw new Error(`Storage upload failed: ${uploadErr?.message}`);
+        console.error('❌ Storage upload failed:', uploadErr);
+        throw new Error(`Storage upload error: ${uploadErr?.message}`);
       }
       
-      setUploadStatus('Upload complete!');
-      return blob.merkleRoot || 'upload-success';
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log('✅ Upload completed successfully');
+      setUploadStatus('Upload completed successfully!');
+      
+      return {
+        success: true,
+        txHash: transactionHash,
+        merkleRoot: submission.nodes[0]?.root
+      };
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+      console.error('❌ Upload process failed:', err);
       setError(errorMessage);
-      setUploadStatus('');
-      return transactionHash || null;
+      return null;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const resetUploadState = useCallback(() => {
-    setLoading(false);
-    setError('');
-    setUploadStatus('');
-    setTxHash('');
-  }, []);
-
   return {
+    uploadFile,
     loading,
     error,
     uploadStatus,
-    txHash,
-    uploadFile,
-    resetUploadState
+    txHash
   };
 }
