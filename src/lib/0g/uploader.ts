@@ -73,7 +73,7 @@ export async function uploadToStorage(
       expectedReplica: 1,
       finalityRequired: true,
       tags: '0x',
-      skipTx: false,
+      skipTx: true, // Skip all transaction operations
       fee: BigInt(0)
     };
     
