@@ -78,11 +78,8 @@ export function useUpload() {
         throw new Error(`Storage upload failed: ${uploadErr?.message}`);
       }
       
-      // Generate mock transaction hash for now
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      setTxHash(mockTxHash);
       setUploadStatus('Upload complete!');
-      return mockTxHash;
+      return blob.merkleRoot || 'upload-success';
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setError(errorMessage);

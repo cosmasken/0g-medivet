@@ -79,10 +79,7 @@ const FileUpload = ({
       
     } catch (error) {
       console.error('Fee calculation failed:', error);
-      // Fallback to mock fee if calculation fails
-      const mockFee = (Math.random() * 0.01 + 0.001).toFixed(6);
-      setEstimatedFee(mockFee);
-      toast.error('Fee estimation failed, showing approximate cost');
+      throw new Error('Unable to calculate fees. Please try again.');
     }
   }, [selectedFile]);
 
