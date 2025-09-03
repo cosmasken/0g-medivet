@@ -111,11 +111,19 @@ export function useUpload() {
     }
   }, []);
 
+  const resetUploadState = useCallback(() => {
+    setLoading(false);
+    setError('');
+    setUploadStatus('');
+    setTxHash('');
+  }, []);
+
   return {
     uploadFile,
     loading,
     error,
     uploadStatus,
-    txHash
+    txHash,
+    resetUploadState
   };
 }
