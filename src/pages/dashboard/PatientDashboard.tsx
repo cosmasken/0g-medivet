@@ -122,7 +122,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   const { data: recordsData, isLoading: isLoadingRecords, error: recordsError } = useRecordsQuery();
   const createRecordMutation = useCreateRecordMutation();
   const shareRecordMutation = useShareRecordMutation();
-  
+
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [isRequestsManagerOpen, setIsRequestsManagerOpen] = useState(false);
@@ -1063,7 +1063,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                   Add Provider
                 </Button>
               </div>
-              
+
               <div className="grid gap-6">
                 <Card>
                   <CardHeader>
@@ -1076,7 +1076,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                     <ProviderSearch />
                   </CardContent>
                 </Card>
-                
+
                 {providers.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card>
@@ -1087,7 +1087,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                         <ProviderSearch filterByAccess="view" />
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-sm">Edit Access</CardTitle>
@@ -1096,7 +1096,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                         <ProviderSearch filterByAccess="edit" />
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-sm">Full Access</CardTitle>
@@ -1108,566 +1108,556 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                   </div>
                 )}
               </div>
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="specialty" className="text-right">Specialty</Label>
-                        <Select
-                          value={providerForm.specialty}
-                          onValueChange={(value) => setProviderForm({ ...providerForm, specialty: value })}
-                        >
-                          <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="Select specialty" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="General Practice">General Practice</SelectItem>
-                            <SelectItem value="Internal Medicine">Internal Medicine</SelectItem>
-                            <SelectItem value="Cardiology">Cardiology</SelectItem>
-                            <SelectItem value="Dermatology">Dermatology</SelectItem>
-                            <SelectItem value="Orthopedics">Orthopedics</SelectItem>
-                            <SelectItem value="Psychiatry">Psychiatry</SelectItem>
-                            <SelectItem value="Radiology">Radiology</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="organization" className="text-right">Organization</Label>
-                        <Input
-                          id="organization"
-                          placeholder="Sample Medical Center (auto-fill)"
-                          value={providerForm.organization}
-                          onChange={(e) => setProviderForm({ ...providerForm, organization: e.target.value })}
-                          className="col-span-3"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="providerEmail" className="text-right">Email</Label>
-                        <Input
-                          id="providerEmail"
-                          type="email"
-                          placeholder="doctor@example.com (auto-fill)"
-                          value={providerForm.email}
-                          onChange={(e) => setProviderForm({ ...providerForm, email: e.target.value })}
-                          className="col-span-3"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="providerPhone" className="text-right">Phone</Label>
-                        <Input
-                          id="providerPhone"
-                          placeholder="(555) 123-0000 (auto-fill)"
-                          value={providerForm.phone}
-                          onChange={(e) => setProviderForm({ ...providerForm, phone: e.target.value })}
-                          className="col-span-3"
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsProviderModalOpen(false)}>Cancel</Button>
-                      <Button onClick={addProvider}>Connect Provider</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {connectedProviders.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium mb-2">No Connected Providers</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Connect with healthcare providers to manage permissions and share your medical information securely.
-                  </p>
-                  <div className="flex justify-center gap-2">
-                    <Button onClick={() => setIsProviderModalOpen(true)}>
-                      <Users className="h-4 w-4 mr-2" />
-                      Connect First Provider
-                    </Button>
-                    <Button variant="outline" onClick={toggleEmptyState}>
-                      {isEmptyState ? "Load Sample Data" : "Show Empty State"}
-                    </Button>
-                  </div>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {connectedProviders.map((provider) => (
-                    <Card key={provider.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-gradient-to-br from-medical-accent/20 to-medical-warning/20">
-                              {provider.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <CardTitle className="text-base">{provider.name}</CardTitle>
-                            <CardDescription>{provider.specialty}</CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
-                          <p><strong>Organization:</strong> {provider.organization}</p>
-                          <p><strong>Email:</strong> {provider.email}</p>
-                          <p><strong>Phone:</strong> {provider.phone}</p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          className="w-full mt-4"
-                          onClick={() => setIsRequestsManagerOpen(true)}
-                        >
-                          <Settings className="h-4 w-4 mr-2" />
-                          Manage Permissions
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="upload" className="space-y-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Upload Medical Files</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Upload your medical documents securely to 0G decentralized storage
-                  </p>
-                </div>
-
-                <FileUpload
-                  onUploadComplete={(fileId) => {
-                    console.log('File uploaded:', fileId);
-                  }}
-                />
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Uploads</CardTitle>
-                    <CardDescription>
-                      Your recently uploaded medical files
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-sm text-gray-500">
-                      No files uploaded yet. Use the upload area above to add your first medical document.
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="audit" className="space-y-6">
-              <AuditTrail patientId={patient.id} />
-            </TabsContent>
-
-            <TabsContent value="monetization" className="space-y-6">
-              <MonetizationDashboard
-                patientId={patient.id}
-                medicalRecords={patient.medicalHistory}
-                onToggleMonetization={(recordId, enabled) => {
-                  console.log(`Toggled monetization for record ${recordId}: ${enabled}`);
-                  // In a real app, this would update the patient's monetization settings
-                }}
-              />
             </TabsContent>
           </Tabs>
         </div>
-      </div>
 
-      {/* Provider Requests Manager */}
-      <ProviderRequestsManager
-        patientId={patient.id}
-        isOpen={isRequestsManagerOpen}
-        onClose={() => setIsRequestsManagerOpen(false)}
-        onRequestUpdate={handleProviderRequestUpdate}
-      />
-
-      {/* Profile Settings Dialog */}
-      <Dialog open={showProfileSettingsDialog} onOpenChange={setShowProfileSettingsDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Profile Settings
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="profile-first-name">First Name</Label>
-                <Input
-                  id="profile-first-name"
-                  defaultValue={patient.name.split(' ')[0]}
-                  placeholder="First name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="profile-last-name">Last Name</Label>
-                <Input
-                  id="profile-last-name"
-                  defaultValue={patient.name.split(' ').slice(1).join(' ')}
-                  placeholder="Last name"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="profile-email">Email Address</Label>
-              <Input
-                id="profile-email"
-                type="email"
-                defaultValue={patient.email}
-                placeholder="Email address"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="profile-phone">Phone Number</Label>
-                <Input
-                  id="profile-phone"
-                  defaultValue={patient.phone}
-                  placeholder="Phone number"
-                />
-              </div>
-              <div>
-                <Label htmlFor="profile-dob">Date of Birth</Label>
-                <Input
-                  id="profile-dob"
-                  type="date"
-                  defaultValue={patient.dateOfBirth}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="profile-address">Address</Label>
-              <Input
-                id="profile-address"
-                defaultValue={patient.address}
-                placeholder="Full address"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="emergency-name">Emergency Contact Name</Label>
-                <Input
-                  id="emergency-name"
-                  defaultValue={patient.emergencyContact?.name || ''}
-                  placeholder="Emergency contact name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="emergency-phone">Emergency Contact Phone</Label>
-                <Input
-                  id="emergency-phone"
-                  defaultValue={patient.emergencyContact?.phone || ''}
-                  placeholder="Emergency contact phone"
-                />
-              </div>
+        {/* Modals */}
+        <Dialog open={showProfileSettingsDialog} onOpenChange={setShowProfileSettingsDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Profile Settings</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Update your profile information and preferences.
+              </p>
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowProfileSettingsDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => {
-                // Mock save functionality
-                setTimeout(() => {
-                  setShowProfileSettingsDialog(false);
-                }, 500);
-              }}>
+              <Button onClick={() => setShowProfileSettingsDialog(false)}>
                 Save Changes
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+              value={providerForm.email}
+              onChange={(e) => setProviderForm({ ...providerForm, email: e.target.value })}
+              className="col-span-3"
+            />
           </div>
-        </DialogContent>
-      </Dialog>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="providerPhone" className="text-right">Phone</Label>
+            <Input
+              id="providerPhone"
+              placeholder="(555) 123-0000 (auto-fill)"
+              value={providerForm.phone}
+              onChange={(e) => setProviderForm({ ...providerForm, phone: e.target.value })}
+              className="col-span-3"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsProviderModalOpen(false)}>Cancel</Button>
+          <Button onClick={addProvider}>Connect Provider</Button>
+        </DialogFooter>
+        {/* </DialogContent>
+    </Dialog> */}
 
-      {/* Privacy Settings Dialog */}
-      <Dialog open={showPrivacySettingsDialog} onOpenChange={setShowPrivacySettingsDialog}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Privacy Settings
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-6 py-4">
-              <div>
-                <h4 className="text-sm font-medium mb-3">Data Sharing Preferences</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-sm">Allow Family Access</div>
-                      <p className="text-xs text-muted-foreground">Let designated family members view your health records</p>
-                    </div>
-                    <Switch
-                      checked={patient.privacySettings?.allowFamilyAccess || false}
-                      onCheckedChange={(checked) => updatePrivacySetting('allowFamilyAccess', checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-sm">Anonymous Research</div>
-                      <p className="text-xs text-muted-foreground">Contribute anonymized data to medical research</p>
-                    </div>
-                    <Switch
-                      checked={patient.privacySettings?.allowAnonymousResearch || false}
-                      onCheckedChange={(checked) => updatePrivacySetting('allowAnonymousResearch', checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium text-sm">Emergency Override</div>
-                      <p className="text-xs text-muted-foreground">Allow emergency access to critical health data</p>
-                    </div>
-                    <Switch
-                      checked={patient.privacySettings?.allowEmergencyOverride || false}
-                      onCheckedChange={(checked) => updatePrivacySetting('allowEmergencyOverride', checked)}
-                    />
-                  </div>
-                </div>
+
+        {
+          connectedProviders.length === 0 ? (
+            <Card className="p-8 text-center">
+              <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">No Connected Providers</h3>
+              <p className="text-muted-foreground mb-4">
+                Connect with healthcare providers to manage permissions and share your medical information securely.
+              </p>
+              <div className="flex justify-center gap-2">
+                <Button onClick={() => setIsProviderModalOpen(true)}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Connect First Provider
+                </Button>
+                <Button variant="outline" onClick={toggleEmptyState}>
+                  {isEmptyState ? "Load Sample Data" : "Show Empty State"}
+                </Button>
               </div>
-
-              <div>
-                <h4 className="text-sm font-medium mb-3">Default Provider Permissions</h4>
-                <p className="text-xs text-muted-foreground mb-3">
-                  These settings apply to new healthcare providers when they connect to your account.
-                </p>
-                <div className="space-y-2">
-                  {[
-                    { id: 'demographics', title: 'Basic Demographics' },
-                    { id: 'medical-history', title: 'Medical History' },
-                    { id: 'medications', title: 'Current Medications' },
-                    { id: 'lab-results', title: 'Lab Results' },
-                    { id: 'imaging', title: 'Medical Imaging' },
-                    { id: 'mental-health', title: 'Mental Health Records' },
-                    { id: 'genetic', title: 'Genetic Information' },
-                    { id: 'insurance', title: 'Insurance Information' }
-                  ].map((category) => (
-                    <div key={category.id} className="flex items-center justify-between p-2 border rounded">
-                      <span className="text-sm">{category.title}</span>
-                      <select
-                        className="text-xs border rounded px-2 py-1"
-                        value={patient.privacySettings?.defaultPermissions?.[category.id] || 'none'}
-                        onChange={(e) => updateDefaultPermission(category.id, e.target.value)}
-                      >
-                        <option value="none">No Access</option>
-                        <option value="view">View Only</option>
-                        <option value="comment">View & Comment</option>
-                        <option value="full">Full Access</option>
-                      </select>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {connectedProviders.map((provider) => (
+                <Card key={provider.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-gradient-to-br from-medical-accent/20 to-medical-warning/20">
+                          {provider.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <CardTitle className="text-base">{provider.name}</CardTitle>
+                        <CardDescription>{provider.specialty}</CardDescription>
+                      </div>
                     </div>
-                  ))}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>Organization:</strong> {provider.organization}</p>
+                      <p><strong>Email:</strong> {provider.email}</p>
+                      <p><strong>Phone:</strong> {provider.phone}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={() => setIsRequestsManagerOpen(true)}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Manage Permissions
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        }
+      </TabsContent >
+
+      <TabsContent value="upload" className="space-y-6">
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium mb-2">Upload Medical Files</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Upload your medical documents securely to 0G decentralized storage
+            </p>
+          </div>
+
+          <FileUpload
+            onUploadComplete={(fileId) => {
+              console.log('File uploaded:', fileId);
+            }}
+          />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Uploads</CardTitle>
+              <CardDescription>
+                Your recently uploaded medical files
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-gray-500">
+                No files uploaded yet. Use the upload area above to add your first medical document.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="audit" className="space-y-6">
+        <AuditTrail patientId={patient.id} />
+      </TabsContent>
+
+      <TabsContent value="monetization" className="space-y-6">
+        <MonetizationDashboard
+          patientId={patient.id}
+          medicalRecords={patient.medicalHistory}
+          onToggleMonetization={(recordId, enabled) => {
+            console.log(`Toggled monetization for record ${recordId}: ${enabled}`);
+            // In a real app, this would update the patient's monetization settings
+          }}
+        />
+      </TabsContent>
+    </Tabs >
+        </div >
+      </div >
+
+    {/* Provider Requests Manager */ }
+    < ProviderRequestsManager
+  patientId = { patient.id }
+  isOpen = { isRequestsManagerOpen }
+  onClose = {() => setIsRequestsManagerOpen(false)
+}
+onRequestUpdate = { handleProviderRequestUpdate }
+  />
+
+  {/* Profile Settings Dialog */ }
+  < Dialog open = { showProfileSettingsDialog } onOpenChange = { setShowProfileSettingsDialog } >
+    <DialogContent className="sm:max-w-[500px]">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <User className="h-5 w-5" />
+          Profile Settings
+        </DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4 py-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="profile-first-name">First Name</Label>
+            <Input
+              id="profile-first-name"
+              defaultValue={patient.name.split(' ')[0]}
+              placeholder="First name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="profile-last-name">Last Name</Label>
+            <Input
+              id="profile-last-name"
+              defaultValue={patient.name.split(' ').slice(1).join(' ')}
+              placeholder="Last name"
+            />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="profile-email">Email Address</Label>
+          <Input
+            id="profile-email"
+            type="email"
+            defaultValue={patient.email}
+            placeholder="Email address"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="profile-phone">Phone Number</Label>
+            <Input
+              id="profile-phone"
+              defaultValue={patient.phone}
+              placeholder="Phone number"
+            />
+          </div>
+          <div>
+            <Label htmlFor="profile-dob">Date of Birth</Label>
+            <Input
+              id="profile-dob"
+              type="date"
+              defaultValue={patient.dateOfBirth}
+            />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="profile-address">Address</Label>
+          <Input
+            id="profile-address"
+            defaultValue={patient.address}
+            placeholder="Full address"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="emergency-name">Emergency Contact Name</Label>
+            <Input
+              id="emergency-name"
+              defaultValue={patient.emergencyContact?.name || ''}
+              placeholder="Emergency contact name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="emergency-phone">Emergency Contact Phone</Label>
+            <Input
+              id="emergency-phone"
+              defaultValue={patient.emergencyContact?.phone || ''}
+              placeholder="Emergency contact phone"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setShowProfileSettingsDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => {
+            // Mock save functionality
+            setTimeout(() => {
+              setShowProfileSettingsDialog(false);
+            }, 500);
+          }}>
+            Save Changes
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+      </Dialog >
+
+  {/* Privacy Settings Dialog */ }
+  < Dialog open = { showPrivacySettingsDialog } onOpenChange = { setShowPrivacySettingsDialog } >
+    <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Shield className="h-5 w-5" />
+          Privacy Settings
+        </DialogTitle>
+      </DialogHeader>
+      <ScrollArea className="max-h-[60vh] pr-4">
+        <div className="space-y-6 py-4">
+          <div>
+            <h4 className="text-sm font-medium mb-3">Data Sharing Preferences</h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <div className="font-medium text-sm">Allow Family Access</div>
+                  <p className="text-xs text-muted-foreground">Let designated family members view your health records</p>
                 </div>
+                <Switch
+                  checked={patient.privacySettings?.allowFamilyAccess || false}
+                  onCheckedChange={(checked) => updatePrivacySetting('allowFamilyAccess', checked)}
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <div className="font-medium text-sm">Anonymous Research</div>
+                  <p className="text-xs text-muted-foreground">Contribute anonymized data to medical research</p>
+                </div>
+                <Switch
+                  checked={patient.privacySettings?.allowAnonymousResearch || false}
+                  onCheckedChange={(checked) => updatePrivacySetting('allowAnonymousResearch', checked)}
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <div className="font-medium text-sm">Emergency Override</div>
+                  <p className="text-xs text-muted-foreground">Allow emergency access to critical health data</p>
+                </div>
+                <Switch
+                  checked={patient.privacySettings?.allowEmergencyOverride || false}
+                  onCheckedChange={(checked) => updatePrivacySetting('allowEmergencyOverride', checked)}
+                />
               </div>
             </div>
-          </ScrollArea>
-          <div className="flex justify-end pt-4">
-            <Button onClick={() => setShowPrivacySettingsDialog(false)}>
-              Close
-            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* Account Settings Dialog */}
-      <Dialog open={showAccountSettingsDialog} onOpenChange={setShowAccountSettingsDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Account Settings
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <h4 className="text-sm font-medium mb-3">Security Settings</h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium text-sm">Two-Factor Authentication</div>
-                    <p className="text-xs text-muted-foreground">Add an extra layer of security to your account</p>
-                  </div>
-                  <Switch defaultChecked={true} />
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium text-sm">Login Notifications</div>
-                    <p className="text-xs text-muted-foreground">Get notified when someone logs into your account</p>
-                  </div>
-                  <Switch defaultChecked={true} />
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium text-sm">Session Timeout</div>
-                    <p className="text-xs text-muted-foreground">Automatically log out after inactivity</p>
-                  </div>
-                  <select className="text-sm border rounded px-2 py-1">
-                    <option value="15">15 minutes</option>
-                    <option value="30" selected>30 minutes</option>
-                    <option value="60">1 hour</option>
-                    <option value="120">2 hours</option>
+          <div>
+            <h4 className="text-sm font-medium mb-3">Default Provider Permissions</h4>
+            <p className="text-xs text-muted-foreground mb-3">
+              These settings apply to new healthcare providers when they connect to your account.
+            </p>
+            <div className="space-y-2">
+              {[
+                { id: 'demographics', title: 'Basic Demographics' },
+                { id: 'medical-history', title: 'Medical History' },
+                { id: 'medications', title: 'Current Medications' },
+                { id: 'lab-results', title: 'Lab Results' },
+                { id: 'imaging', title: 'Medical Imaging' },
+                { id: 'mental-health', title: 'Mental Health Records' },
+                { id: 'genetic', title: 'Genetic Information' },
+                { id: 'insurance', title: 'Insurance Information' }
+              ].map((category) => (
+                <div key={category.id} className="flex items-center justify-between p-2 border rounded">
+                  <span className="text-sm">{category.title}</span>
+                  <select
+                    className="text-xs border rounded px-2 py-1"
+                    value={patient.privacySettings?.defaultPermissions?.[category.id] || 'none'}
+                    onChange={(e) => updateDefaultPermission(category.id, e.target.value)}
+                  >
+                    <option value="none">No Access</option>
+                    <option value="view">View Only</option>
+                    <option value="comment">View & Comment</option>
+                    <option value="full">Full Access</option>
                   </select>
                 </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-medium mb-3">Notification Preferences</h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium text-sm">Email Notifications</div>
-                    <p className="text-xs text-muted-foreground">Receive updates via email</p>
-                  </div>
-                  <Switch defaultChecked={true} />
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium text-sm">SMS Notifications</div>
-                    <p className="text-xs text-muted-foreground">Receive updates via text message</p>
-                  </div>
-                  <Switch defaultChecked={false} />
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium text-sm">Push Notifications</div>
-                    <p className="text-xs text-muted-foreground">Receive browser notifications</p>
-                  </div>
-                  <Switch defaultChecked={true} />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-medium mb-3">Data Export</h4>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export All Medical Records
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Account Data
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setShowAccountSettingsDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => {
-                // Mock save functionality
-                setTimeout(() => {
-                  setShowAccountSettingsDialog(false);
-                }, 500);
-              }}>
-                Save Changes
-              </Button>
+              ))}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </ScrollArea>
+      <div className="flex justify-end pt-4">
+        <Button onClick={() => setShowPrivacySettingsDialog(false)}>
+          Close
+        </Button>
+      </div>
+    </DialogContent>
+      </Dialog >
 
-      {/* Export Overview Dialog */}
-      <Dialog open={showExportOverviewDialog} onOpenChange={setShowExportOverviewDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Export Health Overview
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label className="text-sm font-medium">Export Format</Label>
-              <select className="w-full p-2 border rounded-md mt-1">
-                <option value="pdf">PDF Report</option>
-                <option value="csv">CSV Data</option>
-                <option value="json">JSON Data</option>
-                <option value="xlsx">Excel Spreadsheet</option>
+  {/* Account Settings Dialog */ }
+  < Dialog open = { showAccountSettingsDialog } onOpenChange = { setShowAccountSettingsDialog } >
+    <DialogContent className="sm:max-w-[500px]">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Settings className="h-5 w-5" />
+          Account Settings
+        </DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4 py-4">
+        <div>
+          <h4 className="text-sm font-medium mb-3">Security Settings</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <div className="font-medium text-sm">Two-Factor Authentication</div>
+                <p className="text-xs text-muted-foreground">Add an extra layer of security to your account</p>
+              </div>
+              <Switch defaultChecked={true} />
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <div className="font-medium text-sm">Login Notifications</div>
+                <p className="text-xs text-muted-foreground">Get notified when someone logs into your account</p>
+              </div>
+              <Switch defaultChecked={true} />
+            </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <div className="font-medium text-sm">Session Timeout</div>
+                <p className="text-xs text-muted-foreground">Automatically log out after inactivity</p>
+              </div>
+              <select className="text-sm border rounded px-2 py-1">
+                <option value="15">15 minutes</option>
+                <option value="30" selected>30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="120">2 hours</option>
               </select>
             </div>
-            <div>
-              <Label className="text-sm font-medium">Include Sections</Label>
-              <div className="space-y-2 mt-2">
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-personal-info" defaultChecked />
-                  <Label htmlFor="overview-personal-info" className="text-sm">Personal Information</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-health-stats" defaultChecked />
-                  <Label htmlFor="overview-health-stats" className="text-sm">Health Statistics</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-recent-records" defaultChecked />
-                  <Label htmlFor="overview-recent-records" className="text-sm">Recent Medical Records</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-providers" defaultChecked />
-                  <Label htmlFor="overview-providers" className="text-sm">Connected Providers</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-compliance" />
-                  <Label htmlFor="overview-compliance" className="text-sm">Security & Compliance Status</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-monetization" />
-                  <Label htmlFor="overview-monetization" className="text-sm">Monetization Summary</Label>
-                </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-medium mb-3">Notification Preferences</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <div className="font-medium text-sm">Email Notifications</div>
+                <p className="text-xs text-muted-foreground">Receive updates via email</p>
               </div>
+              <Switch defaultChecked={true} />
             </div>
-            <div>
-              <Label className="text-sm font-medium">Report Options</Label>
-              <div className="space-y-2 mt-2">
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-include-charts" defaultChecked />
-                  <Label htmlFor="overview-include-charts" className="text-sm">Include Charts and Graphs</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-include-trends" defaultChecked />
-                  <Label htmlFor="overview-include-trends" className="text-sm">Include Health Trends</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="overview-include-recommendations" />
-                  <Label htmlFor="overview-include-recommendations" className="text-sm">Include AI Recommendations</Label>
-                </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <div className="font-medium text-sm">SMS Notifications</div>
+                <p className="text-xs text-muted-foreground">Receive updates via text message</p>
               </div>
+              <Switch defaultChecked={false} />
             </div>
-            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-green-800">Comprehensive Report</p>
-                  <p className="text-xs text-green-700 mt-1">
-                    This export will create a complete health overview suitable for sharing with new healthcare providers
-                    or for your personal records.
-                  </p>
-                </div>
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <div className="font-medium text-sm">Push Notifications</div>
+                <p className="text-xs text-muted-foreground">Receive browser notifications</p>
               </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setShowExportOverviewDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => {
-                // Mock export functionality
-                setTimeout(() => {
-                  setShowExportOverviewDialog(false);
-                }, 1000);
-              }}>
-                <Download className="h-4 w-4 mr-2" />
-                Export Overview
-              </Button>
+              <Switch defaultChecked={true} />
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
 
-      <AddProviderModal 
-        open={showAddProvider} 
-        onOpenChange={setShowAddProvider} 
-      />
-    </div>
-  );
-};
+        <div>
+          <h4 className="text-sm font-medium mb-3">Data Export</h4>
+          <div className="space-y-2">
+            <Button variant="outline" className="w-full justify-start">
+              <Download className="h-4 w-4 mr-2" />
+              Export All Medical Records
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Download className="h-4 w-4 mr-2" />
+              Export Account Data
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setShowAccountSettingsDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => {
+            // Mock save functionality
+            setTimeout(() => {
+              setShowAccountSettingsDialog(false);
+            }, 500);
+          }}>
+            Save Changes
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+      </Dialog >
+
+  {/* Export Overview Dialog */ }
+  < Dialog open = { showExportOverviewDialog } onOpenChange = { setShowExportOverviewDialog } >
+    <DialogContent className="sm:max-w-[500px]">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Download className="h-5 w-5" />
+          Export Health Overview
+        </DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4 py-4">
+        <div>
+          <Label className="text-sm font-medium">Export Format</Label>
+          <select className="w-full p-2 border rounded-md mt-1">
+            <option value="pdf">PDF Report</option>
+            <option value="csv">CSV Data</option>
+            <option value="json">JSON Data</option>
+            <option value="xlsx">Excel Spreadsheet</option>
+          </select>
+        </div>
+        <div>
+          <Label className="text-sm font-medium">Include Sections</Label>
+          <div className="space-y-2 mt-2">
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-personal-info" defaultChecked />
+              <Label htmlFor="overview-personal-info" className="text-sm">Personal Information</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-health-stats" defaultChecked />
+              <Label htmlFor="overview-health-stats" className="text-sm">Health Statistics</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-recent-records" defaultChecked />
+              <Label htmlFor="overview-recent-records" className="text-sm">Recent Medical Records</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-providers" defaultChecked />
+              <Label htmlFor="overview-providers" className="text-sm">Connected Providers</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-compliance" />
+              <Label htmlFor="overview-compliance" className="text-sm">Security & Compliance Status</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-monetization" />
+              <Label htmlFor="overview-monetization" className="text-sm">Monetization Summary</Label>
+            </div>
+          </div>
+        </div>
+        <div>
+          <Label className="text-sm font-medium">Report Options</Label>
+          <div className="space-y-2 mt-2">
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-include-charts" defaultChecked />
+              <Label htmlFor="overview-include-charts" className="text-sm">Include Charts and Graphs</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-include-trends" defaultChecked />
+              <Label htmlFor="overview-include-trends" className="text-sm">Include Health Trends</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="overview-include-recommendations" />
+              <Label htmlFor="overview-include-recommendations" className="text-sm">Include AI Recommendations</Label>
+            </div>
+          </div>
+        </div>
+        <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+          <div className="flex items-start gap-2">
+            <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-green-800">Comprehensive Report</p>
+              <p className="text-xs text-green-700 mt-1">
+                This export will create a complete health overview suitable for sharing with new healthcare providers
+                or for your personal records.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setShowExportOverviewDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => {
+            // Mock export functionality
+            setTimeout(() => {
+              setShowExportOverviewDialog(false);
+            }, 1000);
+          }}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Overview
+          </Button>
+        </div>
+      </div>
+          </DialogContent>
+        </Dialog>
+
+        <AddProviderModal
+          open={showAddProvider}
+          onOpenChange={setShowAddProvider}
+        />
+      </div>
+    );
+  };
