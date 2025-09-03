@@ -23,7 +23,7 @@ import FileUpload from "@/components/FileUpload";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuthStore } from "@/stores/authStore";
 import WelcomeBanner from '@/components/WelcomeBanner';
-import { getUserMedicalRecords, createMedicalRecord, updateRecordStatus, createProviderPermission, updateUserProfile } from '@/lib/api';
+import { getUserMedicalRecords, createMedicalRecord, updateRecordStatus, createProviderPermission, updateUserProfile, authenticateUser } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { generateMockAttachments } from "@/lib/mock-attachments";
 import {
@@ -319,7 +319,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   };
 
   // Add new provider
-  const addProvider = () => {
+  const addProvider = async () => {
     const newProvider = {
       id: `p${Date.now()}`,
       name: providerForm.name || 'Dr. Sample Provider',
@@ -332,7 +332,24 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     };
 
     console.log('Adding new provider:', newProvider);
-    // TODO: Implement backend API call to add provider
+    try {
+      // Create provider user account
+      const { user } = await authenticateUser(newProvider.email, 'provider');
+      
+      // Update provider profile
+      await updateUserProfile(user.id, {
+        full_name: newProvider.name,
+        email: newProvider.email,
+        phone: newProvider.phone,
+        contact: newProvider.email,
+        profile_completed: true
+      });
+
+      toast.success('Provider added successfully');
+    } catch (error) {
+      console.error('Failed to add provider:', error);
+      toast.error('Failed to add provider');
+    }
 
     // Reset form and close modal
     setProviderForm({
