@@ -411,7 +411,7 @@ export const MedicalRecordCard = ({
                 <div>
                   <Label>Currently Shared With</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {record.sharedWith.map(providerId => {
+                    {(record.sharedWith || []).map(providerId => {
                       const provider = mockProviders.find(p => p.id === providerId);
                       return (
                         <Badge key={providerId} variant="outline">
