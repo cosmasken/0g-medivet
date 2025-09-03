@@ -291,7 +291,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     console.log('Adding new record:', newRecord);
     try {
       if (currentUser?.id) {
-        await createMedicalRecord({
+        createMedicalRecord({
           user_id: currentUser.id,
           title: newRecord.title,
           description: newRecord.description,
@@ -335,7 +335,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     try {
       // Create provider user account
       const { user } = await authenticateUser(newProvider.email, 'provider');
-      
+
       // Update provider profile
       await updateUserProfile(user.id, {
         full_name: newProvider.name,
@@ -386,7 +386,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     console.log(`Updating default permission for ${categoryId}:`, level);
     try {
       if (currentUser?.id) {
-        await updateUserProfile(currentUser.id, { 
+        await updateUserProfile(currentUser.id, {
           default_permissions: { [categoryId]: level }
         });
         toast.success('Default permission updated');
@@ -402,7 +402,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
     console.log(`Updating emergency permission for ${categoryId}:`, level);
     try {
       if (currentUser?.id) {
-        await updateUserProfile(currentUser.id, { 
+        await updateUserProfile(currentUser.id, {
           emergency_permissions: { [categoryId]: level }
         });
         toast.success('Emergency permission updated');
@@ -1405,7 +1405,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                       <p className="text-xs text-muted-foreground">Let designated family members view your health records</p>
                     </div>
                     <Switch
-                      checked={patient.privacySettings.allowFamilyAccess}
+                      checked={patient.privacySettings?.allowFamilyAccess || false}
                       onCheckedChange={(checked) => updatePrivacySetting('allowFamilyAccess', checked)}
                     />
                   </div>
@@ -1415,7 +1415,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                       <p className="text-xs text-muted-foreground">Contribute anonymized data to medical research</p>
                     </div>
                     <Switch
-                      checked={patient.privacySettings.allowAnonymousResearch}
+                      checked={patient.privacySettings?.allowAnonymousResearch || false}
                       onCheckedChange={(checked) => updatePrivacySetting('allowAnonymousResearch', checked)}
                     />
                   </div>
@@ -1425,7 +1425,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                       <p className="text-xs text-muted-foreground">Allow emergency access to critical health data</p>
                     </div>
                     <Switch
-                      checked={patient.privacySettings.allowEmergencyOverride}
+                      checked={patient.privacySettings?.allowEmergencyOverride || false}
                       onCheckedChange={(checked) => updatePrivacySetting('allowEmergencyOverride', checked)}
                     />
                   </div>
@@ -1452,7 +1452,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                       <span className="text-sm">{category.title}</span>
                       <select
                         className="text-xs border rounded px-2 py-1"
-                        value={patient.privacySettings.defaultPermissions[category.id]}
+                        value={patient.privacySettings?.defaultPermissions?.[category.id] || 'none'}
                         onChange={(e) => updateDefaultPermission(category.id, e.target.value)}
                       >
                         <option value="none">No Access</option>
