@@ -44,9 +44,7 @@ const App = () => {
               <Route path="/landing" element={<LandingPage />} />
 
               {/* Protected Routes - Require wallet connection */}
-              <Route path="/role-selection" element={
-                <RequireWallet><RoleSelection /></RequireWallet>
-              } />
+              <Route path="/role-selection" element={<RoleSelection />} />
               <Route path="/onboarding/patient" element={
                 <RequireWallet><PatientOnboarding /></RequireWallet>
               } />
