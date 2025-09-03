@@ -419,7 +419,7 @@ export const MedicalRecordCard = ({
                         </Badge>
                       );
                     })}
-                    {record.sharedWith.length === 0 && (
+                    {(record.sharedWith?.length || 0) === 0 && (
                       <span className="text-sm text-muted-foreground">Not shared with any providers</span>
                     )}
                   </div>
