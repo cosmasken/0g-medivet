@@ -8,7 +8,7 @@ export async function submitTransaction(
 ): Promise<[any | null, Error | null]> {
   try {
     console.log('🔗 Submitting transaction to flow contract:', {
-      flowAddress: await flowContract.getAddress(),
+      flowAddress: flowContract.address || 'unknown',
       value: value.toString(),
       submissionData: {
         ...submission,
