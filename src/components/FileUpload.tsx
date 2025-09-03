@@ -138,7 +138,10 @@ const FileUpload = ({
       
       // Upload to 0G
       const uploadResult = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
-      const resultTxHash = uploadResult?.txHash || 'direct-upload';
+      console.log('Upload result:', uploadResult);
+      
+      // Extract the correct hash from upload result
+      const resultTxHash = uploadResult?.root || uploadResult?.txHash || uploadResult?.hash || `upload-${Date.now()}`;
       
       // Save to backend database
       if (currentUser?.id) {
@@ -158,6 +161,7 @@ const FileUpload = ({
           file_size: selectedFile.size,
           zero_g_hash: resultTxHash,
           tags: tags.filter(tag => tag.trim())
+        });
         });
       }
       
