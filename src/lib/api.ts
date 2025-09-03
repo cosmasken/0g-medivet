@@ -14,10 +14,19 @@ export const authenticateUser = async (walletAddress: string, role: 'patient' | 
 
 export const updateUserProfile = async (userId: string, profileData: any) => {
   try {
+    // Filter out empty date fields to prevent database errors
+    const cleanedData = { ...profileData };
+    if (cleanedData.dateOfBirth === '') {
+      delete cleanedData.dateOfBirth;
+    }
+    if (cleanedData.date_of_birth === '') {
+      delete cleanedData.date_of_birth;
+    }
+    
     const response = await fetch(`${API_BASE_URL}/users/${userId}/profile`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(profileData)
+      body: JSON.stringify(cleanedData)
     });
     
     if (!response.ok) {
