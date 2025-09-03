@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Blob } from '@0glabs/0g-ts-sdk';
+import { Blob } from '@0glabs/0g-ts-sdk/browser';
 import { uploadToStorage } from '@/lib/0g/uploader';
 import { BrowserProvider } from 'ethers';
 

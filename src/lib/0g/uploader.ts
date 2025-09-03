@@ -1,38 +1,4 @@
-import { Indexer, Blob } from '@0glabs/0g-ts-sdk';
-import { Contract } from 'ethers';
-
-export async function submitTransaction(
-  flowContract: Contract, 
-  submission: any, 
-  value: bigint
-): Promise<[any | null, Error | null]> {
-  try {
-    console.log('🔗 Submitting transaction to flow contract:', {
-      flowAddress: await flowContract.getAddress(),
-      value: value.toString(),
-      submissionData: {
-        ...submission,
-        nodes: submission.nodes?.length || 0,
-        length: submission.length
-      }
-    });
-    
-    const tx = await flowContract.submit(submission, { value });
-    console.log('📝 Transaction sent:', tx.hash);
-    
-    const receipt = await tx.wait();
-    console.log('✅ Transaction confirmed:', {
-      hash: tx.hash,
-      blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed?.toString()
-    });
-    
-    return [{ tx, receipt }, null];
-  } catch (error) {
-    console.error('❌ Transaction submission failed:', error);
-    return [null, error instanceof Error ? error : new Error(String(error))];
-  }
-}
+import { Indexer, Blob } from '@0glabs/0g-ts-sdk/browser';
 
 export async function uploadToStorage(
   blob: Blob, 

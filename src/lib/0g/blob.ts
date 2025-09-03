@@ -1,4 +1,4 @@
-import { Blob } from '@0glabs/0g-ts-sdk';
+import { Blob } from '@0glabs/0g-ts-sdk/browser';
 
 export function createBlobFromFile(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
