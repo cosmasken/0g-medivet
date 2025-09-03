@@ -331,7 +331,8 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
       permissions: {}
     };
 
-    setProviders(prev => [...prev, newProvider]);
+    console.log('Adding new provider:', newProvider);
+    // TODO: Implement backend API call to add provider
 
     // Reset form and close modal
     setProviderForm({
