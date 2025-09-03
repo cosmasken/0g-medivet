@@ -41,12 +41,12 @@ export default defineConfig(({ mode }) => ({
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'util', 'events', 'path-browserify', 'vm-browserify', 'js-sha3'],
+    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'util', 'events', 'path-browserify', 'vm-browserify', 'js-sha3', 'axios'],
     exclude: ['@0glabs/0g-ts-sdk']
   },
   build: {
     commonjsOptions: {
-      include: [/js-sha3/, /node_modules/]
+      include: [/js-sha3/, /axios/, /node_modules/]
     }
   }
 }));
