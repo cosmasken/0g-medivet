@@ -221,15 +221,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   // Record sharing and monetization handlers
   const handleShareRecord = (recordId: string, providerIds: string[]) => {
     console.log(`Sharing record ${recordId} with providers:`, providerIds);
-    // Update the record's sharedWith array
-    setPatientData(prev => ({
-      ...prev,
-      medicalHistory: prev.medicalHistory.map(record =>
-        record.id === recordId
-          ? { ...record, sharedWith: [...new Set([...record.sharedWith, ...providerIds])] }
-          : record
-      )
-    }));
+    // TODO: Implement backend API call to share record
   };
 
   const handleMonetizeRecord = (recordId: string, enabled: boolean) => {
@@ -239,14 +231,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
 
   const handleUpdateRecord = (recordId: string, updates: Partial<any>) => {
     console.log(`Updating record ${recordId}:`, updates);
-    setPatientData(prev => ({
-      ...prev,
-      medicalHistory: prev.medicalHistory.map(record =>
-        record.id === recordId
-          ? { ...record, ...updates }
-          : record
-      )
-    }));
+    // TODO: Implement backend API call to update record
   };
 
   const handleProviderRequestUpdate = (requestId: string, status: 'approved' | 'denied') => {
@@ -281,10 +266,8 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
       notes: recordForm.description || `Auto-generated ${recordForm.type} record with mock attachments`
     };
 
-    setPatientData(prev => ({
-      ...prev,
-      medicalHistory: [...prev.medicalHistory, newRecord]
-    }));
+    console.log('Adding new record:', newRecord);
+    // TODO: Implement backend API call to add record
 
     // Reset form and close modal
     setRecordForm({
@@ -330,41 +313,20 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
 
   // Update privacy setting
   const updatePrivacySetting = (key: string, value: boolean) => {
-    setPatientData(prev => ({
-      ...prev,
-      privacySettings: {
-        ...prev.privacySettings,
-        [key]: value
-      }
-    }));
+    console.log(`Updating privacy setting ${key}:`, value);
+    // TODO: Implement backend API call
   };
 
   // Update default permission level
   const updateDefaultPermission = (categoryId: string, level: string) => {
-    setPatientData(prev => ({
-      ...prev,
-      privacySettings: {
-        ...prev.privacySettings,
-        defaultPermissions: {
-          ...prev.privacySettings.defaultPermissions,
-          [categoryId]: level
-        }
-      }
-    }));
+    console.log(`Updating default permission for ${categoryId}:`, level);
+    // TODO: Implement backend API call
   };
 
   // Update emergency permission level
   const updateEmergencyPermission = (categoryId: string, level: string) => {
-    setPatientData(prev => ({
-      ...prev,
-      privacySettings: {
-        ...prev.privacySettings,
-        emergencyPermissions: {
-          ...prev.privacySettings.emergencyPermissions,
-          [categoryId]: level
-        }
-      }
-    }));
+    console.log(`Updating emergency permission for ${categoryId}:`, level);
+    // TODO: Implement backend API call
   };
 
   const getSharedRecords = () => {
