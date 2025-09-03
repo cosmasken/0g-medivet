@@ -144,9 +144,13 @@ export const useAuthStore = create<AuthState>()(
     if (!currentUser) return;
 
     try {
+      // Store health data in the existing profile JSON structure
       const updatedProfile = {
         ...currentUser.profile,
-        ...healthData
+        healthProfile: {
+          ...currentUser.profile?.healthProfile,
+          ...healthData
+        }
       };
       
       await apiUpdateProfile(currentUser.id, updatedProfile);

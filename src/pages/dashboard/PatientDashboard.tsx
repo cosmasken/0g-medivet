@@ -29,14 +29,14 @@ export default function PatientDashboard() {
     name: currentUser?.name || 'John Doe',
     email: currentUser?.email || 'john.doe@example.com',
     dateOfBirth: currentUser?.profile?.dob || '1985-03-15',
-    bloodType: currentUser?.profile?.bloodType || 'Not set',
-    allergies: currentUser?.profile?.allergies || [],
+    bloodType: currentUser?.profile?.healthProfile?.bloodType || 'Not set',
+    allergies: currentUser?.profile?.healthProfile?.allergies || [],
     emergencyContact: {
-      name: currentUser?.profile?.emergencyContactName || 'Not set',
-      relationship: currentUser?.profile?.emergencyContactRelation || 'Not set',
-      phone: currentUser?.profile?.emergencyContactPhone || 'Not set'
+      name: currentUser?.profile?.healthProfile?.emergencyContactName || 'Not set',
+      relationship: currentUser?.profile?.healthProfile?.emergencyContactRelation || 'Not set',
+      phone: currentUser?.profile?.healthProfile?.emergencyContactPhone || 'Not set'
     },
-    lastCheckup: currentUser?.profile?.lastCheckup || 'Not set'
+    lastCheckup: currentUser?.profile?.healthProfile?.lastCheckup || 'Not set'
   };
 
   const medicalRecords = recordsData?.records || [

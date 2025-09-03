@@ -18,12 +18,14 @@ export function HealthProfileEditor({ open, onOpenChange }: HealthProfileEditorP
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    bloodType: currentUser?.profile?.bloodType || '',
-    allergies: currentUser?.profile?.allergies || '',
-    emergencyContactName: currentUser?.profile?.emergencyContactName || '',
-    emergencyContactPhone: currentUser?.profile?.emergencyContactPhone || '',
-    emergencyContactRelation: currentUser?.profile?.emergencyContactRelation || '',
-    lastCheckup: currentUser?.profile?.lastCheckup || ''
+    bloodType: currentUser?.profile?.healthProfile?.bloodType || '',
+    allergies: Array.isArray(currentUser?.profile?.healthProfile?.allergies) 
+      ? currentUser.profile.healthProfile.allergies.join(', ') 
+      : '',
+    emergencyContactName: currentUser?.profile?.healthProfile?.emergencyContactName || '',
+    emergencyContactPhone: currentUser?.profile?.healthProfile?.emergencyContactPhone || '',
+    emergencyContactRelation: currentUser?.profile?.healthProfile?.emergencyContactRelation || '',
+    lastCheckup: currentUser?.profile?.healthProfile?.lastCheckup || ''
   });
 
   const handleSave = async () => {
