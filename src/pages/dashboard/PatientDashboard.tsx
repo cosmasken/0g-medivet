@@ -20,6 +20,7 @@ import { ProviderRequestsManager } from "@/components/ProviderRequestsManager";
 import AuditTrail from "@/pages/AuditTrail";
 import { TrendingUp, Upload } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
+import { useWallet } from "@/hooks/useWallet";
 import { generateMockAttachments } from "@/lib/mock-attachments";
 import {
   FileText,
@@ -107,6 +108,7 @@ const emptyPatient = {
 };
 
 export default function PatientDashboard({ patientId = '1' }: PatientDashboardProps = {}) {
+  const { address } = useWallet();
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [patientData, setPatientData] = useState(emptyPatient); // Use empty state
   const [providers, setProviders] = useState([]); // Empty providers
@@ -452,8 +454,8 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="text-xs text-muted-foreground mb-1">Address</div>
-                      <div className="text-sm font-mono text-gray-700 truncate" title={patient.address}>
-                        {truncateAddress(patient.address)}
+                      <div className="text-sm font-mono text-gray-700 truncate" title={address || 'No wallet connected'}>
+                        {truncateAddress(address || 'No wallet connected')}
                       </div>
                     </div>
                     <Button
