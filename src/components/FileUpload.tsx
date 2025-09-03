@@ -95,7 +95,7 @@ const FileUpload = ({
       const blob = await createBlobFromFile(selectedFile);
       
       // Upload to 0G
-      const resultTxHash = await uploadFile(blob, 'turbo', selectedFile.size);
+      const resultTxHash = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
       
       if (resultTxHash) {
         // Add file to store

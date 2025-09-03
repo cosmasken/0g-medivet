@@ -35,7 +35,7 @@ export async function submitTransaction(
 }
 
 export async function uploadToStorage(
-  blob: Blob, 
+  fileOrBlob: Blob | File, 
   storageRpc: string, 
   l1Rpc: string, 
   signer: any
@@ -44,7 +44,7 @@ export async function uploadToStorage(
     console.log('☁️ Starting storage upload to 0G:', {
       storageRpc,
       l1Rpc,
-      blobSize: blob?.data?.length || 'unknown',
+      blobSize: fileOrBlob instanceof File ? fileOrBlob.size : 'unknown',
       signerAddress: await signer.getAddress()
     });
     
@@ -61,7 +61,10 @@ export async function uploadToStorage(
     
     console.log('⬆️ Uploading with options:', uploadOptions);
     
-    await indexer.upload(blob, l1Rpc, signer, uploadOptions);
+    // Use File directly if available, otherwise use Blob
+    const uploadTarget = fileOrBlob instanceof File ? fileOrBlob : fileOrBlob;
+    
+    await indexer.upload(uploadTarget, l1Rpc, signer, uploadOptions);
     
     console.log('✅ Storage upload completed successfully');
     return [true, null];

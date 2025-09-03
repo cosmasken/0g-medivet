@@ -10,7 +10,7 @@ export function useUpload() {
   const [uploadStatus, setUploadStatus] = useState('');
   const [txHash, setTxHash] = useState('');
 
-  const uploadFile = useCallback(async (blob: Blob, networkType: NetworkType = 'turbo', fileSize?: number) => {
+  const uploadFile = useCallback(async (blob: Blob, networkType: NetworkType = 'turbo', fileSize?: number, originalFile?: File) => {
     if (!blob) {
       setError('No file provided');
       return null;
@@ -66,9 +66,9 @@ export function useUpload() {
       // Get network configuration
       const network = getNetworkConfig(networkType);
       
-      // Upload file to storage
+      // Upload file to storage using original File object
       const [uploadSuccess, uploadErr] = await uploadToStorage(
-        blob, 
+        originalFile || blob, 
         network.storageRpc,
         network.l1Rpc,
         signer
