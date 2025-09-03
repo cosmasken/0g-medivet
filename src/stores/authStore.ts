@@ -84,8 +84,13 @@ export const useAuthStore = create<AuthState>()(
               email: user.user_profiles[0].email,
               phone: user.user_profiles[0].phone,
               profileCompleted: user.user_profiles[0].profile_completed || false,
-              ...profile
-            } : profile,
+              ...profile,
+              // Load health profile from localStorage
+              healthProfile: JSON.parse(localStorage.getItem(`healthProfile_${user.id}`) || '{}')
+            } : {
+              ...profile,
+              healthProfile: JSON.parse(localStorage.getItem(`healthProfile_${user.id}`) || '{}')
+            },
             isOnboarded: user.is_onboarded || false
           };
 
@@ -144,22 +149,20 @@ export const useAuthStore = create<AuthState>()(
     if (!currentUser) return;
 
     try {
-      // Only send the health profile data, not the entire existing profile
-      const profileUpdate = {
-        healthProfile: {
-          ...currentUser.profile?.healthProfile,
-          ...healthData
-        }
-      };
+      // Store health profile in localStorage to avoid backend column issues
+      const healthProfileKey = `healthProfile_${currentUser.id}`;
+      const existingHealth = JSON.parse(localStorage.getItem(healthProfileKey) || '{}');
+      const updatedHealth = { ...existingHealth, ...healthData };
       
-      await apiUpdateProfile(currentUser.id, profileUpdate);
+      localStorage.setItem(healthProfileKey, JSON.stringify(updatedHealth));
       
+      // Update local state
       set(state => ({
         currentUser: state.currentUser ? {
           ...state.currentUser,
           profile: {
             ...state.currentUser.profile,
-            ...profileUpdate
+            healthProfile: updatedHealth
           }
         } : null
       }));
