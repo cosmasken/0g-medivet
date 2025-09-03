@@ -9,7 +9,7 @@ import { Wallet, Shield, Users, Activity, LogOut } from 'lucide-react';
 const ConnectWallet = () => {
   const navigate = useNavigate();
   const { connect, disconnect, isConnected, isConnecting, address } = useWallet();
-  const { login, logout, selectedRole, isLoading } = useAuthStore();
+  const { login, logout, selectedRole, isLoading, isAuthenticated } = useAuthStore();
 
   const [isAutoLogging, setIsAutoLogging] = useState(false);
 
