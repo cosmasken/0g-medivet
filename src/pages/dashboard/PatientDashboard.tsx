@@ -17,6 +17,9 @@ import { MedicalRecordCard } from "@/components/MedicalRecordCard";
 import { PermissionControl } from "@/components/PermissionControl";
 import { MonetizationDashboard } from "@/components/MonetizationDashboard";
 import { ProviderRequestsManager } from "@/components/ProviderRequestsManager";
+import { AddProviderModal } from '@/components/AddProviderModal';
+import { ProviderSearch } from '@/components/ProviderSearch';
+import { useProviderStore } from '@/stores/providerStore';
 import AuditTrail from "@/pages/AuditTrail";
 import { TrendingUp, Upload } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
@@ -126,6 +129,8 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isTextRecordDialogOpen, setIsTextRecordDialogOpen] = useState(false);
   const [isEmptyState, setIsEmptyState] = useState(false);
+  const [showAddProvider, setShowAddProvider] = useState(false);
+  const { providers } = useProviderStore();
 
   const medicalRecords = recordsData?.records || [];
 
@@ -1052,27 +1057,57 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
 
             <TabsContent value="providers" className="space-y-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Connected Healthcare Providers</h3>
-                <Dialog open={isProviderModalOpen} onOpenChange={setIsProviderModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <Users className="h-4 w-4 mr-2" />
-                      Connect New Provider
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Connect Healthcare Provider</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="providerName" className="text-right">Name</Label>
-                        <Input
-                          id="providerName"
-                          placeholder="Dr. Sample Provider (auto-fill)"
-                          value={providerForm.name}
-                          onChange={(e) => setProviderForm({ ...providerForm, name: e.target.value })}
-                          className="col-span-3"
+                <h3 className="text-lg font-medium">Healthcare Providers</h3>
+                <Button onClick={() => setShowAddProvider(true)}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Provider
+                </Button>
+              </div>
+              
+              <div className="grid gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Provider Management</CardTitle>
+                    <CardDescription>
+                      Add healthcare providers by wallet address and manage their access levels
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ProviderSearch />
+                  </CardContent>
+                </Card>
+                
+                {providers.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm">View Only Access</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ProviderSearch filterByAccess="view" />
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm">Edit Access</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ProviderSearch filterByAccess="edit" />
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm">Full Access</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ProviderSearch filterByAccess="full" />
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
                         />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
@@ -1628,6 +1663,11 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
           </div>
         </DialogContent>
       </Dialog>
+
+      <AddProviderModal 
+        open={showAddProvider} 
+        onOpenChange={setShowAddProvider} 
+      />
     </div>
   );
 };

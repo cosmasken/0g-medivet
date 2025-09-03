@@ -3,29 +3,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus } from 'lucide-react';
+import { useProviderStore, AccessLevel } from '@/stores/providerStore';
 
 interface AddProviderModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddProvider: (provider: { id: string; name: string; email: string; specialty: string }) => void;
 }
 
-export function AddProviderModal({ open, onOpenChange, onAddProvider }: AddProviderModalProps) {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    specialty: ''
-  });
+export function AddProviderModal({ open, onOpenChange }: AddProviderModalProps) {
+  const [walletAddress, setWalletAddress] = useState('');
+  const [name, setName] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [accessLevel, setAccessLevel] = useState<AccessLevel>('view');
+  
+  const { addProvider } = useProviderStore();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.name && formData.email) {
-      onAddProvider({
-        id: `provider-${Date.now()}`,
-        ...formData
-      });
-      setFormData({ name: '', email: '', specialty: '' });
+  const handleAdd = () => {
+    if (walletAddress.trim() && name.trim()) {
+      addProvider(walletAddress.trim(), name.trim(), accessLevel, specialty.trim() || undefined);
+      setWalletAddress('');
+      setName('');
+      setSpecialty('');
+      setAccessLevel('view');
       onOpenChange(false);
     }
   };
@@ -39,44 +40,64 @@ export function AddProviderModal({ open, onOpenChange, onAddProvider }: AddProvi
             Add Healthcare Provider
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="walletAddress">Wallet Address</Label>
+            <Input
+              id="walletAddress"
+              value={walletAddress}
+              onChange={(e) => setWalletAddress(e.target.value)}
+              placeholder="0x..."
+              className="font-mono text-sm"
+            />
+          </div>
+          
           <div>
             <Label htmlFor="name">Provider Name</Label>
             <Input
               id="name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Dr. John Smith"
-              required
             />
           </div>
+          
           <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="doctor@hospital.com"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="specialty">Specialty</Label>
+            <Label htmlFor="specialty">Specialty (Optional)</Label>
             <Input
               id="specialty"
-              value={formData.specialty}
-              onChange={(e) => setFormData(prev => ({ ...prev, specialty: e.target.value }))}
-              placeholder="Cardiology"
+              value={specialty}
+              onChange={(e) => setSpecialty(e.target.value)}
+              placeholder="Cardiology, Radiology, etc."
             />
           </div>
+          
+          <div>
+            <Label htmlFor="accessLevel">Access Level</Label>
+            <Select value={accessLevel} onValueChange={(value: AccessLevel) => setAccessLevel(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="view">View Only</SelectItem>
+                <SelectItem value="edit">View & Edit</SelectItem>
+                <SelectItem value="full">Full Access</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Add Provider</Button>
+            <Button 
+              onClick={handleAdd} 
+              disabled={!walletAddress.trim() || !name.trim()}
+            >
+              Add Provider
+            </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
