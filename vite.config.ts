@@ -19,7 +19,6 @@ export default defineConfig(({ mode }) => ({
         global: true,
         process: true,
       },
-      include: ['fs', 'fs/promises', 'path', 'crypto', 'stream', 'util', 'events', 'buffer'],
     }),
     mode === 'development' &&
     componentTagger(),
@@ -34,15 +33,15 @@ export default defineConfig(({ mode }) => ({
       events: 'events',
       path: 'path-browserify',
       vm: 'vm-browserify',
-      'fs': 'node-stdlib-browser/esm/fs',
-      'fs/promises': 'node-stdlib-browser/esm/fs/promises',
-      'node:fs/promises': 'node-stdlib-browser/esm/fs/promises',
+      'node:fs/promises': 'node-stdlib-browser/mock/empty',
+      'fs/promises': 'node-stdlib-browser/mock/empty',
     },
   },
   define: {
     global: 'globalThis',
   },
   optimizeDeps: {
-    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'util', 'events', 'path-browserify', 'vm-browserify', 'node-stdlib-browser']
+    include: ['buffer', 'crypto-browserify', 'stream-browserify', 'util', 'events', 'path-browserify', 'vm-browserify'],
+    exclude: ['@0glabs/0g-ts-sdk']
   }
 }));
