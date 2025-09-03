@@ -13,14 +13,24 @@ export const authenticateUser = async (walletAddress: string, role: 'patient' | 
 };
 
 export const updateUserProfile = async (userId: string, profileData: any) => {
-  const response = await fetch(`${API_BASE_URL}/users/${userId}/profile`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(profileData)
-  });
-  
-  if (!response.ok) throw new Error('Profile update failed');
-  return response.json();
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileData)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Profile update failed:', response.status, errorText);
+      throw new Error(`Profile update failed: ${response.status} ${errorText}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Profile update error:', error);
+    throw error;
+  }
 };
 
 export const completeUserOnboarding = async (userId: string) => {
