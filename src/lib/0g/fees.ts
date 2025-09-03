@@ -61,10 +61,14 @@ export async function calculateFees(
     console.log('Flow contract address:', await flowContract.getAddress());
     
     // Calculate basic storage fee (fallback approach)
-    const fileSizeInBytes = submission.length;
+    const fileSizeInBytes = Number(submission.length) || 0;
+    if (fileSizeInBytes === 0) {
+      throw new Error('Invalid file size');
+    }
+    
     const sectorSize = 256;
     const sectorsNeeded = Math.ceil(fileSizeInBytes / sectorSize);
-    let actualStorageFee = BigInt(sectorsNeeded * 1000000000000000); // 0.001 ETH per sector
+    let actualStorageFee = BigInt(sectorsNeeded) * BigInt('1000000000000000'); // 0.001 ETH per sector
     
     try {
       // Try to get market pricing
