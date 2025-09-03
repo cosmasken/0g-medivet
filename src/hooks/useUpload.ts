@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Blob } from '@0glabs/0g-ts-sdk/browser';
-import { uploadToStorage } from '@/lib/0g/uploader';
-import { BrowserProvider } from 'ethers';
+import { uploadToStorage, submitTransaction } from '@/lib/0g/uploader';
+import { getProvider, getSigner, getFlowContract, calculateFees } from '@/lib/0g/fees';
+import { getNetworkConfig, NetworkType } from '@/lib/0g/network';
 
 export function useUpload() {
   const [loading, setLoading] = useState(false);
@@ -9,7 +10,7 @@ export function useUpload() {
   const [uploadStatus, setUploadStatus] = useState('');
   const [txHash, setTxHash] = useState('');
 
-  const uploadFile = useCallback(async (blob: Blob) => {
+  const uploadFile = useCallback(async (blob: Blob, networkType: NetworkType = 'turbo') => {
     if (!blob) {
       setError('No file provided');
       return null;
@@ -20,37 +21,75 @@ export function useUpload() {
     setUploadStatus('Preparing file...');
     setTxHash('');
     
+    let transactionHash = '';
+    
     try {
-      // Get signer from wallet
-      if (!window.ethereum) {
-        throw new Error('No wallet found');
-      }
-
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      
-      setUploadStatus('Uploading to 0G Network...');
-      
-      // Upload to 0G storage
-      const storageRpc = 'https://rpc-storage-testnet.0g.ai';
-      const l1Rpc = 'https://evmrpc-testnet.0g.ai';
-      
-      const [success, uploadErr] = await uploadToStorage(blob, storageRpc, l1Rpc, signer);
-      
-      if (!success || uploadErr) {
-        throw uploadErr || new Error('Upload failed');
+      // Get provider and signer
+      console.log('📡 Getting provider and signer...');
+      const [provider, providerErr] = await getProvider();
+      if (!provider) {
+        throw new Error(`Provider error: ${providerErr?.message}`);
       }
       
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      setTxHash(mockTxHash);
+      const [signer, signerErr] = await getSigner(provider);
+      if (!signer) {
+        throw new Error(`Signer error: ${signerErr?.message}`);
+      }
+      
+      // Create submission object
+      const submission = {
+        length: blob.data.length,
+        tags: '0x',
+        nodes: [{
+          root: blob.merkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000',
+          height: 1
+        }]
+      };
+      
+      // Calculate fees
+      setUploadStatus('Calculating fees...');
+      const [feeInfo, feeErr] = await calculateFees(submission, networkType);
+      if (!feeInfo || feeErr) {
+        throw new Error(`Fee calculation error: ${feeErr?.message}`);
+      }
+      
+      // Get flow contract
+      const flowContract = getFlowContract(networkType, signer);
+      
+      // Submit transaction to flow contract
+      setUploadStatus('Confirming transaction...');
+      const [txResult, txErr] = await submitTransaction(flowContract, submission, feeInfo.rawTotalFee);
+      if (!txResult) {
+        throw new Error(`Transaction error: ${txErr?.message}`);
+      }
+      
+      transactionHash = txResult.tx.hash;
+      setTxHash(transactionHash);
+      setUploadStatus('Waiting for transaction confirmation...');
+      
+      // Get network configuration
+      const network = getNetworkConfig(networkType);
+      
+      // Upload file to storage
+      setUploadStatus('Uploading file to storage...');
+      const [uploadSuccess, uploadErr] = await uploadToStorage(
+        blob, 
+        network.storageRpc,
+        network.l1Rpc,
+        signer
+      );
+      
+      if (!uploadSuccess) {
+        throw new Error(`Storage upload failed: ${uploadErr?.message}. Transaction was successful: ${transactionHash}`);
+      }
+      
       setUploadStatus('Upload complete!');
-      
-      return mockTxHash;
+      return transactionHash;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setError(errorMessage);
       setUploadStatus('');
-      return null;
+      return transactionHash || null;
     } finally {
       setLoading(false);
     }

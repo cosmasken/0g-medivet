@@ -54,10 +54,10 @@ const FileUpload = ({
     setEstimatedFee('Calculating...');
     
     try {
-      // Create blob and submission for fee calculation
+      // Create blob for fee calculation
       const blob = await createBlobFromFile(selectedFile);
       
-      // Create submission object for fee calculation
+      // Create submission object
       const submission = {
         length: blob.data.length,
         tags: '0x',
@@ -67,17 +67,9 @@ const FileUpload = ({
         }]
       };
       
-      // Get provider and signer
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      
-      // Get flow contract (using testnet address)
-      const flowAddress = '0x0460aA47b41a66694c0a73f667a1b795A5ED3556'; // 0G testnet flow contract
-      const { getFlowContract, calculateFees } = await import('@/lib/0g/fees');
-      const flowContract = getFlowContract(flowAddress, signer);
-      
-      // Calculate actual fees
-      const [feeInfo, error] = await calculateFees(submission, flowContract, provider);
+      // Calculate actual fees using turbo network
+      const { calculateFees } = await import('@/lib/0g/fees');
+      const [feeInfo, error] = await calculateFees(submission, 'turbo');
       
       if (error || !feeInfo) {
         throw error || new Error('Failed to calculate fees');
