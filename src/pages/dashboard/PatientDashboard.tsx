@@ -18,7 +18,8 @@ import { PermissionControl } from "@/components/PermissionControl";
 import { MonetizationDashboard } from "@/components/MonetizationDashboard";
 import { ProviderRequestsManager } from "@/components/ProviderRequestsManager";
 import AuditTrail from "@/pages/AuditTrail";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Upload } from "lucide-react";
+import FileUpload from "@/components/FileUpload";
 import { generateMockAttachments } from "@/lib/mock-attachments";
 import {
   FileText,
@@ -529,9 +530,13 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
           </div>
 
           <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="records">My Records</TabsTrigger>
+              <TabsTrigger value="upload">
+                <Upload className="h-4 w-4 mr-1" />
+                Upload
+              </TabsTrigger>
               <TabsTrigger value="providers">Providers</TabsTrigger>
               <TabsTrigger value="monetization">
                 <DollarSign className="h-4 w-4 mr-1" />
@@ -1136,6 +1141,37 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="upload" className="space-y-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Upload Medical Files</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Upload your medical documents securely to 0G decentralized storage
+                  </p>
+                </div>
+                
+                <FileUpload 
+                  onUploadComplete={(fileId) => {
+                    console.log('File uploaded:', fileId);
+                  }}
+                />
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Uploads</CardTitle>
+                    <CardDescription>
+                      Your recently uploaded medical files
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-gray-500">
+                      No files uploaded yet. Use the upload area above to add your first medical document.
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="audit" className="space-y-6">

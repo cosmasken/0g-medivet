@@ -3,11 +3,12 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Upload, File, X, CheckCircle } from 'lucide-react';
+import { Upload, File, CheckCircle } from 'lucide-react';
 import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
 import { useWallet } from '@/hooks/useWallet';
 import { createBlobFromFile } from '@/lib/0g/blob';
 import { uploadToStorage } from '@/lib/0g/uploader';
+import { BrowserProvider } from 'ethers';
 import toast from 'react-hot-toast';
 
 interface FileUploadProps {
@@ -39,21 +40,37 @@ const FileUpload = ({
     setUploadProgress(0);
 
     try {
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
-      }, 200);
+      // Get signer from wallet
+      if (!window.ethereum) {
+        throw new Error('No wallet found');
+      }
+
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      setUploadProgress(20);
 
       // Create blob from file
       const blob = await createBlobFromFile(file);
-      
-      // For demo purposes, we'll simulate the 0G upload
-      // In production, you would use actual 0G network endpoints
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      const mockRootHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+      setUploadProgress(40);
 
-      clearInterval(progressInterval);
+      // Upload to 0G storage
+      const storageRpc = 'https://rpc-storage-testnet.0g.ai';
+      const l1Rpc = 'https://evmrpc-testnet.0g.ai';
+      
+      setUploadProgress(60);
+      
+      const [success, error] = await uploadToStorage(blob, storageRpc, l1Rpc, signer);
+      
+      if (!success || error) {
+        throw error || new Error('Upload failed');
+      }
+
       setUploadProgress(100);
+
+      // Generate mock hashes for demo (in production, get from 0G response)
+      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+      const mockRootHash = blob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
 
       // Add file to store
       const fileMetadata = {
@@ -61,25 +78,25 @@ const FileUpload = ({
         name: file.name,
         type: file.type,
         size: file.size,
-        category: 'general',
-        description: `Uploaded file: ${file.name}`,
+        category: 'medical',
+        description: `Medical file: ${file.name}`,
         uploadDate: new Date().toISOString(),
         walletAddress: address,
         txHash: mockTxHash,
         rootHash: mockRootHash,
         isTextRecord: false,
         shared: false,
-        tags: []
+        tags: ['uploaded', 'medical']
       };
 
       addFile(fileMetadata);
       
-      toast.success('File uploaded successfully!');
+      toast.success('File uploaded to 0G Network successfully!');
       onUploadComplete?.(fileMetadata.id);
       
     } catch (error) {
       console.error('Upload failed:', error);
-      toast.error('Upload failed. Please try again.');
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -122,10 +139,10 @@ const FileUpload = ({
               <Upload className="h-12 w-12 text-gray-400 mx-auto" />
               <div>
                 <p className="text-lg font-medium text-gray-900">
-                  {isDragActive ? 'Drop your file here' : 'Upload medical file'}
+                  {isDragActive ? 'Drop your file here' : 'Upload to 0G Network'}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Drag and drop or click to select a file
+                  Drag and drop or click to select a medical file
                 </p>
                 <p className="text-xs text-gray-400 mt-2">
                   Supported: Images, PDF, Documents (max {Math.round(maxSize / 1024 / 1024)}MB)
@@ -134,15 +151,6 @@ const FileUpload = ({
             </div>
           )}
         </div>
-        
-        {!uploading && (
-          <div className="mt-4 text-center">
-            <Button variant="outline" onClick={() => document.querySelector('input[type="file"]')?.click()}>
-              <File className="h-4 w-4 mr-2" />
-              Choose File
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
