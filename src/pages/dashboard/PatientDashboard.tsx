@@ -1309,7 +1309,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                 <Label htmlFor="emergency-name">Emergency Contact Name</Label>
                 <Input
                   id="emergency-name"
-                  defaultValue={patient.emergencyContact.name}
+                  defaultValue={patient.emergencyContact?.name || ''}
                   placeholder="Emergency contact name"
                 />
               </div>
@@ -1317,7 +1317,7 @@ export default function PatientDashboard({ patientId = '1' }: PatientDashboardPr
                 <Label htmlFor="emergency-phone">Emergency Contact Phone</Label>
                 <Input
                   id="emergency-phone"
-                  defaultValue={patient.emergencyContact.phone}
+                  defaultValue={patient.emergencyContact?.phone || ''}
                   placeholder="Emergency contact phone"
                 />
               </div>
