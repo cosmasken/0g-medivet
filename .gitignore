@@ -44,3 +44,5 @@ server/README.md
 
 .env
 *md
+
+/server/.env

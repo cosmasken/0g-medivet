@@ -13,10 +13,14 @@ app.use(express.json());
 // Import routes
 const usersRouter = require('./routes/users');
 const recordsRouter = require('./routes/records');
+const healthRouter = require('./routes/health');
+const providersRouter = require('./routes/providers');
 
 // Use routes
 app.use('/api/users', usersRouter);
 app.use('/api/records', recordsRouter);
+app.use('/api/health', healthRouter);
+app.use('/api/providers', providersRouter);
 
 // Initialize SQLite database
 const db = new sqlite3.Database(path.join(__dirname, 'audit.db'));
