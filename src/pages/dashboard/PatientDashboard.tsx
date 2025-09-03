@@ -5,14 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FileUpload } from '@/components/FileUpload';
+import FileUpload from '@/components/FileUpload';
 import { AddProviderModal } from '@/components/AddProviderModal';
 import { ProviderSearch } from '@/components/ProviderSearch';
+import { HealthProfileEditor } from '@/components/HealthProfileEditor';
 import { useProviderStore } from '@/stores/providerStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useAuthStore } from '@/stores/authStore';
 import { useRecordsQuery } from '@/hooks/useRecordsQuery';
-import { Upload, Users, UserPlus, FileText, DollarSign, Brain, Shield, Settings, LogOut, User, Bell, Activity, Calendar, Heart } from 'lucide-react';
+import { Upload, Users, UserPlus, FileText, DollarSign, Brain, Shield, Settings, LogOut, User, Bell, Activity, Calendar, Heart, Edit } from 'lucide-react';
 
 export default function PatientDashboard() {
   const { address, disconnect } = useWallet();
@@ -20,20 +21,22 @@ export default function PatientDashboard() {
   const { providers } = useProviderStore();
   const { data: recordsData } = useRecordsQuery(currentUser?.id);
   const [showAddProvider, setShowAddProvider] = useState(false);
+  const [showHealthEditor, setShowHealthEditor] = useState(false);
 
-  // Real patient data
+  // Real patient data from user profile
   const patient = {
     id: currentUser?.id || 'patient-1',
     name: currentUser?.name || 'John Doe',
     email: currentUser?.email || 'john.doe@example.com',
-    dateOfBirth: '1985-03-15',
-    bloodType: 'O+',
-    allergies: ['Penicillin', 'Shellfish'],
+    dateOfBirth: currentUser?.profile?.dob || '1985-03-15',
+    bloodType: currentUser?.profile?.bloodType || 'Not set',
+    allergies: currentUser?.profile?.allergies || [],
     emergencyContact: {
-      name: 'Jane Doe',
-      relationship: 'Spouse',
-      phone: '+1 (555) 123-4567'
-    }
+      name: currentUser?.profile?.emergencyContactName || 'Not set',
+      relationship: currentUser?.profile?.emergencyContactRelation || 'Not set',
+      phone: currentUser?.profile?.emergencyContactPhone || 'Not set'
+    },
+    lastCheckup: currentUser?.profile?.lastCheckup || 'Not set'
   };
 
   const medicalRecords = recordsData?.records || [
@@ -46,7 +49,7 @@ export default function PatientDashboard() {
       status: 'Completed'
     },
     {
-      id: '2', 
+      id: '2',
       title: 'Blood Test Results',
       date: '2024-01-10',
       type: 'Lab Results',
@@ -96,7 +99,7 @@ export default function PatientDashboard() {
               <Button variant="ghost" size="sm">
                 <Bell className="h-4 w-4" />
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -200,7 +203,7 @@ export default function PatientDashboard() {
                   <p className="text-xs text-muted-foreground">Medical files uploaded</p>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Providers</CardTitle>
@@ -211,7 +214,7 @@ export default function PatientDashboard() {
                   <p className="text-xs text-muted-foreground">Connected healthcare providers</p>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Storage</CardTitle>
@@ -269,7 +272,12 @@ export default function PatientDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Health Summary</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Health Summary</CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => setShowHealthEditor(true)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -282,7 +290,11 @@ export default function PatientDashboard() {
                     <div>
                       <div className="flex justify-between text-sm">
                         <span>Allergies</span>
-                        <span className="font-medium">{patient.allergies.join(', ')}</span>
+                        <span className="font-medium">
+                          {Array.isArray(patient.allergies) && patient.allergies.length > 0 
+                            ? patient.allergies.join(', ') 
+                            : 'None listed'}
+                        </span>
                       </div>
                     </div>
                     <div>
@@ -294,7 +306,11 @@ export default function PatientDashboard() {
                     <div>
                       <div className="flex justify-between text-sm">
                         <span>Last Checkup</span>
-                        <span className="font-medium">Jan 15, 2024</span>
+                        <span className="font-medium">
+                          {patient.lastCheckup !== 'Not set' 
+                            ? new Date(patient.lastCheckup).toLocaleDateString()
+                            : 'Not set'}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -367,7 +383,7 @@ export default function PatientDashboard() {
                 Add Provider
               </Button>
             </div>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Provider Management</CardTitle>
@@ -390,7 +406,7 @@ export default function PatientDashboard() {
                     <ProviderSearch filterByAccess="view" />
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm">Edit Access</CardTitle>
@@ -399,7 +415,7 @@ export default function PatientDashboard() {
                     <ProviderSearch filterByAccess="edit" />
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm">Full Access</CardTitle>
@@ -449,9 +465,14 @@ export default function PatientDashboard() {
           </TabsContent>
         </Tabs>
 
-        <AddProviderModal 
-          open={showAddProvider} 
-          onOpenChange={setShowAddProvider} 
+        <AddProviderModal
+          open={showAddProvider}
+          onOpenChange={setShowAddProvider}
+        />
+
+        <HealthProfileEditor
+          open={showHealthEditor}
+          onOpenChange={setShowHealthEditor}
         />
       </div>
     </div>

@@ -139,7 +139,31 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      completeOnboarding: async () => {
+      updateHealthProfile: async (healthData) => {
+    const { currentUser } = get();
+    if (!currentUser) return;
+
+    try {
+      const updatedProfile = {
+        ...currentUser.profile,
+        ...healthData
+      };
+      
+      await apiUpdateProfile(currentUser.id, updatedProfile);
+      
+      set(state => ({
+        currentUser: state.currentUser ? {
+          ...state.currentUser,
+          profile: updatedProfile
+        } : null
+      }));
+    } catch (error) {
+      console.error('Health profile update failed:', error);
+      throw error;
+    }
+  },
+
+  completeOnboarding: async () => {
         const currentUser = get().currentUser;
         if (currentUser) {
           try {
