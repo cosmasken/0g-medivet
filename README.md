@@ -404,21 +404,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Open Source Contributors** for their valuable contributions
 - **Patients and Providers** for testing and feedback
 
-## 📞 Support & Community
-
-- **Documentation**: [docs.medivet.health](https://docs.medivet.health)
-- **Discord Community**: [discord.gg/medivet](https://discord.gg/medivet)
-- **GitHub Issues**: [Report bugs and feature requests](https://github.com/your-org/medData/issues)
-- **Email**: support@medivet.health
-- **Twitter**: [@MediVetHealth](https://twitter.com/MediVetHealth)
-
 ## 🔗 Quick Links
 
 | Component | Live Demo | Documentation | Status |
 |-----------|-----------|---------------|--------|
-| **Web App** | [app.medivet.health](https://app.medivet.health) | [Web Docs](./web/README.md) | ✅ Live |
-| **API Server** | [api.medivet.health](https://api.medivet.health) | [API Docs](./server/README.md) | ✅ Live |
-| **Android App** | [Play Store](https://play.google.com/store/apps/details?id=com.medivet) | [Android Docs](./android/README.md) | 🔄 Beta |
+| **Web App** | [medivet-data.netlify.app](https://medivet-data.netlify.app/) | [Web Docs](./web/README.md) | ✅ Live |
+| **API Server** | [medivet-backend-72tq.onrender.com](https://medivet-backend-72tq.onrender.com) | [API Docs](./server/README.md) | ✅ Live |
+| **Android App** | [APK Download](./android/apk/) | [Android Docs](./android/README.md) | 🔄 Beta |
 
 ---
 
