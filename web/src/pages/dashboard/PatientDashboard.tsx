@@ -11,6 +11,7 @@ import { ProviderSearch } from '@/components/ProviderSearch';
 import { HealthProfileEditor } from '@/components/HealthProfileEditor';
 import { AddRecordModal } from '@/components/AddRecordModal';
 import AIAnalysisDisplay from '@/components/AIAnalysisDisplay';
+import { MonetizationDashboard } from '@/components/MonetizationDashboard';
 import { useProviderStore } from '@/stores/providerStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useAuthStore } from '@/stores/authStore';
@@ -35,10 +36,10 @@ export default function PatientDashboard() {
 
   // Real patient data from user profile
   const patient = {
-    id: currentUser?.id || 'patient-1',
-    name: currentUser?.name || 'John Doe',
-    email: currentUser?.email || 'john.doe@example.com',
-    dateOfBirth: currentUser?.profile?.dob || '1985-03-15',
+    id: currentUser?.id || 'unknown',
+    name: currentUser?.profile?.fullName || currentUser?.profile?.username || 'Unknown User',
+    email: currentUser?.profile?.email || `${currentUser?.profile?.username || 'user'}@medivet.test`,
+    dateOfBirth: currentUser?.profile?.dob || 'Not set',
     bloodType: currentUser?.profile?.healthProfile?.bloodType || 'Not set',
     allergies: currentUser?.profile?.healthProfile?.allergies || [],
     emergencyContact: {
@@ -457,21 +458,7 @@ export default function PatientDashboard() {
           </TabsContent>
 
           <TabsContent value="monetization" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Data Monetization</CardTitle>
-                <CardDescription>
-                  Earn from your anonymized medical data contributions to research
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <DollarSign className="h-12 w-12 mx-auto mb-4" />
-                  <p>Monetization features coming soon.</p>
-                  <p className="text-sm">Help advance medical research while earning rewards.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <MonetizationDashboard userId={currentUser.id} />
           </TabsContent>
 
           <TabsContent value="ai" className="space-y-6">

@@ -1,0 +1,16 @@
+{
+  "name": "medivet-test-scripts",
+  "version": "1.0.0",
+  "description": "Test data generation scripts for MediVet",
+  "main": "generate-test-users.js",
+  "scripts": {
+    "generate": "node generate-test-users.js",
+    "test": "echo \"No tests specified\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "keywords": ["medivet", "test-data", "supabase"],
+  "author": "MediVet Team",
+  "license": "MIT"
+}

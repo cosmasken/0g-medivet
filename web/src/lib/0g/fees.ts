@@ -109,7 +109,7 @@ export async function calculateFeesWithContract(
     
     // Try to get market address, but use fallback if it fails
     let marketAddr;
-    let pricePerSector = BigInt('1000000000000000'); // 0.001 ETH fallback
+    let pricePerSector = BigInt('1000000000000000'); // 0.001 OG fallback
     
     try {
       marketAddr = await flowContract.market();
@@ -133,7 +133,7 @@ export async function calculateFeesWithContract(
       storageFee = calculatePrice(submission, pricePerSector);
     } catch (error) {
       console.warn('Price calculation failed, using size-based fallback:', error);
-      // Fallback: ~0.001 ETH per MB
+      // Fallback: ~0.001 OG per MB
       const sizeInMB = Math.ceil(submission.length / (1024 * 1024));
       storageFee = BigInt(sizeInMB) * BigInt('1000000000000000');
     }

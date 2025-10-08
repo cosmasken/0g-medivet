@@ -104,28 +104,44 @@ const FileUpload = ({
       // Create blob from file
       const blob = createBlobFromFile(selectedFile);
 
+      // Calculate the Merkle root separately to ensure we have it available before upload
+      const { calculateMerkleRootFromFile } = await import('@/lib/0g/hashUtils');
+      let calculatedRootHash = 'unknown';
+      try {
+        calculatedRootHash = await calculateMerkleRootFromFile(selectedFile);
+        console.log('📋 Calculated root hash before upload:', calculatedRootHash);
+      } catch (hashError) {
+        console.warn('⚠️ Could not calculate hash directly from file:', hashError);
+        // Fallback: try to extract from blob if available
+        calculatedRootHash = blob?.root || blob?.merkleRoot || 'unknown';
+        console.log('📋 Fallback: Extracted from blob:', calculatedRootHash);
+      }
+
       // Upload to 0G Network
       const uploadResult = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
       console.log('Upload result:', uploadResult);
 
-      // Extract the correct hash from upload result
-      const resultTxHash = uploadResult?.root || uploadResult?.txHash || uploadResult?.hash || `upload-${Date.now()}`;
-      const merkleRoot = blob.merkleRoot || uploadResult?.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
+      // Use the calculated hash as primary source, fall back to upload result, then to default
+      let resultTxHash = calculatedRootHash !== 'unknown' ? calculatedRootHash : 
+                        (uploadResult?.root || uploadResult?.txHash || uploadResult?.hash || `upload-${Date.now()}`);
+      
+      const merkleRoot = calculatedRootHash !== 'unknown' ? calculatedRootHash : 
+                        (uploadResult?.merkleRoot || uploadResult?.root || `0x${Math.random().toString(16).substr(2, 64)}`);
 
       // Create medical record using the new API structure
       const recordData = {
         user_id: currentUser.id,
-        title: selectedFile.name,
-        description: `Uploaded file: ${selectedFile.name}`,
-        category,
-        specialty,
-        priority_level: priority,
-        file_type: selectedFile.type,
-        file_size: selectedFile.size,
-        zero_g_hash: resultTxHash,
-        merkle_root: merkleRoot,
-        transaction_hash: resultTxHash,
-        tags: tags.filter(tag => tag.trim()),
+        title: selectedFile.name || 'Untitled',
+        description: `Uploaded file: ${selectedFile.name}` || 'No description',
+        category: category || 'general',
+        specialty: specialty || 'general',
+        priority_level: priority || 'medium',
+        file_type: selectedFile.type || 'application/octet-stream',
+        file_size: selectedFile.size || 0,
+        zero_g_hash: resultTxHash || 'unknown',
+        merkle_root: merkleRoot || 'unknown',
+        transaction_hash: resultTxHash || 'unknown',
+        tags: tags && Array.isArray(tags) ? tags.filter(tag => tag.trim()) : [],
         upload_status: 'completed'
       };
 
@@ -273,7 +289,7 @@ const FileUpload = ({
             </div>
 
             <div className="bg-blue-50 p-4 rounded-lg text-center">
-              <p className="text-2xl font-bold text-blue-600">{estimatedFee} ETH</p>
+              <p className="text-2xl font-bold text-blue-600">{estimatedFee} OG</p>
               <p className="text-sm text-gray-600 mt-1">
                 Fee for storing on 0G Network
               </p>

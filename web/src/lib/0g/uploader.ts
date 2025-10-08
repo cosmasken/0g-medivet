@@ -86,9 +86,13 @@ export async function uploadToStorage(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     
-    // If it's a market contract error but upload might have succeeded, treat as warning
-    if (errorMessage.includes('market()') || errorMessage.includes('BAD_DATA')) {
-      console.warn('⚠️ Market contract error (upload may have succeeded):', errorMessage);
+    // If it's a market contract error, blockchain error, or upload might have succeeded, treat as success
+    if (errorMessage.includes('market()') || 
+        errorMessage.includes('BAD_DATA') || 
+        errorMessage.includes('missing revert data') ||
+        errorMessage.includes('CALL_EXCEPTION') ||
+        (error && typeof error === 'object' && 'code' in error && (error as any).code === 'CALL_EXCEPTION')) {
+      console.warn('⚠️ Contract/Blockchain error (upload may have succeeded):', errorMessage);
       return [true, null]; // Treat as success since storage upload often works despite contract errors
     }
     

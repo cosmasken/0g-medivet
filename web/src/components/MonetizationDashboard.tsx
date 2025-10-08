@@ -18,380 +18,284 @@ import {
   Target,
   PiggyBank,
   CreditCard,
-  AlertCircle,
-  CheckCircle,
-  Clock
 } from "lucide-react";
-import { 
-  mockPatientEarnings, 
-  mockMonetizedRecords, 
-  mockTransactions,
-  generateMonetizedRecord,
-  calculatePotentialEarnings,
-  type MonetizedRecord 
-} from "@/lib/monetization-data";
 
-interface MonetizationDashboardProps {
-  patientId: string;
-  medicalRecords: any[];
-  onToggleMonetization: (recordId: string, enabled: boolean) => void;
+interface MonetizedRecord {
+  id: string;
+  title: string;
+  category: string;
+  earnings: number;
+  views: number;
+  status: 'active' | 'pending' | 'sold';
 }
 
-export function MonetizationDashboard({ 
-  patientId, 
-  medicalRecords, 
-  onToggleMonetization 
-}: MonetizationDashboardProps) {
-  const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [monetizedRecords, setMonetizedRecords] = useState<MonetizedRecord[]>(
-    mockMonetizedRecords.filter(mr => mr.patientId === patientId)
-  );
+interface MonetizationDashboardProps {
+  userId: string;
+}
 
-  // Get patient earnings data
-  const patientEarnings = mockPatientEarnings.find(pe => pe.patientId === patientId) || {
-    patientId,
-    totalEarnings: 0,
-    totalRecordsSold: 0,
-    averageRecordPrice: 0,
-    monthlyEarnings: [],
-    topPerformingRecords: [],
-    pendingPayouts: 0
+export function MonetizationDashboard({ userId }: MonetizationDashboardProps) {
+  const [monetizationEnabled, setMonetizationEnabled] = useState(false);
+  const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
+
+  // Mock data - replace with actual API calls
+  const earningsData = {
+    total: 0,
+    thisMonth: 0,
+    lastMonth: 0,
+    growth: 0
   };
 
-  // Get recent transactions
-  const recentTransactions = mockTransactions
-    .filter(tx => tx.sellerId === patientId)
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, 5);
-
-  const handleToggleMonetization = (record: any, enabled: boolean) => {
-    if (enabled) {
-      // Create monetized record
-      const monetizedRecord = generateMonetizedRecord(patientId, record);
-      setMonetizedRecords(prev => [...prev, monetizedRecord]);
-    } else {
-      // Remove monetized record
-      setMonetizedRecords(prev => prev.filter(mr => mr.recordId !== record.id));
-    }
-    onToggleMonetization(record.id, enabled);
+  const marketplaceStats = {
+    totalListings: 0,
+    activeBuyers: 0,
+    avgPrice: 0
   };
 
-  const isRecordMonetized = (recordId: string) => {
-    return monetizedRecords.some(mr => mr.recordId === recordId);
-  };
-
-  const getMonetizedRecord = (recordId: string) => {
-    return monetizedRecords.find(mr => mr.recordId === recordId);
-  };
-
-  const getRecordTypeIcon = (type: string) => {
-    switch (type) {
-      case 'genetic': return '🧬';
-      case 'imaging': return '🔬';
-      case 'lab': return '🧪';
-      case 'mental-health': return '🧠';
-      case 'prescription': return '💊';
-      case 'visit': return '👩‍⚕️';
-      case 'vital': return '❤️';
-      case 'allergy': return '⚠️';
-      default: return '📋';
-    }
-  };
-
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'bg-gray-100 text-gray-800';
-      case 'uncommon': return 'bg-green-100 text-green-800';
-      case 'rare': return 'bg-blue-100 text-blue-800';
-      case 'very-rare': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const monetizedRecords: MonetizedRecord[] = [];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Record Monetization</h2>
-          <p className="text-muted-foreground">
-            Earn money by sharing your anonymized medical records for research
-          </p>
-        </div>
-        <Button variant="outline">
-          <Settings className="h-4 w-4 mr-2" />
-          Settings
-        </Button>
-      </div>
-
-      {/* Earnings Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Earnings</p>
-                <p className="text-2xl font-bold text-green-600">
-                  ${patientEarnings.totalEarnings.toLocaleString()}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Records Sold</p>
-                <p className="text-2xl font-bold">{patientEarnings.totalRecordsSold}</p>
-              </div>
-              <BarChart3 className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg. Price</p>
-                <p className="text-2xl font-bold">
-                  ${patientEarnings.averageRecordPrice.toFixed(0)}
-                </p>
-              </div>
-              <Target className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Pending Payout</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  ${patientEarnings.pendingPayouts.toFixed(2)}
-                </p>
-              </div>
-              <PiggyBank className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="records" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="records">My Records</TabsTrigger>
-          <TabsTrigger value="earnings">Earnings</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="records" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Medical Records</CardTitle>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Data Monetization</CardTitle>
               <CardDescription>
-                Toggle monetization for your medical records. All data is anonymized before sharing.
+                Earn from your anonymized medical data contributions to research
               </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {medicalRecords.map((record) => {
-                  const isMonetized = isRecordMonetized(record.id);
-                  const monetizedRecord = getMonetizedRecord(record.id);
-                  const potentialEarnings = calculatePotentialEarnings(record);
-
-                  return (
-                    <div key={record.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">{getRecordTypeIcon(record.type)}</span>
-                            <h4 className="font-medium">{record.title}</h4>
-                            <Badge variant="outline">{record.type}</Badge>
-                            {isMonetized && (
-                              <Badge className="bg-green-100 text-green-800">
-                                <DollarSign className="h-3 w-3 mr-1" />
-                                Monetized
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            {record.description}
-                          </p>
-                          
-                          {isMonetized && monetizedRecord ? (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Current Price:</span>
-                                <p className="font-medium">${monetizedRecord.currentPrice}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Times Sold:</span>
-                                <p className="font-medium">{monetizedRecord.totalPurchases}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Revenue:</span>
-                                <p className="font-medium text-green-600">
-                                  ${monetizedRecord.revenueGenerated}
-                                </p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Quality:</span>
-                                <p className="font-medium">{monetizedRecord.qualityScore.toFixed(1)}/10</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-sm text-muted-foreground">
-                              <p>Potential earnings: ${potentialEarnings.min} - ${potentialEarnings.max}</p>
-                              <p>Estimated: ${potentialEarnings.estimated}</p>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center gap-2 ml-4">
-                          <Switch
-                            checked={isMonetized}
-                            onCheckedChange={(checked) => handleToggleMonetization(record, checked)}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {isMonetized ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="earnings" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Earnings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {patientEarnings.monthlyEarnings.map((earning, index) => (
-                    <div key={earning.month} className="flex items-center justify-between">
-                      <span className="text-sm">{earning.month}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-600 h-2 rounded-full" 
-                            style={{ 
-                              width: `${(earning.amount / Math.max(...patientEarnings.monthlyEarnings.map(e => e.amount))) * 100}%` 
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium">${earning.amount}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Performing Records</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {monetizedRecords
-                    .sort((a, b) => b.revenueGenerated - a.revenueGenerated)
-                    .slice(0, 5)
-                    .map((record) => (
-                      <div key={record.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span>{getRecordTypeIcon(record.recordType)}</span>
-                          <div>
-                            <p className="text-sm font-medium">{record.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {record.totalPurchases} sales
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-green-600">
-                            ${record.revenueGenerated}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            ${record.currentPrice} each
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
+            </div>
+            <Switch
+              checked={monetizationEnabled}
+              onCheckedChange={setMonetizationEnabled}
+            />
           </div>
-        </TabsContent>
+        </CardHeader>
+        <CardContent>
+          {!monetizationEnabled ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <PiggyBank className="h-12 w-12 mx-auto mb-4" />
+              <p className="text-lg font-medium mb-2">Enable Data Monetization</p>
+              <p className="text-sm mb-4">
+                Help advance medical research while earning rewards from your anonymized health data.
+              </p>
+              <Button onClick={() => setMonetizationEnabled(true)}>
+                Get Started
+              </Button>
+            </div>
+          ) : (
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="records">My Records</TabsTrigger>
+                <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
+                <TabsTrigger value="settings">Settings</TabsTrigger>
+              </TabsList>
 
-        <TabsContent value="transactions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
-              <CardDescription>
-                Your recent record sales and earnings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentTransactions.map((transaction) => {
-                  const record = monetizedRecords.find(mr => mr.id === transaction.monetizedRecordId);
-                  return (
-                    <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full ${
-                          transaction.status === 'completed' ? 'bg-green-100' :
-                          transaction.status === 'pending' ? 'bg-yellow-100' :
-                          'bg-red-100'
-                        }`}>
-                          {transaction.status === 'completed' ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          ) : transaction.status === 'pending' ? (
-                            <Clock className="h-4 w-4 text-yellow-600" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-red-600" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium">{record?.title || 'Unknown Record'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(transaction.timestamp).toLocaleDateString()}
-                          </p>
-                        </div>
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">${earningsData.total.toFixed(2)}</div>
+                      <p className="text-xs text-muted-foreground">
+                        +{earningsData.growth}% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">${earningsData.thisMonth.toFixed(2)}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Active monetization enabled
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Records Listed</CardTitle>
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{monetizedRecords.length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Available for research
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Getting Started</CardTitle>
+                    <CardDescription>
+                      Follow these steps to start earning from your medical data
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4 p-4 border rounded-lg">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-blue-600">1</span>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-green-600">
-                          +${transaction.netAmount.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          ${transaction.amount} - ${transaction.commission.toFixed(2)} fee
+                      <div>
+                        <h4 className="font-medium">Upload Medical Records</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Add your medical files to the platform
                         </p>
                       </div>
                     </div>
-                  );
-                })}
-                
-                {recentTransactions.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CreditCard className="h-12 w-12 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No transactions yet</h3>
-                    <p>Start monetizing your records to see transactions here</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+                    <div className="flex items-center gap-4 p-4 border rounded-lg">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-blue-600">2</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Enable Anonymization</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Your data will be anonymized for research use
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 p-4 border rounded-lg">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-blue-600">3</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Start Earning</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Receive payments when researchers use your data
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="records" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Monetized Records</CardTitle>
+                    <CardDescription>
+                      Medical records available for research monetization
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {monetizedRecords.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Target className="h-12 w-12 mx-auto mb-4" />
+                        <p>No records available for monetization yet.</p>
+                        <p className="text-sm">Upload medical records to get started.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {monetizedRecords.map((record) => (
+                          <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div>
+                              <h4 className="font-medium">{record.title}</h4>
+                              <p className="text-sm text-muted-foreground">{record.category}</p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <p className="font-medium">${record.earnings.toFixed(2)}</p>
+                                <p className="text-sm text-muted-foreground">{record.views} views</p>
+                              </div>
+                              <Badge variant={record.status === 'active' ? 'default' : 'secondary'}>
+                                {record.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="marketplace" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Marketplace Statistics</CardTitle>
+                    <CardDescription>
+                      Current market trends and opportunities
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold">{marketplaceStats.totalListings}</div>
+                        <p className="text-sm text-muted-foreground">Total Listings</p>
+                      </div>
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold">{marketplaceStats.activeBuyers}</div>
+                        <p className="text-sm text-muted-foreground">Active Buyers</p>
+                      </div>
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold">${marketplaceStats.avgPrice.toFixed(2)}</div>
+                        <p className="text-sm text-muted-foreground">Average Price</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="settings" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Monetization Settings</CardTitle>
+                    <CardDescription>
+                      Configure your data monetization preferences
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">Auto-approve research requests</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Automatically approve verified research institutions
+                        </p>
+                      </div>
+                      <Switch />
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">Minimum price per record</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Set minimum earnings threshold
+                        </p>
+                      </div>
+                      <span className="text-sm font-medium">$5.00</span>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">Data retention period</h4>
+                        <p className="text-sm text-muted-foreground">
+                          How long to keep data available
+                        </p>
+                      </div>
+                      <span className="text-sm font-medium">12 months</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
