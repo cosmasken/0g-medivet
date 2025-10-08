@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react';
-import { submitComputeAnalysis } from '../lib/api';
+import { submitAIAnalysis, getAIAnalysisJob } from '../lib/api';
 
 export interface AnalysisResult {
   jobId: string;
   analysis: string;
   isValid: boolean;
   provider: string;
-  model: string;
   timestamp: string;
+  computeTime?: number;
 }
 
 export interface AnalysisStatus {
@@ -18,7 +18,7 @@ export interface AnalysisStatus {
 }
 
 /**
- * Hook for managing AI analysis jobs with 0G Compute
+ * Hook for managing AI analysis jobs with 0G Compute Network
  */
 export const useAIAnalysis = () => {
   const [status, setStatus] = useState<AnalysisStatus>({
@@ -30,8 +30,9 @@ export const useAIAnalysis = () => {
 
   const analyzeFile = useCallback(async (
     fileData: any,
-    analysisType: 'medical-analysis' | 'enhanced-analysis' | 'test-analysis' = 'medical-analysis',
-    userId: string
+    analysisType: string = 'medical-analysis',
+    userId: string,
+    fileId?: string
   ) => {
     setStatus({
       loading: true,
@@ -41,17 +42,23 @@ export const useAIAnalysis = () => {
     });
 
     try {
-      // Simulate progress updates
+      // Submit analysis request
       setStatus(prev => ({ ...prev, progress: 30 }));
       
-      // Use test endpoint for test-analysis type
-      const endpoint = analysisType === 'test-analysis' 
-        ? 'test-analyze' 
-        : 'analyze';
+      const result = await submitAIAnalysis({
+        fileData,
+        analysisType,
+        userId,
+        fileId
+      });
       
-      const result = await submitComputeAnalysis(fileData, analysisType, userId, endpoint);
+      setStatus(prev => ({ ...prev, progress: 70 }));
       
-      setStatus(prev => ({ ...prev, progress: 90 }));
+      // If job ID is returned, poll for completion
+      if (result.jobId && !result.analysis) {
+        const jobResult = await getAIAnalysisJob(result.jobId);
+        result.analysis = jobResult.result || result.analysis;
+      }
       
       setStatus({
         loading: false,
@@ -71,7 +78,6 @@ export const useAIAnalysis = () => {
         progress: 0
       });
 
-      // Re-throw for caller to handle fallback
       throw error;
     }
   }, []);

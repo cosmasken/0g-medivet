@@ -8,18 +8,12 @@ import { Upload, File, DollarSign, CheckCircle, Brain, Zap } from 'lucide-react'
 import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useUpload } from '@/hooks/useUpload';
-import { useCreateMedicalFileMutation } from '@/hooks/useMedicalFiles';
+import { useCreateFileRecordMutation } from '@/hooks/useFileRecords';
 import { createBlobFromFile } from '@/lib/0g/blob';
 import { useAuthStore } from '@/stores/authStore';
 import { BrowserProvider } from 'ethers';
-import { auditService } from '@/services/auditService';
+import { createAuditLog } from '@/lib/api';
 import toast from 'react-hot-toast';
-
-interface FileUploadProps {
-  onUploadComplete?: (fileId: string) => void;
-  maxSize?: number;
-}
-
 
 interface FileUploadProps {
   onUploadComplete?: (fileId: string) => void;
@@ -34,11 +28,13 @@ const FileUpload = ({
   const { currentUser } = useAuthStore();
   const { addFile } = useMedicalFilesStore();
   const { loading, error, uploadStatus, txHash, uploadFile, resetUploadState } = useUpload();
-  const createFileMutation = useCreateMedicalFileMutation();
+  const createRecordMutation = useCreateFileRecordMutation();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [estimatedFee, setEstimatedFee] = useState<string>('');
-  const [category, setCategory] = useState<string>('Other');
+  const [category, setCategory] = useState<string>('laboratory');
+  const [specialty, setSpecialty] = useState<string>('general');
+  const [priority, setPriority] = useState<string>('medium');
   const [tags, setTags] = useState<string[]>([]);
   const [step, setStep] = useState<'select' | 'confirm' | 'estimate' | 'upload'>('select');
 
@@ -98,7 +94,7 @@ const FileUpload = ({
   }, [selectedFile]);
 
   const handleConfirmUpload = useCallback(async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !currentUser?.id) return;
 
     setStep('upload');
 
@@ -108,57 +104,68 @@ const FileUpload = ({
       // Create blob from file
       const blob = createBlobFromFile(selectedFile);
 
-      // Upload to 0G
+      // Upload to 0G Network
       const uploadResult = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
       console.log('Upload result:', uploadResult);
 
       // Extract the correct hash from upload result
       const resultTxHash = uploadResult?.root || uploadResult?.txHash || uploadResult?.hash || `upload-${Date.now()}`;
+      const merkleRoot = blob.merkleRoot || uploadResult?.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
 
-      // Save to backend database
-      if (currentUser?.id) {
-        console.log('Saving to database:', {
-          user_id: currentUser.id,
-          title: selectedFile.name,
-          category: category || 'Other',
-          zero_g_hash: resultTxHash
-        });
+      // Create medical record using the new API structure
+      const recordData = {
+        user_id: currentUser.id,
+        title: selectedFile.name,
+        description: `Uploaded file: ${selectedFile.name}`,
+        category,
+        specialty,
+        priority_level: priority,
+        file_type: selectedFile.type,
+        file_size: selectedFile.size,
+        zero_g_hash: resultTxHash,
+        merkle_root: merkleRoot,
+        transaction_hash: resultTxHash,
+        tags: tags.filter(tag => tag.trim()),
+        upload_status: 'completed'
+      };
 
-        createFileMutation.mutate({
-          user_id: currentUser.id,
-          title: selectedFile.name,
-          description: `Uploaded file: ${selectedFile.name}`,
-          category: category || 'Other',
-          file_type: selectedFile.type,
-          file_size: selectedFile.size,
-          zero_g_hash: resultTxHash,
-          tags: tags.filter(tag => tag.trim())
-        });
-      }
+      console.log('Creating medical record:', recordData);
+      createRecordMutation.mutate(recordData);
 
       if (uploadResult?.success) {
-        // Add file to store
+        // Add file to local store for immediate UI update
         const fileMetadata = {
           id: `file-${Date.now()}`,
           name: selectedFile.name,
           type: selectedFile.type,
           size: selectedFile.size,
-          category: 'medical',
+          category,
           description: `Medical file: ${selectedFile.name}`,
           uploadDate: new Date().toISOString(),
           walletAddress: address!,
           txHash: resultTxHash,
-          rootHash: blob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`,
+          rootHash: merkleRoot,
           isTextRecord: false,
           shared: false,
-          tags: ['uploaded', 'medical']
+          tags: ['uploaded', 'medical', ...tags]
         };
 
         addFile(fileMetadata);
 
         // Log audit trail
         try {
-          await auditService.logFileUpload(address!, fileMetadata.id, selectedFile.name);
+          await createAuditLog({
+            wallet_address: address!,
+            action: 'upload_file',
+            resource_type: 'medical_record',
+            resource_id: fileMetadata.id,
+            details: {
+              file_name: selectedFile.name,
+              file_size: selectedFile.size,
+              category,
+              specialty
+            }
+          });
         } catch (error) {
           console.error('Failed to log audit trail:', error);
         }
@@ -177,7 +184,7 @@ const FileUpload = ({
       toast.error('Upload failed. Please try again.');
       setStep('estimate');
     }
-  }, [selectedFile, address, addFile, onUploadComplete, uploadFile, resetUploadState]);
+  }, [selectedFile, currentUser?.id, address, category, specialty, priority, tags, addFile, onUploadComplete, uploadFile, resetUploadState, createRecordMutation]);
 
   const handleCancel = useCallback(() => {
     setSelectedFile(null);

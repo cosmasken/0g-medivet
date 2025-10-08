@@ -1,11 +1,11 @@
 import { mockAPI } from './mocks/mockApiService';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://medivet-production.up.railway.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://medivet-backend-72tq.onrender.com/api';
 
 // Check if backend is available
 const checkBackendHealth = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`, {
+    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/health`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -68,17 +68,37 @@ const createApiWrapper = <T extends any[], R>(
 
 // User management
 export const authenticateUser = createApiWrapper(
-  async (walletAddress: string, role: 'patient' | 'provider' = 'patient') => {
+  async (walletAddress: string, role: 'patient' | 'provider' = 'patient', username?: string) => {
     const response = await fetch(`${API_BASE_URL}/users/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ wallet_address: walletAddress, role })
+      body: JSON.stringify({ 
+        wallet_address: walletAddress, 
+        role,
+        username: username || walletAddress.slice(0, 8)
+      })
     });
     
     if (!response.ok) throw new Error('Authentication failed');
     return response.json();
   },
   mockAPI.authenticateUser
+);
+
+export const loginUser = createApiWrapper(
+  async (username: string, walletAddress: string) => {
+    const response = await fetch(`${API_BASE_URL}/users/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, wallet_address: walletAddress })
+    });
+    
+    if (!response.ok) throw new Error('Login failed');
+    return response.json();
+  },
+  async (username: string, walletAddress: string) => {
+    return mockAPI.authenticateUser(walletAddress, 'patient');
+  }
 );
 
 export const updateUserProfile = createApiWrapper(
@@ -326,6 +346,194 @@ export const getProviderPatientRelationships = createApiWrapper(
     return response.json();
   },
   mockAPI.getProviderPatientRelationships
+);
+
+export const createProviderPatientRelationship = createApiWrapper(
+  async (relationshipData: {
+    provider_id: string;
+    patient_id: string;
+    relationship_type: string;
+    specialty?: string;
+    start_date?: string;
+    notes?: string;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/providers/patient-relationships`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(relationshipData)
+    });
+    
+    if (!response.ok) throw new Error('Failed to create provider-patient relationship');
+    return response.json();
+  },
+  async (relationshipData) => {
+    return { success: true, relationship: { id: `rel-${Date.now()}`, ...relationshipData } };
+  }
+);
+
+// Compute Services (AI Analysis)
+export const submitAIAnalysis = createApiWrapper(
+  async (analysisData: {
+    fileData: any;
+    analysisType: string;
+    userId: string;
+    fileId?: string;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/compute/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(analysisData)
+    });
+    
+    if (!response.ok) throw new Error('AI analysis submission failed');
+    return response.json();
+  },
+  async (analysisData) => {
+    return {
+      success: true,
+      jobId: `job-${Date.now()}`,
+      analysis: 'Mock AI analysis result for development purposes.',
+      isValid: true,
+      provider: '0x3feE5a4dd5FDb8a32dDA97Bed899830605dBD9D3',
+      timestamp: new Date().toISOString(),
+      computeTime: 1500
+    };
+  }
+);
+
+export const getAIAnalysisJob = createApiWrapper(
+  async (jobId: string) => {
+    const response = await fetch(`${API_BASE_URL}/compute/jobs/${jobId}`);
+    if (!response.ok) throw new Error('Failed to fetch AI analysis job');
+    return response.json();
+  },
+  async (jobId: string) => {
+    return {
+      jobId,
+      status: 'completed',
+      result: 'Mock AI analysis result',
+      timestamp: new Date().toISOString()
+    };
+  }
+);
+
+export const getComputeBalance = createApiWrapper(
+  async () => {
+    const response = await fetch(`${API_BASE_URL}/compute/balance`);
+    if (!response.ok) throw new Error('Failed to fetch compute balance');
+    return response.json();
+  },
+  async () => {
+    return { balance: 1000, currency: 'credits' };
+  }
+);
+
+export const getComputeServices = createApiWrapper(
+  async () => {
+    const response = await fetch(`${API_BASE_URL}/compute/services`);
+    if (!response.ok) throw new Error('Failed to fetch compute services');
+    return response.json();
+  },
+  async () => {
+    return {
+      services: [
+        { id: 'medical-analysis', name: 'Medical Analysis', cost: 10 },
+        { id: 'lab-interpretation', name: 'Lab Results Interpretation', cost: 15 }
+      ]
+    };
+  }
+);
+
+// Health Connect Integration
+export const syncHealthConnectData = createApiWrapper(
+  async (syncData: {
+    user_id: string;
+    health_data: Array<{
+      data_type: string;
+      start_time: string;
+      end_time: string;
+      value: number;
+      unit: string;
+      source_app?: string;
+      source_device?: string;
+      metadata?: any;
+    }>;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/health-connect/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(syncData)
+    });
+    
+    if (!response.ok) throw new Error('Health Connect sync failed');
+    return response.json();
+  },
+  async (syncData) => {
+    return {
+      success: true,
+      message: `${syncData.health_data.length} health data points synced successfully`,
+      synced_count: syncData.health_data.length
+    };
+  }
+);
+
+export const getHealthConnectData = createApiWrapper(
+  async (userId: string, params?: {
+    limit?: number;
+    offset?: number;
+    data_type?: string;
+    start_date?: string;
+    end_date?: string;
+    source_app?: string;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) searchParams.append(key, value.toString());
+      });
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/health-connect/user/${userId}?${searchParams}`);
+    if (!response.ok) throw new Error('Failed to fetch Health Connect data');
+    return response.json();
+  },
+  async (userId: string) => {
+    return { data: [], total: 0 };
+  }
+);
+
+// Audit Logs
+export const createAuditLog = createApiWrapper(
+  async (auditData: {
+    wallet_address: string;
+    action: string;
+    resource_type: string;
+    resource_id: string;
+    details?: any;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/audit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(auditData)
+    });
+    
+    if (!response.ok) throw new Error('Audit log creation failed');
+    return response.json();
+  },
+  async (auditData) => {
+    return { success: true, audit: { id: `audit-${Date.now()}`, ...auditData } };
+  }
+);
+
+export const getAuditLogs = createApiWrapper(
+  async (walletAddress: string) => {
+    const response = await fetch(`${API_BASE_URL}/audit/${walletAddress}`);
+    if (!response.ok) throw new Error('Failed to fetch audit logs');
+    return response.json();
+  },
+  async (walletAddress: string) => {
+    return { logs: [] };
+  }
 );
 
 export const createProviderPatientRelationship = createApiWrapper(

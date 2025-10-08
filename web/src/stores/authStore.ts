@@ -82,34 +82,21 @@ export const useAuthStore = create<AuthState>()(
       login: async (role: Role, profile: PatientProfile | ProviderProfile, walletAddress: string) => {
         try {
           set({ isLoading: true });
+          
+          // Generate username from wallet address if not provided
+          const username = (profile as any).username || walletAddress.slice(0, 8);
+          
           // Authenticate with backend
-          const { user } = await authenticateUser(walletAddress, role);
+          const { user } = await authenticateUser(walletAddress, role, username);
           
           const newUser: User = {
             id: user.id,
             walletAddress,
             role,
-            profile: user.user_profiles?.[0] ? {
-              fullName: user.user_profiles[0].full_name || '',
-              dob: user.user_profiles[0].date_of_birth || '',
-              contact: user.user_profiles[0].contact || user.user_profiles[0].email || '',
-              emergency: user.user_profiles[0].emergency_contact || '',
-              email: user.user_profiles[0].email,
-              phone: user.user_profiles[0].phone,
-              profileCompleted: user.user_profiles[0].profile_completed || false,
+            profile: {
               ...profile,
-              // Initialize health profile if not present
-              healthProfile: {
-                bloodType: '',
-                allergies: [],
-                medicalHistory: '',
-                emergencyContactName: '',
-                emergencyContactPhone: '',
-                emergencyContactRelation: '',
-                lastCheckup: ''
-              }
-            } : {
-              ...profile,
+              // Merge with existing profile data from backend if available
+              fullName: profile.fullName || user.username || '',
               // Initialize health profile if not present
               healthProfile: {
                 bloodType: '',
