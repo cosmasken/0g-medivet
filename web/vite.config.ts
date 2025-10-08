@@ -7,8 +7,9 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: true,
     port: 8080,
+    strictPort: true,
   },
   plugins: [
     react(),
@@ -47,6 +48,16 @@ export default defineConfig(({ mode }) => ({
   build: {
     commonjsOptions: {
       include: [/js-sha3/, /axios/, /node_modules/]
+    },
+    sourcemap: false,
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Suppress sourcemap warnings for 0G SDK
+        if (warning.code === 'SOURCEMAP_ERROR' && warning.message.includes('@0glabs/0g-ts-sdk')) {
+          return;
+        }
+        warn(warning);
+      }
     }
   }
 }));

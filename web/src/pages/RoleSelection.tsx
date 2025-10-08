@@ -20,7 +20,9 @@ export default function RoleSelection() {
         navigate(dashboardPath);
       } catch (error) {
         console.error('Login failed:', error);
-        navigate(`/onboarding/${role}`);
+        // Even if login fails, proceed to dashboard as we have local auth fallback
+        const dashboardPath = role === 'patient' ? '/dashboard/patient' : '/dashboard/provider';
+        navigate(dashboardPath);
       }
     } else {
       navigate(`/onboarding/${role}`);

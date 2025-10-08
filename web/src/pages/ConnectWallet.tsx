@@ -16,15 +16,33 @@ const ConnectWallet = () => {
   useEffect(() => {
     if (isConnected && address && selectedRole && !isAuthenticated) {
       setIsAutoLogging(true);
+      
+      // Create a minimal profile for auto-login
+      const defaultProfile = selectedRole === 'patient' ? {
+        fullName: '',
+        dob: '',
+        contact: '',
+        emergency: '',
+        username: address.slice(0, 8)
+      } : {
+        fullName: '',
+        specialization: '',
+        licenseNumber: '',
+        contact: '',
+        username: address.slice(0, 8)
+      };
+      
       // Auto-login with stored role
-      login(selectedRole, {}, address)
+      login(selectedRole, defaultProfile, address)
         .then(() => {
           const dashboardPath = selectedRole === 'patient' ? '/dashboard/patient' : '/dashboard/provider';
           navigate(dashboardPath);
         })
         .catch((error) => {
           console.error('Auto-login failed:', error);
-          navigate('/role-selection');
+          // Continue to dashboard even if backend login fails, as we have local auth
+          const dashboardPath = selectedRole === 'patient' ? '/dashboard/patient' : '/dashboard/provider';
+          navigate(dashboardPath);
         })
         .finally(() => {
           setIsAutoLogging(false);
@@ -76,8 +94,15 @@ const ConnectWallet = () => {
           reputation: 0
         };
 
-    login(role, profile, address);
-    navigate(role === 'patient' ? '/dashboard/patient' : '/dashboard/provider');
+    login(role, profile, address)
+      .then(() => {
+        navigate(role === 'patient' ? '/dashboard/patient' : '/dashboard/provider');
+      })
+      .catch((error) => {
+        console.error('Login failed:', error);
+        // Continue to dashboard even if backend login fails
+        navigate(role === 'patient' ? '/dashboard/patient' : '/dashboard/provider');
+      });
   };
 
   return (

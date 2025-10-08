@@ -86,8 +86,21 @@ export const useAuthStore = create<AuthState>()(
           // Generate username from wallet address if not provided
           const username = (profile as any).username || walletAddress.slice(0, 8);
           
-          // Authenticate with backend
-          const { user } = await authenticateUser(walletAddress, role, username);
+          let user;
+          try {
+            // Authenticate with backend
+            const response = await authenticateUser(walletAddress, role, username);
+            user = response.user;
+          } catch (authError) {
+            console.warn('Backend authentication failed, creating local user:', authError);
+            // Create a local user object when backend is unavailable
+            user = {
+              id: `local-${walletAddress.slice(0, 10)}`,
+              wallet_address: walletAddress,
+              username: username,
+              is_onboarded: false
+            };
+          }
           
           const newUser: User = {
             id: user.id,
@@ -96,7 +109,7 @@ export const useAuthStore = create<AuthState>()(
             profile: {
               ...profile,
               // Merge with existing profile data from backend if available
-              fullName: profile.fullName || user.username || '',
+              fullName: profile.fullName || user.username || username,
               // Initialize health profile if not present
               healthProfile: {
                 bloodType: '',

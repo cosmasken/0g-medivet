@@ -5,10 +5,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://medivet-backe
 // Check if backend is available
 const checkBackendHealth = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/health`, {
+    // The health endpoint is at the root URL, not under /api
+    const rootUrl = API_BASE_URL.endsWith('/api') ? API_BASE_URL.replace('/api', '') : API_BASE_URL;
+    const response = await fetch(`${rootUrl}/health`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
+    
     return response.ok;
   } catch (error) {
     console.warn('Backend health check failed:', error);
@@ -16,30 +19,48 @@ const checkBackendHealth = async (): Promise<boolean> => {
   }
 };
 
-// Flag to cache backend availability status
+// Flag to cache backend availability status with timeout
 let backendAvailable: boolean | null = null;
+let backendCheckTime: number | null = null;
+const CACHE_DURATION = 30000; // 30 seconds
 
 const isBackendAvailable = async (): Promise<boolean> => {
-  if (backendAvailable !== null) {
-    return backendAvailable;
+  const now = Date.now();
+  
+  // Re-check backend availability if cache is expired
+  if (backendAvailable !== null && backendCheckTime !== null) {
+    if (now - backendCheckTime < CACHE_DURATION) {
+      return backendAvailable;
+    }
   }
   
   // Check for environment variable override
   if (process.env.REACT_APP_USE_MOCKS === 'true') {
     backendAvailable = false;
+    backendCheckTime = now;
     return false;
   }
   
+  // On localhost, Netlify, or similar development environments, try backend first
   if (typeof window !== 'undefined' && 
-      (window.location.hostname.includes('netlify.app') || 
-       window.location.hostname.includes('localhost'))) {
-    // On Netlify or localhost, check if backend is available
-    backendAvailable = await checkBackendHealth();
-    return backendAvailable;
+      (window.location.hostname.includes('localhost') || 
+       window.location.hostname.includes('netlify.app') || 
+       window.location.hostname.includes('127.0.0.1'))) {
+    try {
+      backendAvailable = await checkBackendHealth();
+      backendCheckTime = now;
+      return backendAvailable;
+    } catch (error) {
+      console.warn('Backend health check failed, using mocks:', error);
+      backendAvailable = false;
+      backendCheckTime = now;
+      return false;
+    }
   }
   
-  // Default to backend available
+  // For other environments, default to backend available to prevent blocking
   backendAvailable = true;
+  backendCheckTime = now;
   return true;
 };
 
@@ -536,24 +557,6 @@ export const getAuditLogs = createApiWrapper(
   }
 );
 
-export const createProviderPatientRelationship = createApiWrapper(
-  async (providerId: string, patientId: string, relationshipType: string = 'treated', notes: string = '') => {
-    const response = await fetch(`${API_BASE_URL}/providers/patient-relationships`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        provider_id: providerId,
-        patient_id: patientId,
-        relationship_type: relationshipType,
-        notes
-      })
-    });
-    
-    if (!response.ok) throw new Error('Failed to create provider-patient relationship');
-    return response.json();
-  },
-  mockAPI.createProviderPatientRelationship
-);
 
 // Provider record access with payment
 export const accessRecordWithPayment = createApiWrapper(
@@ -620,37 +623,7 @@ export const getMarketplaceRecords = createApiWrapper(
   }
 );
 
-// Audit logs
-export const createAuditLog = createApiWrapper(
-  async (logData: {
-    user_id: string;
-    action: string;
-    resource_type: string;
-    resource_id: string;
-    details?: any;
-  }) => {
-    const response = await fetch(`${API_BASE_URL}/audit-logs`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(logData)
-    });
-    
-    if (!response.ok) throw new Error('Failed to create audit log');
-    return response.json();
-  },
-  async (logData) => {
-    return { success: true, log: { id: `log-${Date.now()}`, ...logData } };
-  }
-);
 
-export const getAuditLogs = createApiWrapper(
-  async (userId: string) => {
-    const response = await fetch(`${API_BASE_URL}/audit-logs/${userId}`);
-    if (!response.ok) throw new Error('Failed to get audit logs');
-    return response.json();
-  },
-  mockAPI.getAuditLogs
-);
 
 // 0G Compute API functions
 export const submitComputeAnalysis = createApiWrapper(
@@ -690,16 +663,6 @@ export const submitComputeAnalysis = createApiWrapper(
   }
 );
 
-export const getComputeBalance = createApiWrapper(
-  async () => {
-    const response = await fetch(`${API_BASE_URL}/compute/balance`);
-    if (!response.ok) throw new Error('Failed to get compute balance');
-    return response.json();
-  },
-  async () => {
-    return { total: '0.250', locked: '0.000' }; // Mock balance
-  }
-);
 
 export const checkComputeHealth = createApiWrapper(
   async () => {
