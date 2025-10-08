@@ -36,10 +36,10 @@ export default function PatientDashboard() {
 
   // Real patient data from user profile
   const patient = {
-    id: currentUser?.id || 'patient-1',
-    name: currentUser?.name || 'John Doe',
-    email: currentUser?.email || 'john.doe@example.com',
-    dateOfBirth: currentUser?.profile?.dob || '1985-03-15',
+    id: currentUser?.id || 'unknown',
+    name: currentUser?.profile?.fullName || currentUser?.profile?.username || 'Unknown User',
+    email: currentUser?.profile?.email || `${currentUser?.profile?.username || 'user'}@medivet.test`,
+    dateOfBirth: currentUser?.profile?.dob || 'Not set',
     bloodType: currentUser?.profile?.healthProfile?.bloodType || 'Not set',
     allergies: currentUser?.profile?.healthProfile?.allergies || [],
     emergencyContact: {

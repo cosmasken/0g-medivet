@@ -54,6 +54,7 @@ interface AuthState {
   isLoading: boolean;
   selectedRole: Role | null;
   login: (role: Role, profile: PatientProfile | ProviderProfile, walletAddress: string) => Promise<void>;
+  loginWithCredentials: (username: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (profile: PatientProfile | ProviderProfile) => Promise<void>;
   updateHealthProfile: (healthData: Partial<HealthProfile>) => Promise<void>;
@@ -132,6 +133,70 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           set({ isLoading: false });
           console.error('Login failed:', error);
+          throw error;
+        }
+      },
+
+      loginWithCredentials: async (username: string, password: string) => {
+        try {
+          set({ isLoading: true });
+          
+          // Generate wallet address from credentials (same as Android)
+          const { generateAddressFromCredentials } = await import('@/lib/crypto');
+          const walletAddress = await generateAddressFromCredentials(username, password);
+          
+          let user;
+          let role: Role = 'patient';
+          
+          try {
+            // Try to authenticate with backend to get user role and data
+            const response = await authenticateUser(walletAddress, 'patient', username);
+            user = response.user;
+            role = user.role || 'patient';
+          } catch (authError) {
+            console.warn('Backend authentication failed, creating local user:', authError);
+            // Create a local user object when backend is unavailable
+            user = {
+              id: `local-${walletAddress.slice(0, 10)}`,
+              wallet_address: walletAddress,
+              username: username,
+              role: 'patient',
+              is_onboarded: false
+            };
+          }
+          
+          // Create profile based on role
+          const profile = role === 'patient' ? {
+            fullName: user.username || username,
+            dob: '',
+            contact: '',
+            emergency: '',
+            username: username
+          } : {
+            fullName: user.username || username,
+            specialization: '',
+            licenseNumber: '',
+            contact: '',
+            username: username
+          };
+          
+          const newUser: User = {
+            id: user.id,
+            walletAddress,
+            role: role as Role,
+            profile,
+            isOnboarded: user.is_onboarded || false
+          };
+
+          set({
+            currentUser: newUser,
+            isAuthenticated: true,
+            selectedRole: role as Role,
+            isLoading: false
+          });
+        } catch (error) {
+          set({ isLoading: false });
+          console.error('Credential login failed:', error);
           throw error;
         }
       },

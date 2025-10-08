@@ -29,6 +29,7 @@ node_modules/
 */node_modules/
 web/node_modules/
 server/node_modules/
+scripts/node_modules/
 
 # Build outputs
 dist/
