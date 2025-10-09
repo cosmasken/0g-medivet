@@ -3,10 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProviderRecordsQuery, useViewRecordMutation, useProviderPatientRelationship } from '@/hooks/useProviderRecords';
 import { useAuthStore } from '@/stores/authStore';
 import { useAIAnalysis } from '@/hooks/useAIAnalysis';
-import { getProviderPatientRelationships } from '@/lib/api';
+import { getProviderPatientRelationships, getComputeBalance, submitAIAnalysis } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import {
   Eye,
@@ -29,23 +32,77 @@ import {
   Upload,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  LogOut,
+  Settings
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ComputeDashboard from '@/components/ComputeDashboard';
 import AIAnalysisDisplay from '@/components/AIAnalysisDisplay';
+import { useWallet } from '@/hooks/useWallet';
+import toast from 'react-hot-toast';
 
 export default function ProviderDashboard() {
-  const { currentUser } = useAuthStore();
+  const { address, disconnect } = useWallet();
+  const { currentUser, logout } = useAuthStore();
   const { data: recordsData, isLoading: recordsLoading } = useProviderRecordsQuery();
   const { data: relationshipsData, isLoading: relationshipsLoading } = useQuery({
     queryKey: ['provider-patient-relationships', currentUser?.id],
     queryFn: () => getProviderPatientRelationships(currentUser?.id || ''),
     enabled: !!currentUser?.id && currentUser?.role === 'provider',
   });
+  const { data: computeBalance } = useQuery({
+    queryKey: ['compute-balance'],
+    queryFn: getComputeBalance,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
   const viewRecordMutation = useViewRecordMutation();
+  const { analyzeFile, loading: aiLoading, result: aiResult, error: aiError } = useAIAnalysis();
+  
+  // Enhanced AI Analysis State
+  const [selectedRecordForAI, setSelectedRecordForAI] = useState('');
+  const [analysisType, setAnalysisType] = useState('medical-analysis');
+  const [clinicalContext, setClinicalContext] = useState('');
 
   const handleViewRecord = (recordId: string, patientId: string) => {
     viewRecordMutation.mutate({ recordId, patientId });
+  };
+
+  const handleLogout = () => {
+    disconnect();
+    logout();
+  };
+
+  const handleRunAIAnalysis = async () => {
+    if (!selectedRecordForAI || !currentUser?.id) {
+      toast.error('Please select a record and ensure you are logged in');
+      return;
+    }
+
+    const record = sharedRecords.find(p => p.record_id === selectedRecordForAI);
+    if (!record) {
+      toast.error('Selected record not found');
+      return;
+    }
+
+    try {
+      await analyzeFile(
+        {
+          recordId: selectedRecordForAI,
+          analysisType,
+          clinicalContext,
+          providerSpecialty: currentUser.profile?.specialty || 'general',
+        },
+        analysisType,
+        currentUser.id,
+        selectedRecordForAI
+      );
+      toast.success('AI analysis completed successfully');
+    } catch (error) {
+      console.error('AI analysis failed:', error);
+      toast.error('AI analysis failed. Please try again.');
+    }
   };
 
   if (recordsLoading || relationshipsLoading) {
@@ -59,45 +116,153 @@ export default function ProviderDashboard() {
     );
   }
 
-  const sharedRecords = recordsData?.permissions || [];
+  if (!address || !currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-96">
+          <CardContent className="p-6 text-center">
+            <p>Please connect your wallet to access the provider dashboard.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  // Mock data for quick stats
-  const mockStats = {
-    sharedRecords: sharedRecords.length,
-    aiAnalyses: 5, // mock data
-    computeBalance: '0.00',
-    activePatients: relationshipsData?.relationships?.length || 0 // Use real relationship count
+  const sharedRecords = recordsData?.permissions || [];
+  const provider = {
+    id: currentUser.id,
+    name: currentUser.profile?.fullName || currentUser.profile?.username || 'Dr. Provider',
+    email: currentUser.profile?.email || `${currentUser.profile?.username || 'provider'}@medivet.test`,
+    specialty: currentUser.profile?.specialty || 'General Practice',
+    license: currentUser.profile?.licenseNumber || 'Not set'
   };
 
-  // Mock recent activity data
-  const mockRecentActivity = [
-    { id: 1, action: 'Viewed patient record', patient: 'John Doe', time: '2 min ago', type: 'view' },
-    { id: 2, action: 'Submitted AI analysis', patient: 'Jane Smith', time: '15 min ago', type: 'compute' },
-    { id: 3, action: 'Received new record share', patient: 'Robert Johnson', time: '1 hour ago', type: 'share' },
-    { id: 4, action: 'Updated patient profile', patient: 'Emily Davis', time: '3 hours ago', type: 'update' }
+  // Real stats from backend data
+  const realStats = {
+    sharedRecords: sharedRecords.length,
+    aiAnalyses: 5, // TODO: Get from backend
+    computeBalance: computeBalance?.balance || 0,
+    activePatients: relationshipsData?.relationships?.length || 0
+  };
+
+  // Generate recent activity from real data
+  const recentActivity = [
+    ...sharedRecords.slice(0, 2).map((record, index) => ({
+      id: `view-${index}`,
+      action: 'Accessed patient record',
+      patient: record.patient?.name || 'Unknown Patient',
+      time: new Date(record.created_at || Date.now()).toLocaleTimeString(),
+      type: 'view'
+    })),
+    ...(aiResult ? [{
+      id: 'ai-latest',
+      action: 'Completed AI analysis',
+      patient: 'Recent Patient',
+      time: 'Just now',
+      type: 'compute'
+    }] : []),
+    // TODO: Add real audit log data from backend
+    { id: 'mock-1', action: 'Received new record share', patient: 'John Doe', time: '1 hour ago', type: 'share' },
+    { id: 'mock-2', action: 'Updated patient profile', patient: 'Jane Smith', time: '3 hours ago', type: 'update' }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-subtle p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Heart className="h-8 w-8 text-medical-primary" />
-              Provider Dashboard
-            </h1>
-            <p className="text-muted-foreground">
-              Manage patient records and AI analysis tools
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-medical-primary/5 via-white to-medical-accent/5">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-medical-primary to-medical-accent rounded-lg flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-medical-primary to-medical-accent bg-clip-text text-transparent">
+                  MediVet
+                </span>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                Provider Portal
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Compute Balance Display */}
+              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 rounded-full border border-yellow-200">
+                <Coins className="h-4 w-4 text-yellow-600" />
+                <span className="text-sm font-medium text-yellow-700">
+                  {realStats.computeBalance.toFixed(2)} OG
+                </span>
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="/avatars/provider.png" alt={provider.name} />
+                      <AvatarFallback className="bg-gradient-to-br from-medical-primary/20 to-medical-accent/20">
+                        {provider.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{provider.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {provider.specialty}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {provider.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              My Profile
-            </Button>
-            <Button size="sm">
-              <Shield className="h-4 w-4 mr-2" />
+        </div>
+      </header>
+
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Provider Info Card */}
+        <Card className="bg-gradient-to-r from-medical-primary/10 to-medical-accent/10 border-medical-primary/20">
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src="/avatars/provider.png" alt={provider.name} />
+                <AvatarFallback className="bg-gradient-to-br from-medical-primary/20 to-medical-accent/20 text-lg">
+                  {provider.name.split(' ').map(n => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <CardTitle className="text-xl">{provider.name}</CardTitle>
+                <CardDescription className="text-base">
+                  {provider.specialty} • License: {provider.license}
+                </CardDescription>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant="secondary">Provider ID: {provider.id}</Badge>
+                  <Badge variant="outline">Wallet: {address?.slice(0, 6)}...{address?.slice(-4)}</Badge>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
               Security Settings
             </Button>
           </div>
@@ -113,7 +278,7 @@ export default function ProviderDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{mockStats.sharedRecords}</div>
+              <div className="text-2xl font-bold text-blue-600">{realStats.sharedRecords}</div>
               <p className="text-xs text-muted-foreground">
                 Records accessible to you
               </p>
@@ -128,7 +293,7 @@ export default function ProviderDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{mockStats.aiAnalyses}</div>
+              <div className="text-2xl font-bold text-purple-600">{realStats.aiAnalyses}</div>
               <p className="text-xs text-muted-foreground">
                 This month
               </p>
@@ -143,7 +308,7 @@ export default function ProviderDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{mockStats.computeBalance} OG</div>
+              <div className="text-2xl font-bold text-green-600">{realStats.computeBalance.toFixed(2)} OG</div>
               <p className="text-xs text-muted-foreground">
                 Tokens available
               </p>
@@ -158,7 +323,7 @@ export default function ProviderDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-indigo-600">{mockStats.activePatients}</div>
+              <div className="text-2xl font-bold text-indigo-600">{realStats.activePatients}</div>
               <p className="text-xs text-muted-foreground">
                 Under your care
               </p>
@@ -188,7 +353,7 @@ export default function ProviderDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {mockRecentActivity.map((activity) => (
+                    {recentActivity.slice(0, 4).map((activity) => (
                       <div key={activity.id} className="flex items-start gap-3 p-3 hover:bg-accent rounded-lg">
                         <div className="mt-0.5 flex-shrink-0">
                           {activity.type === 'view' && (
@@ -405,112 +570,166 @@ export default function ProviderDashboard() {
               <div>
                 <h2 className="text-2xl font-bold">AI Analysis</h2>
                 <p className="text-muted-foreground">
-                  AI-powered analysis of patient medical data
+                  AI-powered analysis of patient medical data using 0G Compute Network
                 </p>
               </div>
-              <Button>
+              <Button onClick={handleRunAIAnalysis} disabled={!selectedRecordForAI || aiLoading}>
                 <Brain className="h-4 w-4 mr-2" />
-                New Analysis
+                {aiLoading ? 'Analyzing...' : 'Run Analysis'}
               </Button>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
+              {/* Analysis Configuration */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent AI Analyses</CardTitle>
+                  <CardTitle>Configure Analysis</CardTitle>
                   <CardDescription>
-                    Latest AI-powered medical insights
+                    Select patient record and analysis parameters
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Select Patient Record</label>
+                    <Select value={selectedRecordForAI} onValueChange={setSelectedRecordForAI}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a record to analyze" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sharedRecords.map((permission) => (
+                          <SelectItem key={permission.id} value={permission.record_id}>
+                            {permission.record?.title || 'Medical Record'} - {permission.patient?.name || 'Unknown Patient'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Analysis Type</label>
+                    <Select value={analysisType} onValueChange={setAnalysisType}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="medical-analysis">General Medical Analysis</SelectItem>
+                        <SelectItem value="radiology-analysis">Radiology Analysis</SelectItem>
+                        <SelectItem value="lab-interpretation">Lab Results Interpretation</SelectItem>
+                        <SelectItem value="cardiology-analysis">Cardiology Analysis</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Clinical Context (Optional)</label>
+                    <Input
+                      placeholder="Additional clinical context..."
+                      value={clinicalContext}
+                      onChange={(e) => setClinicalContext(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Cost Estimate */}
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-yellow-800">
+                      <Coins className="h-4 w-4" />
+                      <span className="font-medium text-sm">Estimated Cost</span>
+                    </div>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      ~2.5 OG tokens for {analysisType.replace('-', ' ')}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Analysis Status */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Analysis Status</CardTitle>
+                  <CardDescription>
+                    Current analysis progress and results
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {mockRecentActivity.filter(a => a.type === 'compute').length > 0 ? (
-                    <div className="space-y-4">
-                      {mockRecentActivity.filter(a => a.type === 'compute').map((analysis) => (
-                        <div key={analysis.id} className="p-4 border rounded-lg">
-                          <div className="flex items-start gap-3">
-                            <Brain className="h-5 w-5 text-purple-600 mt-0.5" />
-                            <div className="flex-1">
-                              <h4 className="font-medium">AI Analysis for {analysis.patient}</h4>
-                              <p className="text-sm text-muted-foreground">{analysis.time}</p>
-                              <div className="mt-2">
-                                <Badge variant="secondary">Medical Report</Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
+                  {aiLoading && (
                     <div className="text-center py-8">
-                      <Brain className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No Recent Analyses</h3>
-                      <p className="text-muted-foreground">
-                        Run AI analysis on patient records to get medical insights.
-                      </p>
+                      <Brain className="h-12 w-12 mx-auto mb-4 animate-pulse text-purple-600" />
+                      <p className="font-medium">Running AI Analysis...</p>
+                      <p className="text-sm text-muted-foreground">Processing with 0G Compute Network</p>
+                    </div>
+                  )}
+                  
+                  {aiError && (
+                    <div className="text-center py-8 text-red-500">
+                      <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+                      <p className="font-medium">Analysis Failed</p>
+                      <p className="text-sm">{aiError}</p>
+                    </div>
+                  )}
+                  
+                  {!aiLoading && !aiError && !aiResult && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Brain className="h-12 w-12 mx-auto mb-4" />
+                      <p>Select a record and click "Run Analysis" to get AI insights.</p>
+                    </div>
+                  )}
+
+                  {aiResult && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="font-medium">Analysis Complete</span>
+                      </div>
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm leading-relaxed">{aiResult.analysis}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium">Job ID:</span>
+                          <span className="ml-2 font-mono text-xs">{aiResult.jobId}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Compute Time:</span>
+                          <span className="ml-2">{aiResult.computeTime || 'N/A'}ms</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Run New Analysis</CardTitle>
-                  <CardDescription>
-                    Select a patient record to analyze with AI
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Select Patient Record</label>
-                      <select className="w-full p-2 border border-input rounded-md bg-background">
-                        <option>Select a record...</option>
-                        {sharedRecords.map((permission) => (
-                          <option key={permission.id} value={permission.record_id}>
-                            {permission.record?.title || 'Medical Record'} - {permission.patient?.name || 'Unknown Patient'}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Analysis Type</label>
-                      <select className="w-full p-2 border border-input rounded-md bg-background">
-                        <option value="general">General Medical Analysis</option>
-                        <option value="radiology">Radiology Analysis</option>
-                        <option value="lab">Lab Results Interpretation</option>
-                        <option value="cardiology">Cardiology Analysis</option>
-                      </select>
-                    </div>
-                    
-                    <Button className="w-full">
-                      <Brain className="h-4 w-4 mr-2" />
-                      Run AI Analysis
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
-            
-            {/* If there's an analysis result available, show it */}
+
+            {/* Recent Analyses */}
             <Card>
               <CardHeader>
-                <CardTitle>Latest Analysis Result</CardTitle>
+                <CardTitle>Recent AI Analyses</CardTitle>
                 <CardDescription>
-                  AI-generated insights from patient records
+                  Your recent AI analysis history
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <AIAnalysisDisplay 
-                  analysis={{
-                    analysis: "Based on the provided medical data, the patient shows signs of improved health markers following the prescribed treatment. Key observations include normalized blood pressure readings, improved cholesterol levels, and stable glucose levels. No concerning abnormalities were detected in the recent lab results. Continue monitoring and following the current treatment plan.",
-                    confidence: 0.92,
-                    timestamp: new Date().toISOString(),
-                    isValid: true,
-                    jobId: "ai-job-12345",
-                    computeTime: 2450
-                  }} 
-                />
+                {/* TODO: Implement real analysis history from backend */}
+                <div className="space-y-4">
+                  {[
+                    { id: 1, patient: 'John Doe', type: 'Medical Analysis', time: '2 hours ago', cost: '2.5 OG' },
+                    { id: 2, patient: 'Jane Smith', type: 'Lab Interpretation', time: '1 day ago', cost: '1.8 OG' },
+                    { id: 3, patient: 'Robert Johnson', type: 'Radiology Analysis', time: '2 days ago', cost: '3.2 OG' }
+                  ].map((analysis) => (
+                    <div key={analysis.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Brain className="h-5 w-5 text-purple-600" />
+                        <div>
+                          <h4 className="font-medium">{analysis.type}</h4>
+                          <p className="text-sm text-muted-foreground">Patient: {analysis.patient}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{analysis.cost}</p>
+                        <p className="text-xs text-muted-foreground">{analysis.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
