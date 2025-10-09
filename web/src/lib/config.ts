@@ -19,7 +19,7 @@ const zgGalileo = {
     default: { http: ['https://evmrpc-testnet.0g.ai'] },
   },
   blockExplorers: {
-    default: { name: 'Newton Explorer', url: 'https://chainscan-newton.0g.ai' },
+    default: { name: 'Galileo Explorer', url: 'https://chainscan-galileo.0g.ai' },
   },
 } as const
 

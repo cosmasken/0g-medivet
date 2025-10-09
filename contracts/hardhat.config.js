@@ -27,8 +27,8 @@ module.exports = {
         network: "galileo",
         chainId: 16600,
         urls: {
-          apiURL: "https://chainscan-newton.0g.ai/api",
-          browserURL: "https://chainscan-newton.0g.ai"
+          apiURL: "https://chainscan-galileo.0g.ai/api",
+          browserURL: "https://chainscan-galileo.0g.ai"
         }
       }
     ]
