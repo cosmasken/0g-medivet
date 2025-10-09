@@ -234,6 +234,13 @@ private-keys/
 keystore/
 mnemonic.txt
 
+# Smart contract artifacts
+contracts/node_modules/
+contracts/.env
+contracts/cache/
+contracts/artifacts/
+contracts/typechain-types/
+
 # ============ TESTING ============
 # Test coverage
 coverage/
