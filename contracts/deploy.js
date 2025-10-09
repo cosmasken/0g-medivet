@@ -6,15 +6,16 @@ async function main() {
   // Deploy MedicalRecordAccess contract
   const MedicalRecordAccess = await ethers.getContractFactory('MedicalRecordAccess');
   const medicalRecordAccess = await MedicalRecordAccess.deploy();
-  await medicalRecordAccess.deployed();
+  await medicalRecordAccess.waitForDeployment();
 
-  console.log('MedicalRecordAccess deployed to:', medicalRecordAccess.address);
+  const address = await medicalRecordAccess.getAddress();
+  console.log('MedicalRecordAccess deployed to:', address);
 
   // Save deployment addresses
   const deploymentInfo = {
     network: 'galileo-testnet',
     contracts: {
-      MedicalRecordAccess: medicalRecordAccess.address
+      MedicalRecordAccess: address
     },
     timestamp: new Date().toISOString()
   };

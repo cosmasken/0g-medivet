@@ -15,7 +15,7 @@ module.exports = {
     galileo: {
       url: "https://evmrpc-testnet.0g.ai",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 16600
+      chainId: 16602
     }
   },
   etherscan: {

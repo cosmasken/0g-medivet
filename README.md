@@ -404,6 +404,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Open Source Contributors** for their valuable contributions
 - **Patients and Providers** for testing and feedback
 
+## 🔗 Deployed Contracts
+
+### 0G Galileo Testnet
+- **MedicalRecordAccess**: `0x6a301456A5274dF720913Ec5C9A48992DFF2a830`
+- **Network**: 0G Galileo Testnet (Chain ID: 16602)
+- **Explorer**: [View on 0G Explorer](https://chainscan-newton.0g.ai/address/0x6a301456A5274dF720913Ec5C9A48992DFF2a830)
+
 ## 🔗 Quick Links
 
 | Component | Live Demo | Documentation | Status |

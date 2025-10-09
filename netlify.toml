@@ -3,8 +3,8 @@
   command = "bun run build"
   publish = "web/dist"
 
-[build.environment]
-  NODE_VERSION = "18"
+# [build.environment]
+#   NODE_VERSION = "18"
 
 [[redirects]]
   from = "/*"
