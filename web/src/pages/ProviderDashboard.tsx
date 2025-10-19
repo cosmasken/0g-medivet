@@ -59,7 +59,7 @@ export default function ProviderDashboard() {
   });
   const viewRecordMutation = useViewRecordMutation();
   const { analyzeFile, loading: aiLoading, result: aiResult, error: aiError } = useAIAnalysis();
-  
+
   // Enhanced AI Analysis State
   const [selectedRecordForAI, setSelectedRecordForAI] = useState('');
   const [analysisType, setAnalysisType] = useState('medical-analysis');
@@ -92,7 +92,7 @@ export default function ProviderDashboard() {
           recordId: selectedRecordForAI,
           analysisType,
           clinicalContext,
-          providerSpecialty: currentUser.profile?.specialty || 'general',
+          providerSpecialty: currentUser.profile?.fullName || 'general',
         },
         analysisType,
         currentUser.id,
@@ -131,7 +131,7 @@ export default function ProviderDashboard() {
   const sharedRecords = recordsData?.permissions || [];
   const provider = {
     id: currentUser.id,
-    name: currentUser.profile?.fullName || currentUser.profile?.username || 'Dr. Provider',
+    name: currentUser.profile?.fullName || currentUser.profile?.contact || 'Dr. Provider',
     email: currentUser.profile?.email || `${currentUser.profile?.username || 'provider'}@medivet.test`,
     specialty: currentUser.profile?.specialty || 'General Practice',
     license: currentUser.profile?.licenseNumber || 'Not set'
@@ -263,10 +263,10 @@ export default function ProviderDashboard() {
             </div>
           </CardHeader>
         </Card>
-              Security Settings
+        {/* Security Settings
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -480,7 +480,7 @@ export default function ProviderDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Patient Records Tab */}
           <TabsContent value="shared-records" className="space-y-6">
             <div className="flex items-center justify-between">
@@ -513,8 +513,8 @@ export default function ProviderDashboard() {
                 {sharedRecords.length > 0 ? (
                   <div className="space-y-4">
                     {sharedRecords.map((permission) => (
-                      <div 
-                        key={permission.id} 
+                      <div
+                        key={permission.id}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
                       >
                         <div className="flex items-center gap-4">
@@ -533,9 +533,9 @@ export default function ProviderDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button 
+                          <Button
                             onClick={() => handleViewRecord(permission.record_id, permission.patient_id)}
-                            variant="outline" 
+                            variant="outline"
                             size="sm"
                           >
                             <Eye className="h-4 w-4 mr-2" />
@@ -563,7 +563,7 @@ export default function ProviderDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* AI Analysis Tab */}
           <TabsContent value="ai-compute" className="space-y-6">
             <div className="flex items-center justify-between">
@@ -604,7 +604,7 @@ export default function ProviderDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Analysis Type</label>
                     <Select value={analysisType} onValueChange={setAnalysisType}>
@@ -641,7 +641,7 @@ export default function ProviderDashboard() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               {/* Analysis Status */}
               <Card>
                 <CardHeader>
@@ -658,7 +658,7 @@ export default function ProviderDashboard() {
                       <p className="text-sm text-muted-foreground">Processing with 0G Compute Network</p>
                     </div>
                   )}
-                  
+
                   {aiError && (
                     <div className="text-center py-8 text-red-500">
                       <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
@@ -666,7 +666,7 @@ export default function ProviderDashboard() {
                       <p className="text-sm">{aiError}</p>
                     </div>
                   )}
-                  
+
                   {!aiLoading && !aiError && !aiResult && (
                     <div className="text-center py-8 text-muted-foreground">
                       <Brain className="h-12 w-12 mx-auto mb-4" />
@@ -733,7 +733,7 @@ export default function ProviderDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* My Patients Tab */}
           <TabsContent value="patients" className="space-y-6">
             <div className="flex items-center justify-between">
@@ -805,7 +805,7 @@ export default function ProviderDashboard() {
                 )}
               </CardContent>
             </Card>
-            
+
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -823,7 +823,7 @@ export default function ProviderDashboard() {
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div className="h-full bg-blue-500 w-2/3"></div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Follow-up Required</span>
                       <span className="text-sm font-medium">3</span>
@@ -831,7 +831,7 @@ export default function ProviderDashboard() {
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div className="h-full bg-yellow-500 w-1/2"></div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Stable Monitoring</span>
                       <span className="text-sm font-medium">2</span>
@@ -842,7 +842,7 @@ export default function ProviderDashboard() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Patient Activity</CardTitle>
