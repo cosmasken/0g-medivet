@@ -19,6 +19,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useRecordsQuery } from '@/hooks/useRecordsQuery';
 import { useFileRecords } from '@/hooks/useFileRecords';
 import { useAIAnalysis } from '@/hooks/useAIAnalysis';
+import { LinkMobileAccess } from '@/components/LinkMobileAccess';
 import { Upload, Users, UserPlus, FileText, DollarSign, Brain, Shield, Settings, LogOut, User, Bell, Activity, Calendar, Heart, Edit, Download } from 'lucide-react';
 
 export default function PatientDashboard() {
@@ -204,6 +205,10 @@ export default function PatientDashboard() {
             <TabsTrigger value="ai">
               <Brain className="h-4 w-4 mr-1" />
               AI Insights
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="h-4 w-4 mr-1" />
+              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -576,6 +581,53 @@ export default function PatientDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium">Account Settings</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage your account preferences and access methods
+                </p>
+              </div>
+              
+              <div className="grid gap-6 md:grid-cols-2">
+                <LinkMobileAccess />
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Privacy Settings
+                    </CardTitle>
+                    <CardDescription>
+                      Control how your medical data is processed and shared
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Zero-Knowledge Processing</p>
+                        <p className="text-sm text-muted-foreground">
+                          Enable privacy-preserving AI analysis
+                        </p>
+                      </div>
+                      <Badge variant="secondary">Enabled</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">End-to-End Encryption</p>
+                        <p className="text-sm text-muted-foreground">
+                          All data encrypted before 0G Storage
+                        </p>
+                      </div>
+                      <Badge variant="secondary">Active</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
 
