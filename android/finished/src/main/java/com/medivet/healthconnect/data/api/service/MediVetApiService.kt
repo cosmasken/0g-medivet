@@ -1,6 +1,8 @@
 package com.medivet.healthconnect.data.api.service
 
 import com.medivet.healthconnect.data.api.model.*
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -28,6 +30,14 @@ interface MediVetApiService {
     // Medical records endpoints
     @POST("api/records")
     suspend fun createMedicalRecord(@Body request: CreateRecordRequest): Response<MedicalRecord>
+
+    // File upload endpoint
+    @Multipart
+    @POST("api/records/upload")
+    suspend fun uploadFile(
+        @Part("metadata") metadata: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Response<UploadResponse>
 
     @GET("api/records/user/{userId}")
     suspend fun getUserRecords(

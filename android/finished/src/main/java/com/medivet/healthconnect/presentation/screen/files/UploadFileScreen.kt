@@ -1,5 +1,8 @@
 package com.medivet.healthconnect.presentation.screen.files
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,36 +13,44 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.medivet.healthconnect.presentation.viewmodel.UploadViewModel
+import com.medivet.healthconnect.util.SharedPreferencesHelper
 
 @Composable
 fun UploadFileScreen(
     modifier: Modifier = Modifier,
-    onUploadComplete: () -> Unit = {}
+    onUploadComplete: () -> Unit = {},
+    viewModel: UploadViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val sharedPrefs = SharedPreferencesHelper.getInstance(context)
+    val uiState by viewModel.uiState.collectAsState()
+    
     var selectedFileType by remember { mutableStateOf(FileType.LAB_REPORT) }
     var selectedCategory by remember { mutableStateOf("Laboratory") }
     var fileName by remember { mutableStateOf("") }
-    var selectedFile by remember { mutableStateOf<String?>(null) }
-    var isUploading by remember { mutableStateOf(false) }
-    var uploadProgress by remember { mutableStateOf(0f) }
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
 
-    val mockFiles = listOf(
-        "blood_test_march_2024.pdf",
-        "chest_xray_scan.jpg", 
-        "prescription_dr_smith.pdf",
-        "mri_brain_scan.dcm",
-        "vaccination_record.pdf"
-    )
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedFileUri = uri
+        uri?.let {
+            val name = context.contentResolver.query(it, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                cursor.moveToFirst()
+                cursor.getString(nameIndex)
+            } ?: "unknown_file"
+            fileName = name
+        }
+    }
 
-    LaunchedEffect(isUploading) {
-        if (isUploading) {
-            for (i in 0..100 step 10) {
-                uploadProgress = i / 100f
-                kotlinx.coroutines.delay(200)
-            }
-            kotlinx.coroutines.delay(500)
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
             onUploadComplete()
         }
     }
@@ -202,7 +213,7 @@ fun UploadFileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Button(
-                        onClick = { selectedFile = mockFiles.random() },
+                        onClick = { filePickerLauncher.launch("*/*") },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Default.AttachFile, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -210,7 +221,7 @@ fun UploadFileScreen(
                         Text("Select File")
                     }
                     
-                    selectedFile?.let { file ->
+                    selectedFileUri?.let { uri ->
                         Spacer(modifier = Modifier.height(12.dp))
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -236,12 +247,12 @@ fun UploadFileScreen(
                                         color = Color.Gray
                                     )
                                     Text(
-                                        text = file,
+                                        text = fileName,
                                         style = MaterialTheme.typography.body2,
                                         fontWeight = FontWeight.Medium
                                     )
                                 }
-                                IconButton(onClick = { selectedFile = null }) {
+                                IconButton(onClick = { selectedFileUri = null; fileName = "" }) {
                                     Icon(
                                         imageVector = Icons.Default.Close,
                                         contentDescription = "Remove",
@@ -255,7 +266,7 @@ fun UploadFileScreen(
             }
         }
 
-        if (isUploading) {
+        if (uiState.isLoading) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -266,18 +277,17 @@ fun UploadFileScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Uploading...",
+                            text = "Uploading to 0G Storage...",
                             style = MaterialTheme.typography.subtitle1,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         LinearProgressIndicator(
-                            progress = uploadProgress,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "${(uploadProgress * 100).toInt()}%",
+                            text = "Processing file and storing on decentralized network",
                             style = MaterialTheme.typography.caption,
                             color = Color.Gray
                         )
@@ -287,13 +297,56 @@ fun UploadFileScreen(
         } else {
             item {
                 Button(
-                    onClick = { isUploading = true },
+                    onClick = {
+                        selectedFileUri?.let { uri ->
+                            val (userId, _, _) = sharedPrefs.getUserInfo()
+                            userId?.let {
+                                viewModel.uploadFile(
+                                    context = context,
+                                    fileUri = uri,
+                                    fileName = fileName,
+                                    category = selectedCategory,
+                                    fileType = selectedFileType,
+                                    userId = it
+                                )
+                            }
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = fileName.isNotBlank() && selectedFile != null
+                    enabled = fileName.isNotBlank() && selectedFileUri != null && !uiState.isLoading
                 ) {
                     Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Upload File")
+                    Text("Upload to 0G Storage")
+                }
+            }
+        }
+
+        uiState.error?.let { error ->
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 2.dp,
+                    shape = RoundedCornerShape(8.dp),
+                    backgroundColor = Color(0xFFFFEBEE)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = "Error",
+                            tint = Color(0xFFD32F2F),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = error,
+                            style = MaterialTheme.typography.body2,
+                            color = Color(0xFFD32F2F)
+                        )
+                    }
                 }
             }
         }

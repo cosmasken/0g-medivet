@@ -18,6 +18,8 @@ class MediVetRepository(private val apiService: MediVetApiService) {
     // Medical records
     suspend fun createMedicalRecord(request: CreateRecordRequest) = apiService.createMedicalRecord(request)
     suspend fun getUserRecords(userId: String) = apiService.getUserRecords(userId)
+    suspend fun uploadFile(metadata: okhttp3.RequestBody, file: okhttp3.MultipartBody.Part) = 
+        apiService.uploadFile(metadata, file)
 
     // Health Connect
     suspend fun syncHealthData(request: SyncHealthDataRequest) = apiService.syncHealthData(request)

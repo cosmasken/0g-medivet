@@ -1,6 +1,73 @@
 const express = require('express');
+const multer = require('multer');
+const { Indexer } = require('@0glabs/0g-ts-sdk');
 const { supabase } = require('../supabase');
 const router = express.Router();
+
+// Configure multer for file uploads
+const upload = multer({ 
+  dest: 'uploads/',
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
+
+// Upload file endpoint
+router.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const metadata = JSON.parse(req.body.metadata);
+    const { userId, title, description, category, specialty, fileType, tags } = metadata;
+
+    // Upload to 0G Storage
+    const indexer = new Indexer(process.env.STANDARD_STORAGE_RPC || 'https://indexer-storage-testnet-standard.0g.ai');
+    
+    const uploadResult = await indexer.upload(req.file.path);
+    
+    if (!uploadResult || !uploadResult.rootHash) {
+      return res.status(500).json({ error: 'Failed to upload to 0G Storage' });
+    }
+
+    // Create medical record in database
+    const { data: record, error } = await supabase
+      .from('medical_records')
+      .insert({
+        user_id: userId,
+        title: title,
+        description: description || 'Uploaded from mobile app',
+        category: category,
+        specialty: specialty || category,
+        file_type: fileType,
+        file_size: req.file.size,
+        zero_g_hash: uploadResult.rootHash,
+        merkle_root: uploadResult.rootHash,
+        transaction_hash: uploadResult.txHash || '',
+        tags: tags || [category.toLowerCase()],
+        upload_status: 'completed'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: 'Failed to save record: ' + error.message });
+    }
+
+    // Clean up uploaded file
+    require('fs').unlinkSync(req.file.path);
+
+    res.json({
+      success: true,
+      message: 'File uploaded successfully',
+      record: record,
+      rootHash: uploadResult.rootHash
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Upload failed: ' + error.message });
+  }
+});
 
 // Create medical record
 router.post('/', async (req, res) => {

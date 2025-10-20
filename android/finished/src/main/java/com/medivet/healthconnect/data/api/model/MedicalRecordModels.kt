@@ -42,3 +42,10 @@ data class MedicalRecord(
     @SerializedName("upload_status") val uploadStatus: String,
     @SerializedName("created_at") val createdAt: String
 )
+
+data class UploadResponse(
+    val success: Boolean,
+    val message: String,
+    val record: MedicalRecord? = null,
+    val rootHash: String? = null
+)
