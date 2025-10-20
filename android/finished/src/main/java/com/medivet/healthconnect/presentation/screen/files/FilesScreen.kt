@@ -44,7 +44,9 @@ enum class AnalysisStatus(val displayName: String, val color: Color) {
 @Composable
 fun FilesScreen(
     modifier: Modifier = Modifier,
-    onUploadFile: () -> Unit = {}
+    onUploadFile: () -> Unit = {},
+    onFileClick: (String) -> Unit = {},
+    onAnalyzeClick: (String) -> Unit = {}
 ) {
     val files = remember {
         listOf(
@@ -164,8 +166,8 @@ fun FilesScreen(
             items(filteredFiles) { file ->
                 FileItem(
                     file = file,
-                    onFileClick = { },
-                    onAnalyzeClick = { }
+                    onFileClick = { onFileClick(file.id) },
+                    onAnalyzeClick = { onAnalyzeClick(file.id) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }

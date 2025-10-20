@@ -41,7 +41,8 @@ enum class Severity(val displayName: String, val color: Color) {
 
 @Composable
 fun AnalysisScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onGenerateAnalysis: () -> Unit = {}
 ) {
     val analysisResults = remember {
         listOf(
@@ -143,6 +144,22 @@ fun AnalysisScreen(
                         SummaryItem("Attention", "2", Icons.Default.Warning)
                     }
                 }
+            }
+        }
+
+        item {
+            Button(
+                onClick = onGenerateAnalysis,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Psychology,
+                    contentDescription = "Generate Analysis",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Generate New Analysis")
             }
         }
 

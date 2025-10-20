@@ -1,5 +1,6 @@
 package com.medivet.healthconnect.presentation.screen.profile
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -31,14 +32,23 @@ data class ProfileItem(
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onPersonalDetails: () -> Unit = {},
+    onMedicalHistory: () -> Unit = {},
+    onDataPermissions: () -> Unit = {},
+    onExportData: () -> Unit = {},
+    onDataSync: () -> Unit = {},
+    onNotifications: () -> Unit = {},
+    onBlockchainWallet: () -> Unit = {},
+    onSharingSettings: () -> Unit = {},
+    onPrivacyPolicy: () -> Unit = {}
 ) {
     val profileSections = listOf(
         ProfileSection(
             title = "Health Information",
             items = listOf(
-                ProfileItem("Personal Details", "Age, Gender, Emergency Contact", Icons.Default.Person),
-                ProfileItem("Medical History", "Conditions, Allergies, Medications", Icons.Default.MedicalServices),
+                ProfileItem("Personal Details", "Age, Gender, Emergency Contact", Icons.Default.Person, onPersonalDetails),
+                ProfileItem("Medical History", "Conditions, Allergies, Medications", Icons.Default.MedicalServices, onMedicalHistory),
                 ProfileItem("Health Goals", "Weight, Fitness, Wellness targets", Icons.Default.FitnessCenter),
                 ProfileItem("Insurance", "Coverage and provider information", Icons.Default.HealthAndSafety)
             )
@@ -46,18 +56,18 @@ fun ProfileScreen(
         ProfileSection(
             title = "Privacy & Security",
             items = listOf(
-                ProfileItem("Data Permissions", "Manage app access to health data", Icons.Default.Security),
-                ProfileItem("Sharing Settings", "Control who can access your data", Icons.Default.Share),
-                ProfileItem("Blockchain Wallet", "0x1234...5678", Icons.Default.AccountBalanceWallet),
-                ProfileItem("Privacy Policy", "Review our privacy practices", Icons.Default.Policy)
+                ProfileItem("Data Permissions", "Manage app access to health data", Icons.Default.Security, onDataPermissions),
+                ProfileItem("Sharing Settings", "Control who can access your data", Icons.Default.Share, onSharingSettings),
+                ProfileItem("Blockchain Wallet", "0x1234...5678", Icons.Default.AccountBalanceWallet, onBlockchainWallet),
+                ProfileItem("Privacy Policy", "Review our privacy practices", Icons.Default.Policy, onPrivacyPolicy)
             )
         ),
         ProfileSection(
             title = "App Settings",
             items = listOf(
-                ProfileItem("Notifications", "Manage alerts and reminders", Icons.Default.Notifications),
-                ProfileItem("Data Sync", "Health Connect synchronization", Icons.Default.Sync),
-                ProfileItem("Export Data", "Download your medical records", Icons.Default.Download),
+                ProfileItem("Notifications", "Manage alerts and reminders", Icons.Default.Notifications, onNotifications),
+                ProfileItem("Data Sync", "Health Connect synchronization", Icons.Default.Sync, onDataSync),
+                ProfileItem("Export Data", "Download your medical records", Icons.Default.Download, onExportData),
                 ProfileItem("Help & Support", "Get help and contact support", Icons.Default.Help)
             )
         )
@@ -216,7 +226,14 @@ fun ProfileItemRow(item: ProfileItem) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .then(
+                if (item.onClick != {}) {
+                    Modifier.clickable { item.onClick() }
+                } else {
+                    Modifier
+                }
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

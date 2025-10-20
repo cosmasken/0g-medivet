@@ -143,6 +143,24 @@
   <string name="analysis">Analysis</string>
   <string name="profile">Profile</string>
 
+  <!-- Sub-pages -->
+  <string name="all_files">All Files</string>
+  <string name="file_detail">File Details</string>
+  <string name="analysis_detail">Analysis Details</string>
+  <string name="upload_file">Upload File</string>
+  <string name="generate_analysis">Generate Analysis</string>
+  <string name="personal_details">Personal Details</string>
+  <string name="medical_history">Medical History</string>
+  <string name="data_permissions">Data Permissions</string>
+  <string name="export_data">Export Data</string>
+  <string name="data_sync">Data Sync</string>
+  <string name="notifications">Notifications</string>
+  <string name="download_file">Download File</string>
+  <string name="share_file">Share File</string>
+  <string name="blockchain_wallet">Blockchain Wallet</string>
+  <string name="privacy_policy_detail">Privacy Policy</string>
+  <string name="sharing_settings">Sharing Settings</string>
+
   <!-- Health Connect settings -->
   <string name="settings">Settings</string>
   <!-- Login screen -->

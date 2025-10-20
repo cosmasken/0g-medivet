@@ -36,7 +36,9 @@ data class RecentFile(
 
 @Composable
 fun DashboardScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onViewAllFiles: () -> Unit = {},
+    onFileClick: (String) -> Unit = {}
 ) {
     val healthMetrics = listOf(
         HealthMetric("Heart Rate", "72", "bpm", Icons.Default.Favorite, Color(0xFFE91E63)),
@@ -116,7 +118,7 @@ fun DashboardScreen(
                             style = MaterialTheme.typography.h6,
                             fontWeight = FontWeight.Bold
                         )
-                        TextButton(onClick = { }) {
+                        TextButton(onClick = onViewAllFiles) {
                             Text("View All")
                         }
                     }
