@@ -36,12 +36,12 @@ fun GenerateAnalysisScreen(
     }
 
     val analysisSteps = listOf(
-        "Uploading files to 0G Network...",
-        "Initializing AI models...",
-        "Processing medical data...",
-        "Analyzing patterns...",
-        "Generating insights...",
-        "Finalizing report..."
+        "Uploading files to 0G Standard Storage...",
+        "Initializing MediVet-GPT-4 model...",
+        "Processing medical data on 0G Compute...",
+        "Analyzing patterns with AI algorithms...",
+        "Generating clinical insights...",
+        "Finalizing analysis report..."
     )
 
     LaunchedEffect(isGenerating) {
@@ -258,8 +258,8 @@ fun GenerateAnalysisScreen(
                         
                         Text("• Files selected: ${selectedFiles.size}", style = MaterialTheme.typography.body2)
                         Text("• AI Model: MediVet-GPT-4", style = MaterialTheme.typography.body2)
-                        Text("• Compute Network: 0G Decentralized", style = MaterialTheme.typography.body2)
-                        Text("• Estimated time: 2-3 minutes", style = MaterialTheme.typography.body2)
+                        Text("• Compute Network: 0G Galileo Testnet", style = MaterialTheme.typography.body2)
+                        Text("• Storage: 0G Standard Storage", style = MaterialTheme.typography.body2)
                     }
                 }
             }

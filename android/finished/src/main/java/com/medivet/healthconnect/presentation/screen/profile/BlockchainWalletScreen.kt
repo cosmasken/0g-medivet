@@ -55,7 +55,7 @@ fun BlockchainWalletScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "0G Network Integration",
+                text = "0G Galileo Testnet Integration",
                 style = MaterialTheme.typography.body2,
                 color = Color.Gray
             )

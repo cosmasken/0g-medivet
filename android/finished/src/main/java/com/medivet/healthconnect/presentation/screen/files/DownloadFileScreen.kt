@@ -185,9 +185,9 @@ fun DownloadFileScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         DownloadInfoRow("Estimated Size", "2.3 MB")
-                        DownloadInfoRow("Storage Location", "0G Network")
+                        DownloadInfoRow("Storage Location", "0G Standard Storage")
                         DownloadInfoRow("Encryption", "AES-256 Encrypted")
-                        DownloadInfoRow("Expires", "Never")
+                        DownloadInfoRow("Network", "0G Galileo Testnet")
                     }
                 }
             }
@@ -222,7 +222,7 @@ fun DownloadFileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Text(
-                            text = "Downloading from 0G Network...",
+                            text = "Downloading from 0G Standard Storage...",
                             style = MaterialTheme.typography.h6,
                             fontWeight = FontWeight.Bold
                         )

@@ -222,7 +222,7 @@ fun ExportDataScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "• Data is encrypted during export\n• Files are stored on 0G Network\n• Export history is maintained for 30 days\n• Large exports may take several minutes",
+                        text = "• Data is encrypted during export\n• Files are stored on 0G Standard Storage\n• Export history is maintained for 30 days\n• Large exports may take several minutes\n• Network: 0G Galileo Testnet",
                         style = MaterialTheme.typography.caption,
                         color = Color.Gray
                     )

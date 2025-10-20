@@ -49,7 +49,7 @@ fun AnalysisScreen(
             AnalysisResult(
                 id = "1",
                 fileName = "Blood Test Results - March 2024",
-                analysisType = "Laboratory Analysis",
+                analysisType = "MediVet-GPT-4 Laboratory Analysis",
                 date = "2 days ago",
                 confidence = 0.94f,
                 findings = listOf(
@@ -82,7 +82,7 @@ fun AnalysisScreen(
             AnalysisResult(
                 id = "3",
                 fileName = "ECG Report",
-                analysisType = "Cardiac Analysis",
+                analysisType = "MediVet-GPT-4 Cardiac Analysis",
                 date = "5 days ago",
                 confidence = 0.91f,
                 findings = listOf(
