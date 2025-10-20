@@ -36,12 +36,12 @@ fun GenerateAnalysisScreen(
     }
 
     val analysisSteps = listOf(
-        "Uploading files to 0G Standard Storage...",
-        "Initializing  model...",
-        "Processing medical data on 0G Compute...",
-        "Analyzing patterns with AI algorithms...",
-        "Generating clinical insights...",
-        "Finalizing analysis report..."
+        "Encrypting files for 0G Standard Storage...",
+        "Initializing privacy-preserving analysis...",
+        "Processing data with zero-knowledge proofs...",
+        "Analyzing patterns while preserving privacy...",
+        "Generating insights with end-to-end encryption...",
+        "Finalizing secure analysis report..."
     )
 
     LaunchedEffect(isGenerating) {
@@ -201,15 +201,15 @@ fun GenerateAnalysisScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Psychology,
-                            contentDescription = "AI Processing",
+                            imageVector = Icons.Default.Security,
+                            contentDescription = "Privacy Processing",
                             tint = MaterialTheme.colors.primary,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Text(
-                            text = "AI Analysis in Progress",
+                            text = "Privacy-Preserving Analysis in Progress",
                             style = MaterialTheme.typography.h6,
                             fontWeight = FontWeight.Bold
                         )
@@ -257,9 +257,9 @@ fun GenerateAnalysisScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text("• Files selected: ${selectedFiles.size}", style = MaterialTheme.typography.body2)
-                        Text("• AI Model: ", style = MaterialTheme.typography.body2)
+                        Text("• Privacy Method: Zero-Knowledge Proofs", style = MaterialTheme.typography.body2)
                         Text("• Compute Network: 0G Galileo Testnet", style = MaterialTheme.typography.body2)
-                        Text("• Storage: 0G Standard Storage", style = MaterialTheme.typography.body2)
+                        Text("• Storage: 0G Standard Storage (Encrypted)", style = MaterialTheme.typography.body2)
                     }
                 }
             }

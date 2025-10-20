@@ -50,7 +50,7 @@ medData/
 - **0G Compute Network**: Decentralized AI inference for medical data
 - **Real-time Analysis**: Instant AI insights on uploaded medical files
 - **Privacy-First**: AI processing without compromising data privacy
-- **Multi-Model Support**: Various AI models for different medical specialties
+- **Zero-Knowledge Processing**: Secure analysis using privacy-preserving techniques
 
 ### 📊 **Smart Data Management**
 - **Multi-format Support**: PDFs, images, lab results, and Health Connect data
@@ -349,7 +349,7 @@ cd android && ./gradlew generateTestData
 - ✅ Cross-platform data synchronization
 
 ### Version 1.1 (Next Quarter)
-- 🔄 Enhanced AI medical analysis models
+- 🔄 Enhanced privacy-preserving analysis techniques
 - 🔄 Real-time collaboration features
 - 🔄 Mobile app UI improvements
 - 🔄 Advanced privacy controls

@@ -1,8 +1,226 @@
 const express = require('express');
 const { supabase } = require('../supabase');
+const crypto = require('crypto');
 const router = express.Router();
 
-// Get or create user by wallet address
+// Generate deterministic EVM address from username + password
+function generateEVMAddress(username, password) {
+  const seed = `medivet:${username.toLowerCase()}:${password}`;
+  const hash = crypto.createHash('sha256').update(seed).digest('hex');
+  return '0x' + hash.substring(0, 40);
+}
+
+// Unified authentication - handles both wallet and username/password
+router.post('/auth', async (req, res) => {
+  try {
+    const { wallet_address, username, password, role = 'patient' } = req.body;
+    
+    // Validate input - either wallet_address OR username+password required
+    if (!wallet_address && (!username || !password)) {
+      return res.status(400).json({ 
+        error: 'Either wallet_address or username+password required' 
+      });
+    }
+
+    let targetWalletAddress;
+    let authMethod;
+
+    if (wallet_address) {
+      // Web wallet authentication
+      if (!/^0x[a-fA-F0-9]{40}$/.test(wallet_address)) {
+        return res.status(400).json({ error: 'Invalid wallet address format' });
+      }
+      targetWalletAddress = wallet_address;
+      authMethod = 'wallet';
+    } else {
+      // Mobile username/password authentication
+      targetWalletAddress = generateEVMAddress(username, password);
+      authMethod = 'credentials';
+    }
+
+    // Check if user exists
+    let { data: user, error } = await supabase
+      .from('users')
+      .select('*, user_profiles(*)')
+      .eq('wallet_address', targetWalletAddress)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Supabase error in auth:', error);
+      throw error;
+    }
+
+    // Create user if doesn't exist
+    if (!user) {
+      const userData = { 
+        wallet_address: targetWalletAddress, 
+        role,
+        username: authMethod === 'credentials' ? username : null
+      };
+
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .insert(userData)
+        .select('*, user_profiles(*)')
+        .single();
+
+      if (createError) {
+        console.error('Error creating user:', createError);
+        throw createError;
+      }
+
+      return res.json({
+        user: newUser,
+        wallet_address: targetWalletAddress,
+        auth_method: authMethod,
+        is_new_user: true,
+        message: 'User created successfully'
+      });
+    }
+
+    res.json({
+      user,
+      wallet_address: targetWalletAddress,
+      auth_method: authMethod,
+      is_new_user: false,
+      message: 'User authenticated successfully'
+    });
+
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.status(500).json({ 
+      error: 'Authentication failed',
+      details: error.message 
+    });
+  }
+});
+
+// Link username/password to existing wallet account
+router.post('/link-credentials', async (req, res) => {
+  try {
+    const { wallet_address, username, password } = req.body;
+    
+    if (!wallet_address || !username || !password) {
+      return res.status(400).json({ 
+        error: 'wallet_address, username, and password required' 
+      });
+    }
+
+    // Validate wallet address
+    if (!/^0x[a-fA-F0-9]{40}$/.test(wallet_address)) {
+      return res.status(400).json({ error: 'Invalid wallet address format' });
+    }
+
+    // Check if username is already taken
+    const { data: existingUsername } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    if (existingUsername) {
+      return res.status(409).json({ error: 'Username already taken' });
+    }
+
+    // Generate the deterministic address for this username/password
+    const credentialAddress = generateEVMAddress(username, password);
+
+    // Check if this credential combination already exists
+    const { data: existingCredential } = await supabase
+      .from('users')
+      .select('id, wallet_address')
+      .eq('wallet_address', credentialAddress)
+      .single();
+
+    if (existingCredential) {
+      return res.status(409).json({ 
+        error: 'This username/password combination is already in use',
+        existing_wallet: credentialAddress
+      });
+    }
+
+    // Update the wallet user with username
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('users')
+      .update({ username })
+      .eq('wallet_address', wallet_address)
+      .select('*, user_profiles(*)')
+      .single();
+
+    if (updateError) {
+      console.error('Error linking credentials:', updateError);
+      throw updateError;
+    }
+
+    res.json({
+      user: updatedUser,
+      credential_address: credentialAddress,
+      message: 'Credentials linked successfully. You can now login with username/password on mobile.'
+    });
+
+  } catch (error) {
+    console.error('Link credentials error:', error);
+    res.status(500).json({ 
+      error: 'Failed to link credentials',
+      details: error.message 
+    });
+  }
+});
+
+// Check if username is available
+router.get('/check-username/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    if (!username || username.length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters' });
+    }
+
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    res.json({
+      available: !existingUser,
+      username
+    });
+
+  } catch (error) {
+    console.error('Username check error:', error);
+    res.status(500).json({ error: 'Failed to check username availability' });
+  }
+});
+
+// Get user by wallet address (existing endpoint - unchanged)
+router.get('/:wallet_address', async (req, res) => {
+  try {
+    const { wallet_address } = req.params;
+    
+    if (!/^0x[a-fA-F0-9]{40}$/.test(wallet_address)) {
+      return res.status(400).json({ error: 'Invalid wallet address format' });
+    }
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*, user_profiles(*)')
+      .eq('wallet_address', wallet_address)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      throw error;
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ error: 'Failed to get user' });
+  }
+});
 router.post('/auth', async (req, res) => {
   try {
     const { wallet_address, role = 'patient', username } = req.body;

@@ -13,7 +13,22 @@ const PORT = process.env.PORT || 3001;
 app.set('trust proxy', 1);
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: [
+    'https://medivet-data.netlify.app',
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://10.0.2.2:3001', // Android emulator
+    'http://localhost:3001', // Local development
+    /^https:\/\/.*\.netlify\.app$/, // Any Netlify subdomain
+    /^http:\/\/192\.168\.\d+\.\d+:\d+$/, // Local network IPs
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Apply rate limiting to all API routes

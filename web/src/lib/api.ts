@@ -122,6 +122,71 @@ export const loginUser = createApiWrapper(
   }
 );
 
+// Mobile authentication (username + password)
+export const authenticateWithCredentials = createApiWrapper(
+  async (username: string, password: string, role: 'patient' | 'provider' = 'patient') => {
+    const response = await fetch(`${API_BASE_URL}/users/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        username, 
+        password, 
+        role 
+      })
+    });
+    
+    if (!response.ok) throw new Error('Authentication failed');
+    return response.json();
+  },
+  async (username: string, password: string, role: 'patient' | 'provider' = 'patient') => {
+    return mockAPI.authenticateUser(`0x${username}`, role);
+  }
+);
+
+// Link username/password to existing wallet account
+export const linkCredentials = createApiWrapper(
+  async (walletAddress: string, username: string, password: string) => {
+    const response = await fetch(`${API_BASE_URL}/users/link-credentials`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        wallet_address: walletAddress,
+        username, 
+        password 
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to link credentials');
+    }
+    return response.json();
+  },
+  async (walletAddress: string, username: string, password: string) => {
+    return { 
+      success: true, 
+      message: 'Credentials linked successfully (mock)',
+      credential_address: `0x${username}`
+    };
+  }
+);
+
+// Check username availability
+export const checkUsernameAvailability = createApiWrapper(
+  async (username: string) => {
+    const response = await fetch(`${API_BASE_URL}/users/check-username/${username}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (!response.ok) throw new Error('Failed to check username');
+    return response.json();
+  },
+  async (username: string) => {
+    return { available: true, username };
+  }
+);
+
 export const updateUserProfile = createApiWrapper(
   async (userId: string, profileData: any) => {
     try {

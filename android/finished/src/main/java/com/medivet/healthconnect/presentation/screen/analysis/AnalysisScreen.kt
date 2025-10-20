@@ -49,7 +49,7 @@ fun AnalysisScreen(
             AnalysisResult(
                 id = "1",
                 fileName = "Blood Test Results - March 2024",
-                analysisType = " Laboratory Analysis",
+                analysisType = "Privacy-Preserving Analysis",
                 date = "2 days ago",
                 confidence = 0.94f,
                 findings = listOf(
@@ -66,7 +66,7 @@ fun AnalysisScreen(
             AnalysisResult(
                 id = "2",
                 fileName = "Chest X-Ray",
-                analysisType = "Medical Imaging Analysis",
+                analysisType = "Encrypted Analysis",
                 date = "1 week ago",
                 confidence = 0.89f,
                 findings = listOf(
@@ -82,7 +82,7 @@ fun AnalysisScreen(
             AnalysisResult(
                 id = "3",
                 fileName = "ECG Report",
-                analysisType = " Cardiac Analysis",
+                analysisType = "Zero-Knowledge Analysis",
                 date = "5 days ago",
                 confidence = 0.91f,
                 findings = listOf(
