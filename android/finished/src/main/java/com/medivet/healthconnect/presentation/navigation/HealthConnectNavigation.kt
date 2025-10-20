@@ -15,6 +15,10 @@ import com.medivet.healthconnect.data.AuthRepository
 import com.medivet.healthconnect.data.HealthConnectManager
 import kotlinx.coroutines.launch
 import com.medivet.healthconnect.presentation.screen.WelcomeScreen
+import com.medivet.healthconnect.presentation.screen.dashboard.DashboardScreen
+import com.medivet.healthconnect.presentation.screen.files.FilesScreen
+import com.medivet.healthconnect.presentation.screen.analysis.AnalysisScreen
+import com.medivet.healthconnect.presentation.screen.profile.ProfileScreen
 import com.medivet.healthconnect.presentation.screen.exercisesession.ExerciseSessionScreen
 import com.medivet.healthconnect.presentation.screen.exercisesession.ExerciseSessionViewModel
 import com.medivet.healthconnect.presentation.screen.exercisesession.ExerciseSessionViewModelFactory
@@ -36,14 +40,15 @@ fun HealthConnectNavigation(
     val sharedPreferencesHelper = (context.applicationContext as com.medivet.healthconnect.presentation.BaseApplication).sharedPreferencesHelper
     val authRepository = AuthRepository()
 
-    val startDestination = if (sharedPreferencesHelper.isLoggedIn()) Screen.ExerciseSessions.route else "auth"
+    // Temporarily bypass authentication - go directly to Dashboard for screenshots
+    val startDestination = Screen.Dashboard.route
 
     NavHost(navController = navController, startDestination = startDestination) {
         navigation(startDestination = Screen.Login.route, route = "auth") {
             composable(Screen.Login.route) {
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.navigate(Screen.ExerciseSessions.route) {
+                        navController.navigate(Screen.Dashboard.route) {
                             popUpTo("auth") { inclusive = true }
                         }
                     },
@@ -58,7 +63,7 @@ fun HealthConnectNavigation(
             composable(Screen.Register.route) {
                 RegisterScreen(
                     onRegistrationSuccess = {
-                        navController.navigate(Screen.ExerciseSessions.route) {
+                        navController.navigate(Screen.Dashboard.route) {
                             popUpTo("auth") { inclusive = true }
                         }
                     },
@@ -68,6 +73,35 @@ fun HealthConnectNavigation(
                 )
             }
         }
+        
+        // Main MediVet screens
+        composable(Screen.Dashboard.route) {
+            DashboardScreen()
+        }
+        
+        composable(Screen.Files.route) {
+            FilesScreen(
+                onUploadFile = {
+                    // TODO: Implement file upload
+                }
+            )
+        }
+        
+        composable(Screen.Analysis.route) {
+            AnalysisScreen()
+        }
+        
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                onLogout = {
+                    sharedPreferencesHelper.clearUserInfo()
+                    navController.navigate("auth") {
+                        popUpTo(Screen.Dashboard.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
         composable(Screen.WelcomeScreen.route) {
             val healthConnectAvailability by healthConnectManager.availability
             WelcomeScreen(

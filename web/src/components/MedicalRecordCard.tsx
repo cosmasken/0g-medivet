@@ -12,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { AttachmentViewer } from "@/components/AttachmentViewer";
 import { ShareRecordModal } from "@/components/ShareRecordModal";
-import { 
-  FileText, 
-  TestTube, 
-  Camera, 
-  Pill, 
-  Stethoscope, 
-  Activity, 
+import FileDownload from "@/components/FileDownload";
+import {
+  FileText,
+  TestTube,
+  Camera,
+  Pill,
+  Stethoscope,
+  Activity,
   AlertTriangle,
   Eye,
   Calendar,
@@ -73,10 +74,10 @@ interface MedicalRecordCardProps {
   onUpdateRecord?: (recordId: string, updates: Partial<MedicalRecord>) => void;
 }
 
-export const MedicalRecordCard = ({ 
-  record, 
-  canView, 
-  compact = false, 
+export const MedicalRecordCard = ({
+  record,
+  canView,
+  compact = false,
   showActions = false,
   isPatientView = false,
   onShareRecord,
@@ -129,7 +130,7 @@ export const MedicalRecordCard = ({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  
+
   if (!canView) {
     return (
       <Card className="opacity-50 bg-muted/30">
@@ -171,8 +172,8 @@ export const MedicalRecordCard = ({
   };
 
   const toggleProviderSelection = (providerId: string) => {
-    setSelectedProviders(prev => 
-      prev.includes(providerId) 
+    setSelectedProviders(prev =>
+      prev.includes(providerId)
         ? prev.filter(id => id !== providerId)
         : [...prev, providerId]
     );
@@ -220,7 +221,7 @@ export const MedicalRecordCard = ({
             </Badge>
           </div>
         </CardHeader>
-        
+
         {!compact && (
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
@@ -259,7 +260,7 @@ export const MedicalRecordCard = ({
                 </div>
               </div>
             )}
-            
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>Shared with {record.sharedWith?.length || 0} provider(s)</span>
@@ -268,28 +269,28 @@ export const MedicalRecordCard = ({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowDetailModal(true)}
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   View Details
                 </Button>
-                
+
                 {showActions && isPatientView && (
                   <>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => setShowSharingModal(true)}
                     >
                       <Share2 className="h-4 w-4 mr-2" />
                       Share
                     </Button>
-                    
-                    <Button 
-                      variant={isMonetized ? "default" : "outline"} 
+
+                    <Button
+                      variant={isMonetized ? "default" : "outline"}
                       size="sm"
                       onClick={() => handleMonetizationToggle(!isMonetized)}
                     >
@@ -315,7 +316,7 @@ export const MedicalRecordCard = ({
               {isEditing ? 'Edit Medical Record' : 'Medical Record Details'}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -325,19 +326,19 @@ export const MedicalRecordCard = ({
                     <Input
                       id="title"
                       value={editedRecord.title}
-                      onChange={(e) => setEditedRecord({...editedRecord, title: e.target.value})}
+                      onChange={(e) => setEditedRecord({ ...editedRecord, title: e.target.value })}
                     />
                   ) : (
                     <p className="text-sm mt-1 p-2 bg-muted rounded">{record.title}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="type">Type</Label>
                   {isEditing ? (
-                    <Select 
-                      value={editedRecord.type} 
-                      onValueChange={(value) => setEditedRecord({...editedRecord, type: value as any})}
+                    <Select
+                      value={editedRecord.type}
+                      onValueChange={(value) => setEditedRecord({ ...editedRecord, type: value as any })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -355,7 +356,7 @@ export const MedicalRecordCard = ({
                     <p className="text-sm mt-1 p-2 bg-muted rounded capitalize">{record.type}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="date">Date</Label>
                   {isEditing ? (
@@ -363,27 +364,27 @@ export const MedicalRecordCard = ({
                       id="date"
                       type="date"
                       value={editedRecord.date}
-                      onChange={(e) => setEditedRecord({...editedRecord, date: e.target.value})}
+                      onChange={(e) => setEditedRecord({ ...editedRecord, date: e.target.value })}
                     />
                   ) : (
                     <p className="text-sm mt-1 p-2 bg-muted rounded">{new Date(record.date).toLocaleDateString()}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="provider">Provider</Label>
                   {isEditing ? (
                     <Input
                       id="provider"
                       value={editedRecord.provider}
-                      onChange={(e) => setEditedRecord({...editedRecord, provider: e.target.value})}
+                      onChange={(e) => setEditedRecord({ ...editedRecord, provider: e.target.value })}
                     />
                   ) : (
                     <p className="text-sm mt-1 p-2 bg-muted rounded">{record.provider}</p>
                   )}
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="description">Description</Label>
@@ -391,21 +392,21 @@ export const MedicalRecordCard = ({
                     <Textarea
                       id="description"
                       value={editedRecord.description}
-                      onChange={(e) => setEditedRecord({...editedRecord, description: e.target.value})}
+                      onChange={(e) => setEditedRecord({ ...editedRecord, description: e.target.value })}
                       rows={4}
                     />
                   ) : (
                     <p className="text-sm mt-1 p-2 bg-muted rounded">{record.description}</p>
                   )}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <Label htmlFor="sensitive">Sensitive Record</Label>
                   {isEditing ? (
                     <Switch
                       id="sensitive"
                       checked={editedRecord.sensitive}
-                      onCheckedChange={(checked) => setEditedRecord({...editedRecord, sensitive: checked})}
+                      onCheckedChange={(checked) => setEditedRecord({ ...editedRecord, sensitive: checked })}
                     />
                   ) : (
                     <Badge variant={record.sensitive ? "destructive" : "secondary"}>
@@ -413,7 +414,7 @@ export const MedicalRecordCard = ({
                     </Badge>
                   )}
                 </div>
-                
+
                 <div>
                   <Label>Currently Shared With</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -467,20 +468,20 @@ export const MedicalRecordCard = ({
                               <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Download
-                            </Button>
+                            <FileDownload
+                              rootHash={attachment.id} // Using attachment ID as placeholder for root hash
+                              fileName={attachment.filename}
+                              mimeType={attachment.mimeType}
+                              variant="button"
+                              showPreview={false}
+                            />
                           </div>
                         </div>
                       ))}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="w-full mt-3"
                       onClick={() => {
                         // Generate a new mock attachment
@@ -497,10 +498,10 @@ export const MedicalRecordCard = ({
                           accessCount: 0,
                           lastAccessed: undefined
                         };
-                        
+
                         // Add to record (this would normally update the backend)
                         record.attachments = [...(record.attachments || []), newAttachment];
-                        
+
                         // Force re-render by updating the record
                         onUpdateRecord?.(record.id, record);
                       }}
@@ -518,8 +519,8 @@ export const MedicalRecordCard = ({
                     <div className="mt-2 p-4 border-2 border-dashed border-muted rounded-lg text-center">
                       <Paperclip className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground mb-3">No attachments yet</p>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           // Generate mock attachments based on record type
@@ -560,7 +561,7 @@ export const MedicalRecordCard = ({
                 )}
               </div>
             </div>
-            
+
             {isPatientView && (
               <div className="flex justify-end gap-2 pt-4 border-t">
                 {isEditing ? (
@@ -595,14 +596,14 @@ export const MedicalRecordCard = ({
               Share "{record.title}"
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
                 Select providers to share this record with. They will only see what their existing permissions allow.
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-medium mb-3">Available Healthcare Providers</h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -627,12 +628,12 @@ export const MedicalRecordCard = ({
                 ))}
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => setShowSharingModal(false)}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={handleShareRecord}
                 disabled={selectedProviders.length === 0}
               >

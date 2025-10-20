@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import FileUpload from '@/components/FileUpload';
+import FileDownload from '@/components/FileDownload';
 import { AddProviderModal } from '@/components/AddProviderModal';
 import { ProviderSearch } from '@/components/ProviderSearch';
 import { HealthProfileEditor } from '@/components/HealthProfileEditor';
@@ -18,7 +19,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useRecordsQuery } from '@/hooks/useRecordsQuery';
 import { useFileRecords } from '@/hooks/useFileRecords';
 import { useAIAnalysis } from '@/hooks/useAIAnalysis';
-import { Upload, Users, UserPlus, FileText, DollarSign, Brain, Shield, Settings, LogOut, User, Bell, Activity, Calendar, Heart, Edit } from 'lucide-react';
+import { Upload, Users, UserPlus, FileText, DollarSign, Brain, Shield, Settings, LogOut, User, Bell, Activity, Calendar, Heart, Edit, Download } from 'lucide-react';
 
 export default function PatientDashboard() {
   const { address, disconnect } = useWallet();
@@ -178,11 +179,15 @@ export default function PatientDashboard() {
         </Card>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="upload">
               <Upload className="h-4 w-4 mr-1" />
               Upload
+            </TabsTrigger>
+            <TabsTrigger value="download">
+              <Download className="h-4 w-4 mr-1" />
+              Download
             </TabsTrigger>
             <TabsTrigger value="records">
               <FileText className="h-4 w-4 mr-1" />
@@ -302,8 +307,8 @@ export default function PatientDashboard() {
                       <div className="flex justify-between text-sm">
                         <span>Allergies</span>
                         <span className="font-medium">
-                          {Array.isArray(patient.allergies) && patient.allergies.length > 0 
-                            ? patient.allergies.join(', ') 
+                          {Array.isArray(patient.allergies) && patient.allergies.length > 0
+                            ? patient.allergies.join(', ')
                             : 'None listed'}
                         </span>
                       </div>
@@ -318,7 +323,7 @@ export default function PatientDashboard() {
                       <div className="flex justify-between text-sm">
                         <span>Last Checkup</span>
                         <span className="font-medium">
-                          {patient.lastCheckup !== 'Not set' 
+                          {patient.lastCheckup !== 'Not set'
                             ? new Date(patient.lastCheckup).toLocaleDateString()
                             : 'Not set'}
                         </span>
@@ -344,6 +349,66 @@ export default function PatientDashboard() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="download" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Download from 0G Storage</CardTitle>
+                <CardDescription>
+                  Retrieve your medical files using their root hash from 0G decentralized storage
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FileDownload />
+              </CardContent>
+            </Card>
+
+            {/* Quick Download from Records */}
+            {fileRecords.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Download from Your Records</CardTitle>
+                  <CardDescription>
+                    Download files directly from your medical records
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {fileRecords.slice(0, 5).map((record) => (
+                      <div key={record.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <h4 className="font-medium">{record.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {record.category} • {new Date(record.created_at).toLocaleDateString()}
+                            </p>
+                            {record.zero_g_hash && record.zero_g_hash !== 'unknown' && (
+                              <p className="text-xs text-muted-foreground font-mono">
+                                Hash: {record.zero_g_hash.substring(0, 20)}...
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <FileDownload
+                          rootHash={record.zero_g_hash || record.merkle_root || ''}
+                          fileName={record.title}
+                          mimeType={record.file_type || 'application/octet-stream'}
+                          variant="button"
+                          showPreview={true}
+                        />
+                      </div>
+                    ))}
+                    {fileRecords.length > 5 && (
+                      <p className="text-sm text-muted-foreground text-center pt-2">
+                        Showing 5 of {fileRecords.length} records. View all in the Records tab.
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
           <TabsContent value="records" className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -367,9 +432,9 @@ export default function PatientDashboard() {
                   <div className="space-y-4">
                     {fileRecords.map((record) => (
                       <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 flex-1">
                           <FileText className="h-8 w-8 text-muted-foreground" />
-                          <div>
+                          <div className="flex-1">
                             <h4 className="font-medium">{record.title}</h4>
                             <p className="text-sm text-muted-foreground">
                               {record.category} • {new Date(record.created_at).toLocaleDateString()}
@@ -377,16 +442,30 @@ export default function PatientDashboard() {
                             {record.description && (
                               <p className="text-sm text-muted-foreground">{record.description}</p>
                             )}
-                            {record.file_size && (
-                              <p className="text-sm text-muted-foreground">
-                                Size: {(record.file_size / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            )}
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                              {record.file_size && (
+                                <span>Size: {(record.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                              )}
+                              {record.zero_g_hash && record.zero_g_hash !== 'unknown' && (
+                                <span className="font-mono">Hash: {record.zero_g_hash.substring(0, 16)}...</span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <Badge variant={record.file_type === 'text/plain' ? 'secondary' : 'default'}>
-                          {record.file_type === 'text/plain' ? 'Text' : 'File'}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={record.file_type === 'text/plain' ? 'secondary' : 'default'}>
+                            {record.file_type === 'text/plain' ? 'Text' : 'File'}
+                          </Badge>
+                          {record.zero_g_hash && record.zero_g_hash !== 'unknown' && (
+                            <FileDownload
+                              rootHash={record.zero_g_hash}
+                              fileName={record.title}
+                              mimeType={record.file_type || 'application/octet-stream'}
+                              variant="button"
+                              showPreview={true}
+                            />
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -476,18 +555,18 @@ export default function PatientDashboard() {
                     <p>Analyzing your medical data...</p>
                   </div>
                 )}
-                
+
                 {aiError && (
                   <div className="text-center py-8 text-red-500">
                     <Brain className="h-12 w-12 mx-auto mb-4" />
                     <p>Analysis failed: {aiError}</p>
                   </div>
                 )}
-                
+
                 {aiResult && (
                   <AIAnalysisDisplay analysis={aiResult} />
                 )}
-                
+
                 {!aiLoading && !aiError && !aiResult && (
                   <div className="text-center py-8 text-muted-foreground">
                     <Brain className="h-12 w-12 mx-auto mb-4" />

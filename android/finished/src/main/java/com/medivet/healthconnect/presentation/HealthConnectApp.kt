@@ -40,6 +40,7 @@ import com.medivet.healthconnect.data.HealthConnectAvailability
 import com.medivet.healthconnect.data.HealthConnectManager
 import com.medivet.healthconnect.presentation.navigation.Drawer
 import com.medivet.healthconnect.presentation.navigation.HealthConnectNavigation
+import com.medivet.healthconnect.presentation.navigation.MediVetBottomNavigation
 import com.medivet.healthconnect.presentation.navigation.Screen
 import com.medivet.healthconnect.presentation.screen.auth.LoginScreen
 import com.medivet.healthconnect.presentation.screen.auth.RegisterScreen
@@ -52,14 +53,8 @@ const val TAG = "MediVet"
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun HealthConnectApp(healthConnectManager: HealthConnectManager) {
-    val context = LocalContext.current
-    val isAuthenticated = SharedPreferencesHelper.getInstance(context).isLoggedIn()
-
-    if (isAuthenticated) {
-        ShowMainApp(healthConnectManager)
-    } else {
-        ShowAuthFlow()
-    }
+    // Temporarily bypass authentication for screenshots
+    ShowMainApp(healthConnectManager)
 }
 
 @Composable
@@ -94,12 +89,24 @@ fun ShowMainApp(healthConnectManager: HealthConnectManager) {
 
         val availability by healthConnectManager.availability
 
+        // Check if current route should show bottom navigation
+        val showBottomNav = listOf(
+            Screen.Dashboard.route,
+            Screen.Files.route,
+            Screen.Analysis.route,
+            Screen.Profile.route
+        ).contains(currentRoute)
+
         Scaffold(
             scaffoldState = scaffoldState,
             topBar = {
                 TopAppBar(
                     title = {
                         val titleId = when (currentRoute) {
+                            Screen.Dashboard.route -> Screen.Dashboard.titleId
+                            Screen.Files.route -> Screen.Files.titleId
+                            Screen.Analysis.route -> Screen.Analysis.titleId
+                            Screen.Profile.route -> Screen.Profile.titleId
                             Screen.ExerciseSessions.route -> Screen.ExerciseSessions.titleId
                             Screen.InputReadings.route -> Screen.InputReadings.titleId
                             Screen.DifferentialChanges.route -> Screen.DifferentialChanges.titleId
@@ -107,32 +114,12 @@ fun ShowMainApp(healthConnectManager: HealthConnectManager) {
                             else -> R.string.app_name
                         }
                         Text(stringResource(titleId))
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                if (availability == HealthConnectAvailability.INSTALLED) {
-                                    scope.launch {
-                                        scaffoldState.drawerState.open()
-                                    }
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Menu,
-                                contentDescription = stringResource(id = R.string.menu)
-                            )
-                        }
                     }
                 )
             },
-            drawerContent = {
-                if (availability == HealthConnectAvailability.INSTALLED) {
-                    Drawer(
-                        scope = scope,
-                        scaffoldState = scaffoldState,
-                        navController = navController
-                    )
+            bottomBar = {
+                if (showBottomNav) {
+                    MediVetBottomNavigation(navController = navController)
                 }
             },
             snackbarHost = { snackbarHostState ->

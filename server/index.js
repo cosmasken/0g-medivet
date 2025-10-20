@@ -32,9 +32,11 @@ app.use('/api/audit', auditLimiter);
 
 // Import routes
 const computeRouter = require('./routes/compute');
+const downloadRouter = require('./routes/download');
 
 // Always available routes (using SQLite)
 app.use('/api/compute', computeRouter);
+app.use('/api/download', downloadRouter);
 
 // Conditionally import Supabase-dependent routes
 const supabaseClient = require('./supabase').supabase;
@@ -121,23 +123,23 @@ db.serialize(() => {
 app.get('/api/audit/:walletAddress', async (req, res) => {
   const { walletAddress } = req.params;
   const { limit = 50, offset = 0 } = req.query;
-  
+
   // Validate inputs to prevent injection attacks
   if (!walletAddress || typeof walletAddress !== 'string' || !/^[a-fA-F0-9x]+$/.test(walletAddress)) {
     return res.status(400).json({ error: 'Invalid wallet address format' });
   }
-  
+
   const limitInt = parseInt(limit);
   const offsetInt = parseInt(offset);
-  
+
   if (isNaN(limitInt) || limitInt <= 0 || limitInt > 1000) {
     return res.status(400).json({ error: 'Invalid limit parameter (1-1000)' });
   }
-  
+
   if (isNaN(offsetInt) || offsetInt < 0) {
     return res.status(400).json({ error: 'Invalid offset parameter' });
   }
-  
+
   try {
     const { data, error } = await supabaseClient
       .from('audit_logs')
@@ -173,36 +175,36 @@ app.get('/api/audit/:walletAddress', async (req, res) => {
 
 // Create audit log entry
 app.post('/api/audit', async (req, res) => {
-  const { 
-    wallet_address, 
-    action, 
-    resource_type, 
-    resource_id, 
-    details 
+  const {
+    wallet_address,
+    action,
+    resource_type,
+    resource_id,
+    details
   } = req.body;
-  
+
   // Validate required fields
   if (!wallet_address || !action || !resource_type) {
     return res.status(400).json({ error: 'Missing required fields: wallet_address, action, resource_type' });
   }
-  
+
   // Validate data formats
   if (typeof wallet_address !== 'string' || !/^[a-fA-F0-9x]+$/.test(wallet_address)) {
     return res.status(400).json({ error: 'Invalid wallet address format' });
   }
-  
+
   if (typeof action !== 'string' || action.length > 100) {
     return res.status(400).json({ error: 'Invalid action format or too long' });
   }
-  
+
   if (typeof resource_type !== 'string' || resource_type.length > 100) {
     return res.status(400).json({ error: 'Invalid resource_type format or too long' });
   }
-  
+
   if (resource_id && (typeof resource_id !== 'string' || resource_id.length > 255)) {
     return res.status(400).json({ error: 'Invalid resource_id format or too long' });
   }
-  
+
   // Find user ID from wallet address
   let user_id = null;
   try {
@@ -222,10 +224,10 @@ app.post('/api/audit', async (req, res) => {
     console.error('Error finding user for audit:', error);
     // Continue without user_id
   }
-  
+
   const ip_address = req.ip || req.connection.remoteAddress || 'unknown';
   const user_agent = req.get('User-Agent') || 'unknown';
-  
+
   // Encrypt sensitive details
   let encryptedDetails = details;
   if (details && typeof details === 'object') {
@@ -233,7 +235,7 @@ app.post('/api/audit', async (req, res) => {
   } else if (details && typeof details === 'string') {
     encryptedDetails = encryption.encrypt(details);
   }
-  
+
   try {
     const { data, error } = await supabaseClient
       .from('audit_logs')
@@ -255,10 +257,10 @@ app.post('/api/audit', async (req, res) => {
       throw error;
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       id: data.id,
-      message: 'Audit log created successfully' 
+      message: 'Audit log created successfully'
     });
   } catch (error) {
     console.error('Audit creation error:', error);
@@ -269,20 +271,20 @@ app.post('/api/audit', async (req, res) => {
 // Get audit statistics
 app.get('/api/audit/:walletAddress/stats', async (req, res) => {
   const { walletAddress } = req.params;
-  
+
   // Validate wallet address format
   if (!walletAddress || typeof walletAddress !== 'string' || !/^[a-fA-F0-9x]+$/.test(walletAddress)) {
     return res.status(400).json({ error: 'Invalid wallet address format' });
   }
-  
+
   try {
-    const { data, error } = await supabaseClient.rpc('get_audit_stats', { 
-      wallet_addr: walletAddress 
+    const { data, error } = await supabaseClient.rpc('get_audit_stats', {
+      wallet_addr: walletAddress
     });
 
     if (error) {
       console.error('Supabase audit stats error:', error);
-      
+
       // If RPC function doesn't exist, fall back to raw query
       if (error.code === '42883') { // undefined function
         const { data: fallbackData, error: fallbackError } = await supabaseClient
@@ -301,7 +303,7 @@ app.get('/api/audit/:walletAddress/stats', async (req, res) => {
           console.error('Fallback audit stats error:', fallbackError);
           throw fallbackError;
         }
-        
+
         res.json({ stats: fallbackData });
       } else {
         throw error;
@@ -317,8 +319,8 @@ app.get('/api/audit/:walletAddress/stats', async (req, res) => {
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     services: {
       database: 'OK',

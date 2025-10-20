@@ -11,7 +11,13 @@ sealed class Screen(
     object WelcomeScreen : Screen("welcome", R.string.welcome_screen, false)
     object PrivacyPolicy : Screen("privacy_policy", R.string.privacy_policy, false)
 
-    // Main app screens
+    // Main MediVet screens
+    object Dashboard : Screen("dashboard", R.string.dashboard)
+    object Files : Screen("files", R.string.files)
+    object Analysis : Screen("analysis", R.string.analysis)
+    object Profile : Screen("profile", R.string.profile)
+    
+    // Legacy Health Connect screens (kept for compatibility)
     object ExerciseSessions : Screen("exercise_sessions", R.string.exercise_sessions)
     object ExerciseSessionDetail : Screen("exercise_session_detail", R.string.exercise_session_detail, false)
     object InputReadings : Screen("input_readings", R.string.input_readings)
@@ -21,6 +27,10 @@ sealed class Screen(
 
     companion object {
         val Labeled = listOf(
+            Dashboard,
+            Files,
+            Analysis,
+            Profile,
             ExerciseSessions,
             InputReadings,
             DifferentialChanges,

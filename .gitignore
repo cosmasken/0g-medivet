@@ -271,3 +271,6 @@ test.sqlite
 *.pid
 *.seed
 *.pid.lock
+
+
+*.md

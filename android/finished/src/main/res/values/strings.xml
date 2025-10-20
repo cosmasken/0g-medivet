@@ -137,6 +137,12 @@
   <string name="differential_changes_type_weight">Weight</string>
   <string name="add_medical_record">Add Medical Record</string>
 
+  <!-- MediVet screens -->
+  <string name="dashboard">Dashboard</string>
+  <string name="files">Files</string>
+  <string name="analysis">Analysis</string>
+  <string name="profile">Profile</string>
+
   <!-- Health Connect settings -->
   <string name="settings">Settings</string>
   <!-- Login screen -->
