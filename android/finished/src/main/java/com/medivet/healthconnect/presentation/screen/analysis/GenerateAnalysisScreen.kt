@@ -37,7 +37,7 @@ fun GenerateAnalysisScreen(
 
     val analysisSteps = listOf(
         "Uploading files to 0G Standard Storage...",
-        "Initializing MediVet-GPT-4 model...",
+        "Initializing  model...",
         "Processing medical data on 0G Compute...",
         "Analyzing patterns with AI algorithms...",
         "Generating clinical insights...",
@@ -257,7 +257,7 @@ fun GenerateAnalysisScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text("• Files selected: ${selectedFiles.size}", style = MaterialTheme.typography.body2)
-                        Text("• AI Model: MediVet-GPT-4", style = MaterialTheme.typography.body2)
+                        Text("• AI Model: ", style = MaterialTheme.typography.body2)
                         Text("• Compute Network: 0G Galileo Testnet", style = MaterialTheme.typography.body2)
                         Text("• Storage: 0G Standard Storage", style = MaterialTheme.typography.body2)
                     }
