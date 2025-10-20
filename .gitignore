@@ -274,3 +274,5 @@ test.sqlite
 
 
 *.md
+
+.specs/

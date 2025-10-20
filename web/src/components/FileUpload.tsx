@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Upload, File, DollarSign, CheckCircle, Brain, Zap } from 'lucide-react';
+import { Upload, File, DollarSign, CheckCircle, Brain, Zap, Shield } from 'lucide-react';
 import { useMedicalFilesStore } from '@/stores/medicalFilesStore';
 import { useWallet } from '@/hooks/useWallet';
 import { useUpload } from '@/hooks/useUpload';
@@ -13,6 +13,7 @@ import { createBlobFromFile } from '@/lib/0g/blob';
 import { useAuthStore } from '@/stores/authStore';
 import { BrowserProvider } from 'ethers';
 import { createAuditLog } from '@/lib/api';
+import { encryptionService, EncryptionMetadata } from '@/lib/encryption';
 import toast from 'react-hot-toast';
 
 interface FileUploadProps {
@@ -37,6 +38,8 @@ const FileUpload = ({
   const [priority, setPriority] = useState<string>('medium');
   const [tags, setTags] = useState<string[]>([]);
   const [step, setStep] = useState<'select' | 'confirm' | 'estimate' | 'upload'>('select');
+  const [encryptionEnabled, setEncryptionEnabled] = useState<boolean>(true);
+  const [encryptionMetadata, setEncryptionMetadata] = useState<EncryptionMetadata | null>(null);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -101,14 +104,40 @@ const FileUpload = ({
     try {
       resetUploadState();
 
-      // Create blob from file
-      const blob = createBlobFromFile(selectedFile);
+      let fileToUpload = selectedFile;
+      let encryptionMeta: EncryptionMetadata | null = null;
+
+      // Encrypt file if encryption is enabled
+      if (encryptionEnabled && address) {
+        toast.loading('Encrypting file...', { id: 'encryption' });
+        try {
+          const encryptionResult = await encryptionService.encryptFile(selectedFile, address);
+          
+          // Create new File object from encrypted data
+          fileToUpload = new File(
+            [encryptionResult.encryptedData], 
+            `encrypted_${selectedFile.name}`,
+            { type: 'application/octet-stream' }
+          );
+          
+          encryptionMeta = encryptionResult.metadata;
+          setEncryptionMetadata(encryptionMeta);
+          
+          toast.success('File encrypted successfully', { id: 'encryption' });
+        } catch (encryptionError) {
+          toast.error('Encryption failed', { id: 'encryption' });
+          throw new Error(`Encryption failed: ${encryptionError}`);
+        }
+      }
+
+      // Create blob from file (encrypted or original)
+      const blob = createBlobFromFile(fileToUpload);
 
       // Calculate the Merkle root separately to ensure we have it available before upload
       const { calculateMerkleRootFromFile } = await import('@/lib/0g/hashUtils');
       let calculatedRootHash = 'unknown';
       try {
-        calculatedRootHash = await calculateMerkleRootFromFile(selectedFile);
+        calculatedRootHash = await calculateMerkleRootFromFile(fileToUpload);
         console.log('📋 Calculated root hash before upload:', calculatedRootHash);
       } catch (hashError) {
         console.warn('⚠️ Could not calculate hash directly from file:', hashError);
@@ -117,8 +146,8 @@ const FileUpload = ({
         console.log('📋 Fallback: Extracted from blob:', calculatedRootHash);
       }
 
-      // Upload to 0G Network
-      const uploadResult = await uploadFile(blob, 'turbo', selectedFile.size, selectedFile);
+      // Upload to 0G Network (encrypted file if encryption enabled)
+      const uploadResult = await uploadFile(blob, 'turbo', fileToUpload.size, fileToUpload);
       console.log('Upload result:', uploadResult);
 
       // Use the calculated hash as primary source, fall back to upload result, then to default
@@ -132,7 +161,7 @@ const FileUpload = ({
       const recordData = {
         user_id: currentUser.id,
         title: selectedFile.name || 'Untitled',
-        description: `Uploaded file: ${selectedFile.name}` || 'No description',
+        description: `${encryptionEnabled ? 'Encrypted file: ' : 'Uploaded file: '}${selectedFile.name}` || 'No description',
         category: category || 'general',
         specialty: specialty || 'general',
         priority_level: priority || 'medium',
@@ -142,7 +171,8 @@ const FileUpload = ({
         merkle_root: merkleRoot || 'unknown',
         transaction_hash: resultTxHash || 'unknown',
         tags: tags && Array.isArray(tags) ? tags.filter(tag => tag.trim()) : [],
-        upload_status: 'completed'
+        upload_status: 'completed',
+        encryption_metadata: encryptionMeta ? JSON.stringify(encryptionMeta) : null
       };
 
       console.log('Creating medical record:', recordData);
@@ -268,6 +298,26 @@ const FileUpload = ({
               <p className="text-sm text-gray-600">
                 Type: {selectedFile.type}
               </p>
+            </div>
+
+            {/* Encryption Toggle */}
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center space-x-3">
+                <Shield className="h-5 w-5 text-blue-600" />
+                <div>
+                  <Label htmlFor="encryption-toggle" className="text-sm font-medium text-blue-900">
+                    Client-Side Encryption
+                  </Label>
+                  <p className="text-xs text-blue-700">
+                    Encrypt file before uploading to 0G Storage for enhanced privacy
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="encryption-toggle"
+                checked={encryptionEnabled}
+                onCheckedChange={setEncryptionEnabled}
+              />
             </div>
 
             <div className="flex gap-2">

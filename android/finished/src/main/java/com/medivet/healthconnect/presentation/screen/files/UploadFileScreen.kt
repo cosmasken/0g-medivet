@@ -187,6 +187,51 @@ fun UploadFileScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = 2.dp,
+                shape = RoundedCornerShape(8.dp),
+                backgroundColor = Color(0xFFE3F2FD)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = "Encryption",
+                        tint = Color(0xFF1976D2),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Client-Side Encryption",
+                            style = MaterialTheme.typography.subtitle2,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1976D2)
+                        )
+                        Text(
+                            text = "Encrypt file before uploading to 0G Storage",
+                            style = MaterialTheme.typography.caption,
+                            color = Color(0xFF1565C0)
+                        )
+                    }
+                    Switch(
+                        checked = uiState.encryptionEnabled,
+                        onCheckedChange = { viewModel.toggleEncryption(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color(0xFF1976D2),
+                            checkedTrackColor = Color(0xFFBBDEFB)
+                        )
+                    )
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = 2.dp,
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Column(
@@ -299,7 +344,7 @@ fun UploadFileScreen(
                 Button(
                     onClick = {
                         selectedFileUri?.let { uri ->
-                            val (userId, _, _) = sharedPrefs.getUserInfo()
+                            val (userId, _, walletAddress) = sharedPrefs.getUserInfo()
                             userId?.let {
                                 viewModel.uploadFile(
                                     context = context,
@@ -307,7 +352,8 @@ fun UploadFileScreen(
                                     fileName = fileName,
                                     category = selectedCategory,
                                     fileType = selectedFileType,
-                                    userId = it
+                                    userId = it,
+                                    walletAddress = walletAddress
                                 )
                             }
                         }
