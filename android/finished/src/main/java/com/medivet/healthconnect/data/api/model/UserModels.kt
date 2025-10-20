@@ -9,6 +9,13 @@ data class AuthRequest(
     val username: String
 )
 
+// Mobile authentication with username/password
+data class CredentialAuthRequest(
+    val username: String,
+    val password: String,
+    val role: String = "patient"
+)
+
 data class LoginRequest(
     @SerializedName("wallet_address") val walletAddress: String,
     val username: String
@@ -16,7 +23,16 @@ data class LoginRequest(
 
 // Response models
 data class UserResponse(
-    val user: User
+    val user: User,
+    @SerializedName("wallet_address") val walletAddress: String? = null,
+    @SerializedName("auth_method") val authMethod: String? = null,
+    @SerializedName("is_new_user") val isNewUser: Boolean = false,
+    val message: String? = null
+)
+
+data class UsernameCheckResponse(
+    val available: Boolean,
+    val username: String
 )
 
 data class User(

@@ -1,11 +1,13 @@
 package com.medivet.healthconnect.presentation.screen.login
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.medivet.healthconnect.data.AuthRepository
 import com.medivet.healthconnect.util.SharedPreferencesHelper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
@@ -13,28 +15,68 @@ class RegisterViewModel(
     private val sharedPreferencesHelper: SharedPreferencesHelper
 ) : ViewModel() {
 
-    val registrationState = mutableStateOf<RegistrationState>(RegistrationState.Idle)
+    private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Idle)
+    val registerState: StateFlow<RegisterState> = _registerState.asStateFlow()
 
-    fun register(username: String, walletAddress: String, role: String) {
+    fun register(username: String, password: String, confirmPassword: String) {
         viewModelScope.launch {
-            registrationState.value = RegistrationState.Loading
+            _registerState.value = RegisterState.Loading
+            
             try {
-                val authResponse = authRepository.auth(walletAddress, username, role)
-                sharedPreferencesHelper.setUserInfo(authResponse.user.id, authResponse.user.username, authResponse.user.walletAddress)
+                // Validate input
+                if (username.length < 3) {
+                    _registerState.value = RegisterState.Error("Username must be at least 3 characters")
+                    return@launch
+                }
+                
+                if (password.length < 6) {
+                    _registerState.value = RegisterState.Error("Password must be at least 6 characters")
+                    return@launch
+                }
+                
+                if (password != confirmPassword) {
+                    _registerState.value = RegisterState.Error("Passwords do not match")
+                    return@launch
+                }
+
+                // Check username availability
+                val isAvailable = authRepository.checkUsernameAvailability(username.trim())
+                if (!isAvailable) {
+                    _registerState.value = RegisterState.Error("Username is already taken")
+                    return@launch
+                }
+
+                // Register user
+                val authResponse = authRepository.loginWithCredentials(username.trim(), password)
+                
+                // Save user data
+                sharedPreferencesHelper.setUserInfo(
+                    authResponse.user.id,
+                    authResponse.user.username,
+                    authResponse.walletAddress ?: ""
+                )
                 sharedPreferencesHelper.setIsLoggedIn(true)
-                registrationState.value = RegistrationState.Success
+                
+                _registerState.value = RegisterState.Success("Account created successfully")
+                
             } catch (e: Exception) {
-                registrationState.value = RegistrationState.Error(e.message ?: "An unexpected error occurred")
+                _registerState.value = RegisterState.Error(
+                    e.message ?: "Registration failed"
+                )
             }
         }
     }
+
+    fun resetState() {
+        _registerState.value = RegisterState.Idle
+    }
 }
 
-sealed class RegistrationState {
-    object Idle : RegistrationState()
-    object Loading : RegistrationState()
-    object Success : RegistrationState()
-    data class Error(val message: String) : RegistrationState()
+sealed class RegisterState {
+    object Idle : RegisterState()
+    object Loading : RegisterState()
+    data class Success(val message: String) : RegisterState()
+    data class Error(val message: String) : RegisterState()
 }
 
 class RegisterViewModelFactory(

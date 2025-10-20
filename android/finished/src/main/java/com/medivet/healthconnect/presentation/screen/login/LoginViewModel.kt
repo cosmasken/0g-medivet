@@ -1,11 +1,13 @@
 package com.medivet.healthconnect.presentation.screen.login
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.medivet.healthconnect.data.AuthRepository
 import com.medivet.healthconnect.util.SharedPreferencesHelper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
@@ -13,27 +15,36 @@ class LoginViewModel(
     private val sharedPreferencesHelper: SharedPreferencesHelper
 ) : ViewModel() {
 
-    val loginState = mutableStateOf<LoginState>(LoginState.Idle)
+    private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
+    val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
 
-    fun login(username: String, walletAddress: String) {
+    fun login(username: String, password: String) {
         viewModelScope.launch {
-            loginState.value = LoginState.Loading
+            _loginState.value = LoginState.Loading
             try {
-                val authResponse = authRepository.login(walletAddress, username)
-                sharedPreferencesHelper.setUserInfo(authResponse.user.id, authResponse.user.username, authResponse.user.walletAddress)
+                val authResponse = authRepository.loginWithCredentials(username, password)
+                sharedPreferencesHelper.setUserInfo(
+                    authResponse.user.id, 
+                    authResponse.user.username, 
+                    authResponse.walletAddress ?: ""
+                )
                 sharedPreferencesHelper.setIsLoggedIn(true)
-                loginState.value = LoginState.Success
+                _loginState.value = LoginState.Success("Login successful")
             } catch (e: Exception) {
-                loginState.value = LoginState.Error(e.message ?: "An unexpected error occurred")
+                _loginState.value = LoginState.Error(e.message ?: "Login failed")
             }
         }
+    }
+
+    fun resetState() {
+        _loginState.value = LoginState.Idle
     }
 }
 
 sealed class LoginState {
     object Idle : LoginState()
     object Loading : LoginState()
-    object Success : LoginState()
+    data class Success(val message: String) : LoginState()
     data class Error(val message: String) : LoginState()
 }
 

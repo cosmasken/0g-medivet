@@ -17,8 +17,13 @@ interface MediVetApiService {
     @POST("api/users/auth")
     suspend fun authenticateUser(@Body request: AuthRequest): Response<UserResponse>
 
-    @POST("api/users/login")
-    suspend fun loginUser(@Body request: LoginRequest): Response<LoginResponse> // Corrected to use LoginRequest
+    // Mobile authentication with username/password
+    @POST("api/users/auth")
+    suspend fun authenticateWithCredentials(@Body request: CredentialAuthRequest): Response<UserResponse>
+
+    // Check username availability
+    @GET("api/users/check-username/{username}")
+    suspend fun checkUsername(@Path("username") username: String): Response<UsernameCheckResponse>
 
     // Medical records endpoints
     @POST("api/records")

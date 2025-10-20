@@ -3,6 +3,7 @@ package com.medivet.healthconnect.data.repository
 import com.medivet.healthconnect.data.api.model.AuthRequest
 import com.medivet.healthconnect.data.api.model.ComputeAnalysisRequest
 import com.medivet.healthconnect.data.api.model.CreateRecordRequest
+import com.medivet.healthconnect.data.api.model.CredentialAuthRequest
 import com.medivet.healthconnect.data.api.model.LoginRequest
 import com.medivet.healthconnect.data.api.model.SyncHealthDataRequest
 import com.medivet.healthconnect.data.api.service.MediVetApiService
@@ -11,7 +12,8 @@ class MediVetRepository(private val apiService: MediVetApiService) {
 
     // User management
     suspend fun authenticateUser(request: AuthRequest) = apiService.authenticateUser(request)
-    suspend fun loginUser(request: LoginRequest) = apiService.loginUser(request) // Corrected to use LoginRequest
+    suspend fun authenticateWithCredentials(request: CredentialAuthRequest) = apiService.authenticateWithCredentials(request)
+    suspend fun checkUsername(username: String) = apiService.checkUsername(username)
 
     // Medical records
     suspend fun createMedicalRecord(request: CreateRecordRequest) = apiService.createMedicalRecord(request)
