@@ -1,0 +1,12 @@
+*.md
+.env
+node_modules/
+audib.db
+migrations/
+*.sql
+
+# Docker deployment files (contain secrets)
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile.prod
+.dockerignore

@@ -1,0 +1,20 @@
+name: Deploy MediVet Server
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Deploy to VPS
+        run: |
+          cd /home/ubuntu/apps/medivet
+          git pull origin main
+          docker compose down
+          docker compose build --no-cache
+          docker compose up -d
+          docker system prune -af --volumes

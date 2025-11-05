@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+     Copyright (C) 2022 The Android Open Source Project
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+          http://www.apache.org/licenses/LICENSE-2.0
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+  <string name="app_name">MediVet</string>
+  <string name="menu">menu</string>
+
+  <!-- Screen titles -->
+  <string name="welcome_screen">Welcome screen</string>
+  <string name="exercise_sessions">Exercise sessions</string>
+  <string name="exercise_session_detail">Exercise session detail</string>
+  <string name="sleep_sessions">Sleep sessions</string>
+  <string name="sleep_session_detail">Sleep session detail</string>
+  <string name="differential_changes">Changes</string>
+  <string name="login_screen">Login</string>
+  <string name="medical_records">Medical Records</string>
+
+  <!-- Welcome screen -->
+  <string name="welcome_message">Welcome to Health Connect!</string>
+  <string name="health_connect_logo">Health Connect logo</string>
+  <string name="installed_welcome_message">
+        Health Connect is installed on this device. Use the menu to explore the sample, with each
+        screen demonstrating a different aspect of Health Connect functionality.
+    </string>
+
+  <!-- Privacy policy screen -->
+  <string name="privacy_policy">Privacy policy</string>
+  <string name="privacy_policy_description">
+        This is a placeholder example. Your app should display an appropriate privacy policy for how
+        you will handle and use Health Connect data. This sample app does not store or transmit any
+        data outside of Health Connect.
+    </string>
+
+  <!-- Not installed on device -->
+  <string name="not_installed_tag">not_installed_tag</string>
+  <string name="market_url">market://details</string>
+  <string name="health_connect_package">com.google.android.apps.healthdata</string>
+  <string name="onboarding_url">healthconnect://onboarding</string>
+  <string name="not_installed_description">
+        Health Connect is supported on this device, but is not currently installed.
+    </string>
+  <string name="not_installed_link_text">
+        To use this sample, and other apps using Health Connect, please install the Health Connect
+        package from Google Play.
+    </string>
+
+  <!-- Not supported on device -->
+  <string name="not_supported_tag">not_supported_tag</string>
+  <string name="not_supported_url">https://developer.android.com/health-connect</string>
+  <string name="not_supported_description">
+        Health Connect is only supported on Android devices running API level %1$d or above.
+    </string>
+  <string name="not_supported_link_text">
+        Please visit the Health Connect guides to learn more about device compatibility and using
+        Health Connect.
+    </string>
+
+  <string name="permissions_button_label">Request permissions</string>
+  <string name="not_available_abbrev">N/A</string>
+
+  <!-- Exercise Session screen -->
+  <string name="insert_exercise_session">Insert session</string>
+  <string name="no_title">[No title]</string>
+  <string name="delete_button">Delete</string>
+  <string name="request_background_read">Request Background Read</string>
+  <string name="background_read_is_not_available">Background Read is not available</string>
+  <string name="read_steps_in_background">Read steps in background</string>
+  <string name="request_history_read">Request History Read</string>
+  <string name="history_read_is_not_available">History Read is not available</string>
+
+  <!-- Exercise Session detail screen -->
+  <string name="total_active_duration">Total active duration</string>
+  <string name="total_steps">Total steps</string>
+  <string name="total_distance">Total distance</string>
+  <string name="total_energy">Total calories</string>
+  <string name="hr_stats">HR stats (bpm)</string>
+  <string name="hr_series">HR series (bpm)</string>
+  <string name="speed_stats">Speed stats (m/s)</string>
+  <string name="speed_series">Speed series (m/s)</string>
+  <string name="min_label">Min</string>
+  <string name="max_label">Max</string>
+  <string name="avg_label">Avg</string>
+  <string name="label_and_value">%1$s: %2$s</string>
+
+  <!-- Sleep Session screen -->
+  <string name="generate_sleep_data">Generate sleep data</string>
+  <string-array name="sleep_notes_array">
+    <item>I slept great!</item>
+    <item>I got woken up</item>
+    <item>Struggled to sleep</item>
+    <item>Much needed sleep</item>
+    <item>Restful sleep</item>
+  </string-array>
+  <string name="sleep_notes">Notes:</string>
+  <string name="sleep_duration">Duration:</string>
+  <string name="sleep_time">Time:</string>
+  <string name="sleep_stages">Sleep stages:</string>
+
+  <!-- Input Readings detail screen -->
+  <string name="input_readings">Record weight</string>
+  <string name="delete_button_readings">Delete</string>
+  <string name="weight_input">New Record (Kg)</string>
+  <string name="add_readings_button">Add</string>
+  <string name="previous_readings"> Previous Measurements </string>
+  <string name="weekly_avg"> Weekly Average </string>
+  <string name="kilograms">Kg </string>
+  <string name="valid_weight_error_message"> Weight must be between 0 and 1000</string>
+
+  <!-- Differential changes screen -->
+  <string name="differential_changes_title_text">Enabling differential change tracking obtains a token that can be used later for obtaining any subsequent changes</string>
+  <string name="differential_changes_continuation_text">Click on the button below to get any new changes that have taken place in Health Connnect since the token was obtained.</string>
+  <string name="differential_changes_switch_text">Track changes</string>
+  <string name="differential_changes_button_text">"Get new changes"</string>
+  <string name="differential_changes_empty">No changes found</string>
+  <string name="differential_changes_current_token">Current token: %1$s</string>
+  <string name="differential_changes_upserted">Upserted:</string>
+  <string name="differential_changes_deleted">Deleted:</string>
+
+  <string name="differential_changes_type_exercise_session">Exercise session</string>
+  <string name="differential_changes_type_exercise_event">Exercise event</string>
+  <string name="differential_changes_type_speed_series">Speed series</string>
+  <string name="differential_changes_type_heart_rate_series">Heart rate series</string>
+  <string name="differential_changes_type_total_calories">Total calories</string>
+  <string name="differential_changes_type_steps">Steps</string>
+  <string name="differential_changes_type_sleep_session">Sleep session</string>
+  <string name="differential_changes_type_sleep_stage">Sleep stage</string>
+  <string name="differential_changes_type_distance">Distance</string>
+  <string name="differential_changes_type_weight">Weight</string>
+  <string name="add_medical_record">Add Medical Record</string>
+
+  <!-- MediVet screens -->
+  <string name="dashboard">Dashboard</string>
+  <string name="files">Files</string>
+  <string name="analysis">Analysis</string>
+  <string name="profile">Profile</string>
+
+  <!-- Sub-pages -->
+  <string name="all_files">All Files</string>
+  <string name="file_detail">File Details</string>
+  <string name="analysis_detail">Analysis Details</string>
+  <string name="upload_file">Upload File</string>
+  <string name="generate_analysis">Generate Analysis</string>
+  <string name="personal_details">Personal Details</string>
+  <string name="medical_history">Medical History</string>
+  <string name="data_permissions">Data Permissions</string>
+  <string name="export_data">Export Data</string>
+  <string name="data_sync">Data Sync</string>
+  <string name="notifications">Notifications</string>
+  <string name="download_file">Download File</string>
+  <string name="share_file">Share File</string>
+  <string name="blockchain_wallet">Blockchain Wallet</string>
+  <string name="wallet">Wallet</string>
+  <string name="privacy_policy_detail">Privacy Policy</string>
+  <string name="sharing_settings">Sharing Settings</string>
+
+  <!-- Health Connect settings -->
+  <string name="settings">Settings</string>
+  <!-- Login screen -->
+  <string name="login_title">MediVet Login</string>
+  <string name="login_subtitle">Enter your credentials to access MediVet</string>
+  <string name="username_label">Username</string>
+  <string name="wallet_address_label">Wallet Address</string>
+  <string name="login_button">Login</string>
+  <string name="authenticate_button">Authenticate Only</string>
+  <string name="test_credentials_button">Fill with Test Credentials</string>
+  <string name="test_credentials_title">Test Credentials</string>
+  <string name="test_username">johndoe</string>
+  <string name="test_wallet_address">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</string>
+  <string name="username_required">Username is required</string>
+  <string name="username_min_length">Username must be at least 3 characters</string>
+  <string name="wallet_required">Wallet address is required</string>
+  <string name="wallet_invalid_format">Invalid wallet address format</string>
+  <string name="login_error_title">Login Error</string>
+  <string name="invalid_credentials">Invalid username or wallet address</string>
+  <string name="user_not_found">User not found. Please check your credentials.</string>
+  <string name="too_many_requests">Too many requests. Please try again later.</string>
+  <string name="server_error">Server error. Please try again later.</string>
+  <string name="connection_timeout">Connection timeout. Please check your internet connection.</string>
+  <string name="connection_failed">Failed to connect to server. Please try again later.</string>
+  <string name="unexpected_error">An unexpected error occurred</string>
+
+  <string name="copy_username">Copy username</string>
+  <string name="copy_wallet_address">Copy wallet address</string>
+  <string name="copied_to_clipboard">Copied to clipboard</string>
+
+</resources>
