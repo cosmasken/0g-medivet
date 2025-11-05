@@ -43,7 +43,6 @@ app.use('/api/audit', auditLimiter);
 // Import routes
 const downloadRouter = require('./routes/download');
 const uploadRouter = require('./routes/upload');
-const testRouter = require('./routes/test');
 const contractRouter = require('./routes/contract');
 const usersRouter = require('./routes/users');
 const recordsRouter = require('./routes/records');
@@ -54,7 +53,6 @@ const healthRouter = require('./routes/health');
 // Always available routes
 app.use('/api/download', downloadRouter);
 app.use('/api/upload', uploadRouter);
-app.use('/api/test', testRouter);
 app.use('/api/contract', contractRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/records', recordsRouter);
