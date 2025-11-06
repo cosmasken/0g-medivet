@@ -1,38 +1,42 @@
+/**
+ * Network configuration for 0G Storage
+ */
+
 export type NetworkType = 'standard' | 'turbo';
 
 export interface NetworkConfig {
-  name: string;
   flowAddress: string;
   storageRpc: string;
-  explorerUrl: string;
   l1Rpc: string;
-  computeRpc: string;
+  explorerUrl: string;
 }
 
+/**
+ * Get network configuration based on network type
+ */
 export function getNetworkConfig(networkType: NetworkType): NetworkConfig {
-  const NETWORKS: Record<string, NetworkConfig> = {
+  const configs = {
     standard: {
-      name: 'Standard',
-      flowAddress: '0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526',
-      storageRpc: import.meta.env.VITE_TESTNET_INDEXER_RPC || 'https://indexer-storage-testnet-turbo.0g.ai',
-      explorerUrl: 'https://chainscan.0g.ai/tx/',
-      l1Rpc: import.meta.env.VITE_TESTNET_RPC_URL || 'https://evmrpc-testnet.0g.ai/',
-      computeRpc: import.meta.env.VITE_TESTNET_RPC_URL || 'https://evmrpc-testnet.0g.ai/'
+      flowAddress: import.meta.env.VITE_STANDARD_FLOW_ADDRESS || '0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628',
+      storageRpc: import.meta.env.VITE_STANDARD_STORAGE_RPC || 'https://indexer-storage-testnet-standard.0g.ai',
+      l1Rpc: import.meta.env.VITE_STANDARD_L1_RPC || 'https://evmrpc-testnet.0g.ai',
+      explorerUrl: import.meta.env.VITE_STANDARD_EXPLORER_URL || 'https://chainscan-galileo.0g.ai/tx/'
     },
     turbo: {
-      name: 'Turbo',
-      flowAddress: '0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526',
-      storageRpc: import.meta.env.VITE_MAINNET_INDEXER_RPC || 'https://indexer-storage-turbo.0g.ai',
-      explorerUrl: 'https://chainscan.0g.ai/tx/',
-      l1Rpc: import.meta.env.VITE_MAINNET_RPC_URL || 'https://evmrpc.0g.ai/',
-      computeRpc: import.meta.env.VITE_MAINNET_RPC_URL || 'https://evmrpc.0g.ai/'
+      flowAddress: import.meta.env.VITE_TURBO_FLOW_ADDRESS || '0xbD75117F80b4E22698D0Cd7612d92BDb8eaff628',
+      storageRpc: import.meta.env.VITE_TURBO_STORAGE_RPC || 'https://indexer-storage-testnet-turbo.0g.ai',
+      l1Rpc: import.meta.env.VITE_TURBO_L1_RPC || 'https://evmrpc-testnet.0g.ai',
+      explorerUrl: import.meta.env.VITE_TURBO_EXPLORER_URL || 'https://chainscan-galileo.0g.ai/tx/'
     }
   };
-  
-  return NETWORKS[networkType];
+
+  return configs[networkType];
 }
 
+/**
+ * Get explorer URL for a transaction hash
+ */
 export function getExplorerUrl(txHash: string, networkType: NetworkType): string {
-  const network = getNetworkConfig(networkType);
-  return network.explorerUrl + txHash;
+  const config = getNetworkConfig(networkType);
+  return `${config.explorerUrl}${txHash}`;
 }

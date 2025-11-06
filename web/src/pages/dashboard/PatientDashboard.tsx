@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useWallet } from '@/hooks/useWallet';
 import { useAuthStore } from '@/stores/authStore';
 import { getUserRecords } from '@/lib/api';
+import { useClientUpload } from '@/hooks/useClientUpload';
 import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 import { Upload, Users, FileText, Settings, LogOut, User, Heart, Plus, Download, DollarSign } from 'lucide-react';
@@ -17,9 +18,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://medivet.payme
 export default function PatientDashboard() {
   const { address, disconnect } = useWallet();
   const { currentUser, logout } = useAuthStore();
+  const { uploading, uploadStatus, error: uploadError, uploadFile, resetState } = useClientUpload();
   const [showUpload, setShowUpload] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,42 +67,50 @@ export default function PatientDashboard() {
     if (!selectedFile || !currentUser?.id) return;
     
     try {
-      setUploading(true);
+      console.log('📤 Starting client-side 0G Storage upload:', selectedFile.name);
       
-      console.log('📤 Starting server-side 0G Storage upload:', selectedFile.name);
+      // Upload directly to 0G Storage using client-side SDK
+      const result = await uploadFile(selectedFile, 'turbo');
       
-      // Create FormData for server upload
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('user_id', currentUser.id);
-      
-      console.log('📋 Uploading via server API...');
-      
-      // Upload via server API (avoids CORS issues)
-      const response = await fetch(`${API_BASE_URL}/upload`, {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server upload failed:', { status: response.status, error: errorText });
-        throw new Error(`Server upload failed: ${errorText || response.statusText}`);
+      if (result.success) {
+        console.log('✅ Client upload successful:', result);
+        
+        // Save record to backend with 0G Storage hash
+        const recordData = {
+          user_id: currentUser.id,
+          file_name: selectedFile.name,
+          file_size: selectedFile.size,
+          file_type: selectedFile.type,
+          storage_hash: result.rootHash,
+          tx_hash: result.txHash,
+          upload_date: new Date().toISOString()
+        };
+        
+        const response = await fetch(`${API_BASE_URL}/records`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(recordData)
+        });
+        
+        if (response.ok) {
+          toast.success(`File "${selectedFile.name}" uploaded to 0G Storage successfully!`);
+          setSelectedFile(null);
+          setShowUpload(false);
+          resetState();
+          loadRecords();
+        } else {
+          console.warn('File uploaded to 0G but failed to save record to backend');
+          toast.success(`File uploaded to 0G Storage, but record saving failed`);
+        }
+      } else {
+        throw new Error(result.error || 'Upload failed');
       }
-      
-      const result = await response.json();
-      console.log('✅ Server upload successful:', result);
-      
-      toast.success(`File "${selectedFile.name}" uploaded to 0G Storage successfully!`);
-      setSelectedFile(null);
-      setShowUpload(false);
-      loadRecords();
       
     } catch (error) {
       console.error('❌ Upload failed:', error);
       toast.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -284,12 +293,17 @@ export default function PatientDashboard() {
                       onClick={handleUpload} 
                       disabled={!selectedFile || uploading}
                     >
-                      {uploading ? 'Uploading to 0G Storage...' : 'Upload to 0G Storage'}
+                      {uploading ? (uploadStatus || 'Uploading to 0G Storage...') : 'Upload to 0G Storage'}
                     </Button>
                     <Button variant="outline" onClick={() => setShowUpload(false)}>
                       Cancel
                     </Button>
                   </div>
+                  {uploadError && (
+                    <div className="text-red-500 text-sm mt-2">
+                      Error: {uploadError}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

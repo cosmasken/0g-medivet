@@ -28,7 +28,7 @@ async function uploadTo0G(file, network = 'mainnet') {
   const config = NETWORKS[network];
   const provider = new ethers.JsonRpcProvider(config.l1Rpc);
   const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY, provider);
-  const indexer = new Indexer(config.storageRpc);
+  const indexer = new Indexer(new URL(config.storageRpc));
 
   console.log('☁️ Starting storage upload to 0G:', {
     storageRpc: config.storageRpc,
