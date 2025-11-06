@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { Indexer, Blob } = require('@0glabs/0g-ts-sdk');
+const { Indexer, ZgFile } = require('@0glabs/0g-ts-sdk');
 const { ethers } = require('ethers');
 const { pool } = require('../lib/database');
 const router = express.Router();
@@ -26,65 +26,37 @@ async function uploadTo0G(file, network = 'mainnet') {
   const provider = new ethers.JsonRpcProvider(config.l1Rpc);
   const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY, provider);
   const indexer = new Indexer(config.storageRpc);
-  
+
   console.log('☁️ Starting storage upload to 0G:', {
     storageRpc: config.storageRpc,
     l1Rpc: config.l1Rpc,
     fileSize: file.size,
     network
   });
-  
-  // Create a File-like object that 0G SDK expects
-  const fileBuffer = file.buffer;
-  const fileBlob = new Blob([fileBuffer], { type: file.mimetype });
-  
-  // Add arrayBuffer method if missing (for Node.js compatibility)
-  if (!fileBlob.arrayBuffer) {
-    fileBlob.arrayBuffer = () => Promise.resolve(fileBuffer);
+
+  const uint8Array = new Uint8Array(file.buffer);
+  const zgFile = new ZgFile(uint8Array, file.originalname);
+
+  const [tree, err] = await zgFile.merkleTree();
+  if (err) {
+    throw new Error('Failed to create merkle tree');
   }
-  
-  // Add slice method if missing
-  if (!fileBlob.slice) {
-    fileBlob.slice = (start = 0, end = fileBuffer.length) => {
-      const sliced = fileBuffer.slice(start, end);
-      const slicedBlob = new Blob([sliced], { type: file.mimetype });
-      slicedBlob.arrayBuffer = () => Promise.resolve(sliced);
-      return slicedBlob;
-    };
+  const rootHash = tree.rootHash();
+  console.log('✅ Merkle tree created, root hash:', rootHash);
+
+  const [tx, uploadErr] = await indexer.upload(zgFile, {
+    signer,
+    rpcUrl: config.l1Rpc,
+  });
+
+  if (uploadErr) {
+    console.error(`❌ ${network} upload failed:`, uploadErr);
+    throw new Error(`0G Storage upload failed on ${network}`);
   }
-  
-  const uploadOptions = {
-    taskSize: 10,
-    expectedReplica: 1,
-    finalityRequired: true,
-    tags: '0x',
-    skipTx: true,
-    fee: BigInt(0)
-  };
-  
-  try {
-    await indexer.upload(fileBlob, config.l1Rpc, signer, uploadOptions);
-    
-    // Extract root hash from blob
-    const rootHash = fileBlob.root || fileBlob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
-    console.log('✅ Storage upload completed, root hash:', rootHash);
-    
-    return rootHash;
-  } catch (error) {
-    const errorMessage = error.message || String(error);
-    
-    // If it's a contract/blockchain error, upload may have succeeded
-    if (errorMessage.includes('market()') || 
-        errorMessage.includes('BAD_DATA') || 
-        errorMessage.includes('missing revert data') ||
-        errorMessage.includes('CALL_EXCEPTION')) {
-      console.warn('⚠️ Contract/Blockchain error (upload may have succeeded):', errorMessage);
-      const rootHash = fileBlob.root || fileBlob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
-      return rootHash;
-    }
-    
-    throw error;
-  }
+
+  console.log(`✅ ${network} upload successful, tx:`, tx);
+  await zgFile.close();
+  return rootHash;
 }
 
 router.post('/', upload.single('file'), async (req, res) => {
