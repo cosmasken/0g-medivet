@@ -3,6 +3,9 @@ const multer = require('multer');
 const { Indexer, ZgFile } = require('@0glabs/0g-ts-sdk');
 const { ethers } = require('ethers');
 const { pool } = require('../lib/database');
+const fs = require('fs').promises;
+const path = require('path');
+const os = require('os');
 const router = express.Router();
 
 const upload = multer({
@@ -34,29 +37,44 @@ async function uploadTo0G(file, network = 'mainnet') {
     network
   });
 
-  const uint8Array = new Uint8Array(file.buffer);
-  const zgFile = new ZgFile(uint8Array, file.originalname);
+  const tempDir = path.join(os.tmpdir(), 'medvet-uploads');
+  await fs.mkdir(tempDir, { recursive: true });
+  const tempFilePath = path.join(tempDir, file.originalname);
 
-  const [tree, err] = await zgFile.merkleTree();
-  if (err) {
-    throw new Error('Failed to create merkle tree');
+  let zgFile;
+  try {
+    await fs.writeFile(tempFilePath, file.buffer);
+    zgFile = await ZgFile.fromFilePath(tempFilePath);
+
+    const [tree, err] = await zgFile.merkleTree();
+    if (err) {
+      throw new Error('Failed to create merkle tree');
+    }
+    const rootHash = tree.rootHash();
+    console.log('✅ Merkle tree created, root hash:', rootHash);
+
+    const [tx, uploadErr] = await indexer.upload(zgFile, {
+      signer,
+      rpcUrl: config.l1Rpc,
+    });
+
+    if (uploadErr) {
+      console.error(`❌ ${network} upload failed:`, uploadErr);
+      throw new Error(`0G Storage upload failed on ${network}`);
+    }
+
+    console.log(`✅ ${network} upload successful, tx:`, tx);
+    return rootHash;
+  } finally {
+    if (zgFile) {
+      await zgFile.close();
+    }
+    try {
+      await fs.unlink(tempFilePath);
+    } catch (e) {
+      console.error(`Failed to delete temp file: ${tempFilePath}`, e);
+    }
   }
-  const rootHash = tree.rootHash();
-  console.log('✅ Merkle tree created, root hash:', rootHash);
-
-  const [tx, uploadErr] = await indexer.upload(zgFile, {
-    signer,
-    rpcUrl: config.l1Rpc,
-  });
-
-  if (uploadErr) {
-    console.error(`❌ ${network} upload failed:`, uploadErr);
-    throw new Error(`0G Storage upload failed on ${network}`);
-  }
-
-  console.log(`✅ ${network} upload successful, tx:`, tx);
-  await zgFile.close();
-  return rootHash;
 }
 
 router.post('/', upload.single('file'), async (req, res) => {
