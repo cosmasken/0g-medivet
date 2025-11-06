@@ -3,17 +3,7 @@
  */
 
 import { Contract } from 'ethers';
-import { Blob, Uploader } from '@0glabs/0g-ts-sdk';
-
-export interface UploadOption {
-  tags: string;
-  finalityRequired: boolean;
-  taskSize: number;
-  expectedReplica: number;
-  skipTx: boolean;
-  fee: bigint;
-  nonce?: bigint;
-}
+import { Blob, Uploader, Indexer } from '@0glabs/0g-ts-sdk';
 
 /**
  * Submit transaction to flow contract
@@ -45,19 +35,16 @@ export async function uploadToStorage(
   signer: any
 ): Promise<[boolean | null, Error | null]> {
   try {
-    // Import the necessary contract factory inside the function
-    const { FixedPriceFlow__factory } = await import('@0glabs/0g-ts-sdk');
+    // Use the indexer to get the proper flow contract
+    const indexer = new Indexer(new URL(storageRpc));
     
-    // Get the flow contract instance that has the required market() function
-    // Use the flow address from environment or default
-    const flowAddress = typeof window !== 'undefined' 
-      ? (import.meta.env.VITE_STANDARD_FLOW_ADDRESS || import.meta.env.VITE_TURBO_FLOW_ADDRESS || '0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526')
-      : process.env.VITE_STANDARD_FLOW_ADDRESS || process.env.VITE_TURBO_FLOW_ADDRESS || '0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526';
+    // Get uploader from indexer which will handle the flow contract properly
+    const [uploader, err] = await indexer.newUploaderFromIndexerNodes(l1Rpc, signer, 1);
     
-    const flowContract = FixedPriceFlow__factory.connect(flowAddress, signer);
-    
-    // Initialize the uploader with proper parameters: [nodes], providerRpc, flowContract
-    const uploader = new Uploader([storageRpc], l1Rpc, flowContract);
+    if (err || !uploader) {
+      console.error('Failed to create uploader:', err);
+      return [null, err || new Error('Failed to create uploader')];
+    }
     
     // Define upload options based on the SDK's expected format
     const uploadOptions = {
