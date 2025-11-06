@@ -15,12 +15,8 @@ const upload = multer({
 
 const NETWORKS = {
   mainnet: {
-    l1Rpc: process.env.MAINNET_RPC_URL || 'https://evmrpc.0g.ai/',
-    storageRpc: process.env.MAINNET_INDEXER_RPC || 'https://indexer-storage-turbo.0g.ai'
-  },
-  testnet: {
-    l1Rpc: process.env.TESTNET_RPC_URL || 'https://evmrpc-testnet.0g.ai/',
-    storageRpc: process.env.TESTNET_INDEXER_RPC || 'https://indexer-storage-testnet-turbo.0g.ai'
+    l1Rpc: process.env.MAINNET_RPC_URL || 'https://evmrpc-mainnet.0g.ai/',
+    storageRpc: process.env.MAINNET_INDEXER_RPC || 'https://indexer-storage-mainnet.0g.ai'
   }
 };
 
@@ -90,24 +86,10 @@ router.post('/', upload.single('file'), async (req, res) => {
 
     let storageHash, network;
     
-    // Try mainnet first
-    try {
-      storageHash = await uploadTo0G(file, 'mainnet');
-      network = 'mainnet';
-      console.log('✅ Mainnet upload successful:', storageHash);
-    } catch (mainnetError) {
-      console.warn('⚠️ Mainnet failed, trying testnet:', mainnetError.message);
-      
-      // Fallback to testnet
-      try {
-        storageHash = await uploadTo0G(file, 'testnet');
-        network = 'testnet';
-        console.log('✅ Testnet upload successful:', storageHash);
-      } catch (testnetError) {
-        console.error('❌ Both networks failed:', testnetError.message);
-        throw new Error('0G Storage upload failed on both mainnet and testnet');
-      }
-    }
+    // Try mainnet only
+    storageHash = await uploadTo0G(file, 'mainnet');
+    network = 'mainnet';
+    console.log('✅ Mainnet upload successful:', storageHash);
 
     // Save to database
     const client = await pool.connect();

@@ -84,7 +84,7 @@ medData/
 - **Node.js 18+** and npm ([install with nvm](https://github.com/nvm-sh/nvm))
 - **Android Studio** (for mobile development)
 - **MetaMask** or compatible Web3 wallet
-- **0G Network** access (testnet or mainnet)
+- **0G Network** access (mainnet)
 
 ### 🌐 Web Application
 
@@ -109,9 +109,9 @@ npm run dev
 VITE_API_BASE_URL=https://medivet-backend-72tq.onrender.com/api
 
 # 0G Network Configuration
-VITE_L1_RPC=https://evmrpc-testnet.0g.ai
-VITE_STANDARD_STORAGE_RPC=https://indexer-storage-testnet-standard.0g.ai
-VITE_TURBO_STORAGE_RPC=https://indexer-storage-testnet-turbo.0g.ai
+VITE_L1_RPC=https://evmrpc-mainnet.0g.ai
+VITE_STANDARD_STORAGE_RPC=https://indexer-storage-mainnet.0g.ai
+VITE_TURBO_STORAGE_RPC=https://indexer-storage-turbo-mainnet.0g.ai
 
 # Web3Modal Configuration
 VITE_PROJECT_ID=your_walletconnect_project_id
@@ -138,7 +138,7 @@ npm start
 ```env
 # 0G Network Configuration
 ZG_PRIVATE_KEY=your_private_key_here
-ZG_RPC_ENDPOINT=https://evmrpc-testnet.0g.ai
+ZG_RPC_ENDPOINT=https://evmrpc-mainnet.0g.ai
 
 # Database Configuration
 DATABASE_URL=your_database_url
@@ -425,10 +425,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Network**: 0G Mainnet (Chain ID: 16661)
 - **Explorer**: [View on 0G Explorer](https://chainscan.0g.ai/address/0xA6347e1dCb5f4C80FF2022850106Eb5C7bF07f57)
 
-### 0G Galileo Testnet
-- **MedicalRecordAccess**: `0x6a301456A5274dF720913Ec5C9A48992DFF2a830`
-- **Network**: 0G Galileo Testnet (Chain ID: 16602)
-- **Explorer**: [View on 0G Explorer](https://chainscan-galileo.0g.ai/address/0x6a301456A5274dF720913Ec5C9A48992DFF2a830)
+
 
 ## 🔗 Quick Links
 

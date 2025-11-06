@@ -209,37 +209,19 @@ export async function verifyFileExists(
         // Ensure root hash has proper 0x prefix
         const formattedRootHash = rootHash.startsWith('0x') ? rootHash : `0x${rootHash}`;
 
-        // Try to get file info (this is lighter than full download)
-        try {
-            const fileInfo = await indexer.getFileInfo(formattedRootHash);
-            const exists = !!fileInfo;
+        // Get file info (this is lighter than full download)
+        const fileInfo = await indexer.getFileInfo(formattedRootHash);
+        const exists = !!fileInfo;
 
-            console.log('✅ File existence verified:', {
-                rootHash: formattedRootHash,
-                exists,
-                fileInfo: exists ? 'Found' : 'Not found'
-            });
+        console.log('✅ File existence verified:', {
+            rootHash: formattedRootHash,
+            exists,
+            fileInfo: exists ? 'Found' : 'Not found'
+        });
 
-            return [exists, null];
-        } catch (error) {
-            // If getFileInfo is not available, try a small download
-            try {
-                const [data] = await downloadFromStorage(rootHash, networkType);
-                const exists = !!data;
-
-                console.log('✅ File existence verified via download:', {
-                    rootHash: formattedRootHash,
-                    exists
-                });
-
-                return [exists, null];
-            } catch (downloadError) {
-                console.log('❌ File does not exist:', formattedRootHash);
-                return [false, null]; // File doesn't exist, not an error
-            }
-        }
+        return [exists, null];
     } catch (error) {
-        console.error('❌ Failed to verify file existence:', error);
-        return [false, error instanceof Error ? error : new Error(String(error))];
+        console.log('❌ File does not exist:', rootHash);
+        return [false, null]; // File doesn't exist, not an error
     }
 }

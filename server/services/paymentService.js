@@ -9,7 +9,7 @@ const CONTRACT_ABI = [
 ];
 
 const CONTRACT_ADDRESS = '0x6a301456A5274dF720913Ec5C9A48992DFF2a830';
-const RPC_URL = 'https://evmrpc-testnet.0g.ai';
+const RPC_URL = 'https://evmrpc-mainnet.0g.ai';
 
 class PaymentService {
   constructor() {

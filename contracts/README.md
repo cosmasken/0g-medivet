@@ -65,10 +65,7 @@ event EmergencyAccess(address indexed provider, address indexed patient, bytes32
 - **Network**: 0G Mainnet (Chain ID: 16661)
 - **Explorer**: [View Contract](https://chainscan.0g.ai/address/0xA6347e1dCb5f4C80FF2022850106Eb5C7bF07f57)
 
-### 0G Galileo Testnet
-- **Address**: `0x6a301456A5274dF720913Ec5C9A48992DFF2a830`
-- **Network**: 0G Galileo Testnet (Chain ID: 16602)
-- **Explorer**: [View Contract](https://chainscan-galileo.0g.ai/address/0x6a301456A5274dF720913Ec5C9A48992DFF2a830)
+
 
 ## Usage Example
 

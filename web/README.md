@@ -48,7 +48,7 @@ MediVet is a revolutionary decentralized platform that enables secure medical da
 
 - Node.js 18+ and npm ([install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
 - MetaMask or compatible Web3 wallet
-- Access to 0G Network (testnet or mainnet)
+- Access to 0G Network (mainnet)
 
 ### Installation
 

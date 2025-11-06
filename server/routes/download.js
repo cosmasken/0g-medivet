@@ -5,12 +5,8 @@ const router = express.Router();
 
 const NETWORKS = {
   mainnet: {
-    storageRpc: process.env.MAINNET_INDEXER_RPC || 'https://indexer-storage-turbo.0g.ai',
-    l1Rpc: process.env.MAINNET_RPC_URL || 'https://evmrpc.0g.ai/'
-  },
-  testnet: {
-    storageRpc: process.env.TESTNET_INDEXER_RPC || 'https://indexer-storage-testnet-turbo.0g.ai',
-    l1Rpc: process.env.TESTNET_RPC_URL || 'https://evmrpc-testnet.0g.ai/'
+    storageRpc: process.env.MAINNET_INDEXER_RPC || 'https://indexer-storage-mainnet.0g.ai',
+    l1Rpc: process.env.MAINNET_RPC_URL || 'https://evmrpc-mainnet.0g.ai/'
   }
 };
 

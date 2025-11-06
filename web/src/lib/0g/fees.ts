@@ -2,8 +2,8 @@
  * Fee calculation utilities for 0G Storage
  */
 
-import { ethers, Contract, JsonRpcProvider, BrowserProvider } from 'ethers';
-import { formatEther } from 'ethers';
+import { calculatePrice, getMarketContract, FixedPriceFlow__factory } from '@0glabs/0g-ts-sdk';
+import { Contract, JsonRpcProvider, BrowserProvider, formatEther } from 'ethers';
 
 export interface FeeInfo {
   storageFee: string;
@@ -15,17 +15,12 @@ export interface FeeInfo {
   isLoading: boolean;
 }
 
-const FLOW_ABI = [
-  'function submit(tuple(uint256 length, bytes tags, bytes nodes) submission) payable returns (uint256)',
-  'function getPrice() view returns (uint256)'
-];
-
 /**
  * Get Ethereum provider
  */
 export async function getProvider(): Promise<[JsonRpcProvider | null, Error | null]> {
   try {
-    const l1Rpc = import.meta.env.VITE_L1_RPC || 'https://evmrpc-testnet.0g.ai';
+    const l1Rpc = import.meta.env.VITE_L1_RPC || 'https://evmrpc-mainnet.0g.ai';
     const provider = new JsonRpcProvider(l1Rpc);
     return [provider, null];
   } catch (error) {
@@ -54,7 +49,7 @@ export async function getSigner(provider: JsonRpcProvider): Promise<[any | null,
  * Get flow contract instance
  */
 export function getFlowContract(flowAddress: string, signer: any): Contract {
-  return new Contract(flowAddress, FLOW_ABI, signer);
+  return FixedPriceFlow__factory.connect(flowAddress, signer) as unknown as Contract;
 }
 
 /**
@@ -66,28 +61,39 @@ export async function calculateFees(
   provider: JsonRpcProvider
 ): Promise<[FeeInfo | null, Error | null]> {
   try {
-    // Get storage price per byte
-    const pricePerByte = await flowContract.getPrice();
-    const storageFee = BigInt(submission.length) * pricePerByte;
+    // Get market address from the flow contract
+    const marketAddr = await flowContract.market();
+    const market = getMarketContract(marketAddr, provider);
     
-    // Estimate gas for the transaction
-    const gasEstimate = await flowContract.submit.estimateGas(submission, {
-      value: storageFee
-    });
+    // Get price per sector from market contract
+    const pricePerSector = await market.pricePerSector();
     
-    // Get current gas price
+    // Calculate storage fee using the SDK function
+    const storageFee = calculatePrice(submission, pricePerSector);
+    
+    // Get gas price
     const feeData = await provider.getFeeData();
     const gasPrice = feeData.gasPrice || BigInt(0);
-    const gasFee = gasEstimate * gasPrice;
     
-    const totalFee = storageFee + gasFee;
+    // Estimate gas for the transaction with fallback
+    let gasEstimate;
+    try {
+      gasEstimate = await flowContract.submit.estimateGas(submission, { value: storageFee });
+    } catch (error) {
+      // Use fallback gas estimate if estimation fails
+      gasEstimate = BigInt(500000); // Fallback gas estimate
+    }
+    
+    // Calculate estimated gas fee and total fee
+    const estimatedGasFee = gasEstimate * gasPrice;
+    const totalFee = BigInt(storageFee) + estimatedGasFee;
     
     return [{
       storageFee: formatEther(storageFee),
-      estimatedGas: formatEther(gasFee),
+      estimatedGas: formatEther(estimatedGasFee),
       totalFee: formatEther(totalFee),
       rawStorageFee: storageFee,
-      rawGasFee: gasFee,
+      rawGasFee: estimatedGasFee,
       rawTotalFee: totalFee,
       isLoading: false
     }, null];
