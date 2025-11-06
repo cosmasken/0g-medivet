@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  medivet-web:
+    build:
+      context: .
+      args:
+        # These build arguments are passed from the 'deploy-vps.sh' script
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_L1_RPC: ${VITE_L1_RPC}
+        VITE_STANDARD_STORAGE_RPC: ${VITE_STANDARD_STORAGE_RPC}
+        VITE_TURBO_STORAGE_RPC: ${VITE_TURBO_STORAGE_RPC}
+        VITE_PROJECT_ID: ${VITE_PROJECT_ID}
+    container_name: medivet-web
+    restart: always
+    networks:
+      - traefik_default
+    labels:
+      # Traefik labels for reverse proxy configuration
+      - "traefik.enable=true"
+      - "traefik.http.routers.medivet-web.rule=Host(`your-frontend-domain.com`)"
+      - "traefik.http.routers.medivet-web.entrypoints=websecure"
+      - "traefik.http.routers.medivet-web.tls.certresolver=myresolver" # Assumes a cert resolver named 'myresolver' is configured in Traefik
+      - "traefik.http.services.medivet-web.loadbalancer.server.port=80"
+
+networks:
+  traefik_default:
+    external: true
+    name: traefik_default # Connects to the existing Traefik network
