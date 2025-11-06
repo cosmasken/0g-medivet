@@ -20,7 +20,7 @@ export interface FeeInfo {
  */
 export async function getProvider(): Promise<[JsonRpcProvider | null, Error | null]> {
   try {
-    const l1Rpc = import.meta.env.VITE_L1_RPC || 'https://evmrpc-mainnet.0g.ai';
+    const l1Rpc = import.meta.env.VITE_L1_RPC || 'https://evmrpc.0g.ai';
     const provider = new JsonRpcProvider(l1Rpc);
     return [provider, null];
   } catch (error) {

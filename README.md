@@ -109,9 +109,9 @@ npm run dev
 VITE_API_BASE_URL=https://medivet-backend-72tq.onrender.com/api
 
 # 0G Network Configuration
-VITE_L1_RPC=https://evmrpc-mainnet.0g.ai
-VITE_STANDARD_STORAGE_RPC=https://indexer-storage-mainnet.0g.ai
-VITE_TURBO_STORAGE_RPC=https://indexer-storage-turbo-mainnet.0g.ai
+VITE_L1_RPC=https://evmrpc.0g.ai
+VITE_STANDARD_STORAGE_RPC=https://indexer-storage.0g.ai
+VITE_TURBO_STORAGE_RPC=https://indexer-storage-turbo.0g.ai
 
 # Web3Modal Configuration
 VITE_PROJECT_ID=your_walletconnect_project_id
@@ -138,7 +138,7 @@ npm start
 ```env
 # 0G Network Configuration
 ZG_PRIVATE_KEY=your_private_key_here
-ZG_RPC_ENDPOINT=https://evmrpc-mainnet.0g.ai
+ZG_RPC_ENDPOINT=https://evmrpc.0g.ai
 
 # Database Configuration
 DATABASE_URL=your_database_url

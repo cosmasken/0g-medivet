@@ -5,8 +5,8 @@ const router = express.Router();
 
 const NETWORKS = {
   mainnet: {
-    storageRpc: process.env.MAINNET_INDEXER_RPC || 'https://indexer-storage-mainnet.0g.ai',
-    l1Rpc: process.env.MAINNET_RPC_URL || 'https://evmrpc-mainnet.0g.ai/'
+    storageRpc: process.env.MAINNET_INDEXER_RPC || 'https://indexer-storage.0g.ai',
+    l1Rpc: process.env.MAINNET_RPC_URL || 'https://evmrpc.0g.ai/'
   }
 };
 
