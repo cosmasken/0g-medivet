@@ -46,8 +46,10 @@ object HealthConnectToApiMapper {
             dataPoints.add(
                 HealthDataPoint(
                     dataType = "steps",
-                    startTime = record.startTime.toString(),  // Using toString() since steps records might not have zoneOffset
-                    endTime = record.endTime.toString(),      // Using toString() since steps records might not have zoneOffset
+                    // Using toString() since steps records might not have zoneOffset
+                    startTime = record.startTime.toString(),
+                    // Using toString() since steps records might not have zoneOffset
+                    endTime = record.endTime.toString(),
                     value = record.count ?: 0L,
                     unit = "count",
                     sourceApp = record.metadata.dataOrigin.packageName,

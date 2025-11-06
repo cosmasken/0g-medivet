@@ -1,10 +1,35 @@
 package com.medivet.healthconnect.data.api.service
 
-import com.medivet.healthconnect.data.api.model.*
+import com.medivet.healthconnect.data.api.model.AuthRequest
+import com.medivet.healthconnect.data.api.model.CreateRecordRequest
+import com.medivet.healthconnect.data.api.model.CredentialAuthRequest
+import com.medivet.healthconnect.data.api.model.DataSummaryResponse
+import com.medivet.healthconnect.data.api.model.FileMetadataResponse
+import com.medivet.healthconnect.data.api.model.FileVerificationResponse
+import com.medivet.healthconnect.data.api.model.GetHealthDataResponse
+import com.medivet.healthconnect.data.api.model.GetRecordsResponse
+import com.medivet.healthconnect.data.api.model.HealthCheckResponse
+import com.medivet.healthconnect.data.api.model.HealthDataSyncRequest
+import com.medivet.healthconnect.data.api.model.HealthDataSyncResponse
+import com.medivet.healthconnect.data.api.model.HealthStatsResponse
+import com.medivet.healthconnect.data.api.model.MedicalRecord
+import com.medivet.healthconnect.data.api.model.SyncHealthDataRequest
+import com.medivet.healthconnect.data.api.model.SyncHealthDataResponse
+import com.medivet.healthconnect.data.api.model.UploadResponse
+import com.medivet.healthconnect.data.api.model.UserResponse
+import com.medivet.healthconnect.data.api.model.UsernameCheckResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.Part
+import retrofit2.http.Path
+import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 interface MediVetApiService {
     companion object {
@@ -21,7 +46,9 @@ interface MediVetApiService {
 
     // Mobile authentication with username/password
     @POST("users/auth")
-    suspend fun authenticateWithCredentials(@Body request: CredentialAuthRequest): Response<UserResponse>
+    suspend fun authenticateWithCredentials(
+        @Body request: CredentialAuthRequest
+    ): Response<UserResponse>
 
     // Check username availability
     @GET("users/check-username/{username}")
@@ -56,7 +83,9 @@ interface MediVetApiService {
 
     // Health Connect integration endpoints
     @POST("health-connect/sync")
-    suspend fun syncHealthData(@Body request: SyncHealthDataRequest): Response<SyncHealthDataResponse>
+    suspend fun syncHealthData(
+        @Body request: SyncHealthDataRequest
+    ): Response<SyncHealthDataResponse>
 
     @GET("health-connect/user/{userId}")
     suspend fun getHealthData(
