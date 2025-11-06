@@ -52,6 +52,7 @@ export default defineConfig(({ mode }) => ({
       include: [/js-sha3/, /axios/, /node_modules/]
     },
     sourcemap: false,
+    outDir: '../dist',
     rollupOptions: {
       onwarn(warning, warn) {
         // Suppress sourcemap warnings for 0G SDK

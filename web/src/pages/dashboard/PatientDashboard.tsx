@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useWallet } from '@/hooks/useWallet';
 import { useAuthStore } from '@/stores/authStore';
 import { getUserRecords } from '@/lib/api';
+import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 import { Upload, Users, FileText, Settings, LogOut, User, Heart, Plus, Download, DollarSign } from 'lucide-react';
 
@@ -73,11 +74,10 @@ export default function PatientDashboard() {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('user_id', currentUser.id);
-      formData.append('network_type', 'turbo');
       
       console.log('📋 Uploading via server API...');
       
-      // Upload via server API
+      // Upload via server API (avoids CORS issues)
       const response = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData
@@ -95,7 +95,7 @@ export default function PatientDashboard() {
       toast.success(`File "${selectedFile.name}" uploaded to 0G Storage successfully!`);
       setSelectedFile(null);
       setShowUpload(false);
-      loadRecords(); // Refresh records
+      loadRecords();
       
     } catch (error) {
       console.error('❌ Upload failed:', error);

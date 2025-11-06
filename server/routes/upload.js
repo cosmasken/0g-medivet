@@ -34,7 +34,24 @@ async function uploadTo0G(file, network = 'mainnet') {
     network
   });
   
-  const blob = new Blob(new Uint8Array(file.buffer));
+  // Create a File-like object that 0G SDK expects
+  const fileBuffer = file.buffer;
+  const fileBlob = new Blob([fileBuffer], { type: file.mimetype });
+  
+  // Add arrayBuffer method if missing (for Node.js compatibility)
+  if (!fileBlob.arrayBuffer) {
+    fileBlob.arrayBuffer = () => Promise.resolve(fileBuffer);
+  }
+  
+  // Add slice method if missing
+  if (!fileBlob.slice) {
+    fileBlob.slice = (start = 0, end = fileBuffer.length) => {
+      const sliced = fileBuffer.slice(start, end);
+      const slicedBlob = new Blob([sliced], { type: file.mimetype });
+      slicedBlob.arrayBuffer = () => Promise.resolve(sliced);
+      return slicedBlob;
+    };
+  }
   
   const uploadOptions = {
     taskSize: 10,
@@ -46,10 +63,10 @@ async function uploadTo0G(file, network = 'mainnet') {
   };
   
   try {
-    await indexer.upload(blob, config.l1Rpc, signer, uploadOptions);
+    await indexer.upload(fileBlob, config.l1Rpc, signer, uploadOptions);
     
     // Extract root hash from blob
-    const rootHash = blob.root || blob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
+    const rootHash = fileBlob.root || fileBlob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
     console.log('✅ Storage upload completed, root hash:', rootHash);
     
     return rootHash;
@@ -62,7 +79,7 @@ async function uploadTo0G(file, network = 'mainnet') {
         errorMessage.includes('missing revert data') ||
         errorMessage.includes('CALL_EXCEPTION')) {
       console.warn('⚠️ Contract/Blockchain error (upload may have succeeded):', errorMessage);
-      const rootHash = blob.root || blob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
+      const rootHash = fileBlob.root || fileBlob.merkleRoot || `0x${Math.random().toString(16).substr(2, 64)}`;
       return rootHash;
     }
     

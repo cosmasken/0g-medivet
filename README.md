@@ -439,6 +439,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for the future of healthcare data**
-
-*MediVet - Where patient data meets blockchain innovation*
