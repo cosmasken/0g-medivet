@@ -45,7 +45,19 @@ export async function uploadToStorage(
   signer: any
 ): Promise<[boolean | null, Error | null]> {
   try {
-    const uploader = new Uploader(storageRpc, l1Rpc, signer);
+    // Import the necessary contract factory inside the function
+    const { FixedPriceFlow__factory } = await import('@0glabs/0g-ts-sdk');
+    
+    // Get the flow contract instance that has the required market() function
+    // Use the flow address from environment or default
+    const flowAddress = typeof window !== 'undefined' 
+      ? (import.meta.env.VITE_STANDARD_FLOW_ADDRESS || import.meta.env.VITE_TURBO_FLOW_ADDRESS || '0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526')
+      : process.env.VITE_STANDARD_FLOW_ADDRESS || process.env.VITE_TURBO_FLOW_ADDRESS || '0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526';
+    
+    const flowContract = FixedPriceFlow__factory.connect(flowAddress, signer);
+    
+    // Initialize the uploader with proper parameters: [nodes], providerRpc, flowContract
+    const uploader = new Uploader([storageRpc], l1Rpc, flowContract);
     
     // Define upload options based on the SDK's expected format
     const uploadOptions = {
