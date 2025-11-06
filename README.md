@@ -220,6 +220,7 @@ cd android
 ### Web Application (`/web`)
 
 **Technology Stack:**
+
 - React 18 with TypeScript
 - Vite for fast development and building
 - Tailwind CSS + shadcn/ui components
