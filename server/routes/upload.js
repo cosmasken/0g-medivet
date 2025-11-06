@@ -55,7 +55,7 @@ async function uploadTo0G(file, network = 'mainnet') {
 
     const [tx, uploadErr] = await indexer.upload(zgFile, {
       signer,
-      rpcUrl: config.l1Rpc,
+      rpcUrl: new URL(config.l1Rpc),
     });
 
     if (uploadErr) {
