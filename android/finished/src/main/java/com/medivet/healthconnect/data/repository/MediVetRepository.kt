@@ -13,11 +13,13 @@ class MediVetRepository(private val apiService: MediVetApiService) {
 
     // User management
     suspend fun authenticateUser(request: AuthRequest) = apiService.authenticateUser(request)
-    suspend fun authenticateWithCredentials(request: CredentialAuthRequest) = apiService.authenticateWithCredentials(request)
+    suspend fun authenticateWithCredentials(request: CredentialAuthRequest) = 
+        apiService.authenticateWithCredentials(request)
     suspend fun checkUsername(username: String) = apiService.checkUsername(username)
 
     // Medical records
-    suspend fun createMedicalRecord(request: CreateRecordRequest) = apiService.createMedicalRecord(request)
+    suspend fun createMedicalRecord(request: CreateRecordRequest) = 
+        apiService.createMedicalRecord(request)
     suspend fun getUserRecords(userId: String) = apiService.getUserRecords(userId)
     suspend fun uploadFile(metadata: okhttp3.RequestBody, file: okhttp3.MultipartBody.Part) = 
         apiService.uploadFile(metadata, file)

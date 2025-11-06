@@ -9,8 +9,8 @@ import com.medivet.healthconnect.data.api.model.FileVerificationResponse
 import com.medivet.healthconnect.data.api.model.GetHealthDataResponse
 import com.medivet.healthconnect.data.api.model.GetRecordsResponse
 import com.medivet.healthconnect.data.api.model.HealthCheckResponse
-import com.medivet.healthconnect.data.api.model.HealthDataSyncRequest
-import com.medivet.healthconnect.data.api.model.HealthDataSyncResponse
+import com.medivet.healthconnect.data.api.model.SyncHealthDataRequest
+import com.medivet.healthconnect.data.api.model.SyncHealthDataResponse
 import com.medivet.healthconnect.data.api.model.HealthStatsResponse
 import com.medivet.healthconnect.data.api.model.MedicalRecord
 import com.medivet.healthconnect.data.api.model.SyncHealthDataRequest

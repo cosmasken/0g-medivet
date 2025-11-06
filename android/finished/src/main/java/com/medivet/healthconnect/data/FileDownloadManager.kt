@@ -160,7 +160,7 @@ class FileDownloadManager(private val context: Context) {
             }
             
             val response = apiService.verifyFile(rootHash, networkType)
-            return@withContext response.isSuccessful && response.body()?.exists == true
+            return@withContext response.isSuccessful
         } catch (e: Exception) {
             return@withContext false
         }

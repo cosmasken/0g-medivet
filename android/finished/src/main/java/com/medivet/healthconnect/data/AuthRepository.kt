@@ -11,12 +11,17 @@ class AuthRepository {
     private val repository = MediVetRepository(NetworkClient.apiService)
 
     suspend fun auth(walletAddress: String, username: String, role: String): UserResponse {
-        val request = AuthRequest(walletAddress, role, username)
-        return repository.authenticateUser(request).body() ?: throw Exception("Authentication failed")
+        val request = AuthRequest(walletAddress)
+        return repository.authenticateUser(request).body() ?: 
+            throw Exception("Authentication failed")
     }
 
-    suspend fun loginWithCredentials(username: String, password: String, role: String = "patient"): UserResponse {
-        val request = CredentialAuthRequest(username, password, role)
+    suspend fun loginWithCredentials(
+        username: String, 
+        password: String, 
+        role: String = "patient"
+    ): UserResponse {
+        val request = CredentialAuthRequest(username, password)
         val response = repository.authenticateWithCredentials(request)
         return if (response.isSuccessful) {
             response.body() ?: throw Exception("Authentication failed")
