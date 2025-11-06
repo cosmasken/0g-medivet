@@ -78,7 +78,10 @@ class FileDownloadManager(private val context: Context) {
             onProgress?.invoke(30)
             
             // Create downloads directory
-            val downloadsDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "MediVet")
+            val downloadsDir = File(
+                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), 
+                "MediVet"
+            )
             if (!downloadsDir.exists()) {
                 downloadsDir.mkdirs()
             }
@@ -167,7 +170,10 @@ class FileDownloadManager(private val context: Context) {
      * Gets the list of downloaded files
      */
     fun getDownloadedFiles(): List<File> {
-        val downloadsDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "MediVet")
+        val downloadsDir = File(
+            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), 
+            "MediVet"
+        )
         return if (downloadsDir.exists()) {
             downloadsDir.listFiles()?.toList() ?: emptyList()
         } else {
@@ -199,7 +205,10 @@ class FileDownloadManager(private val context: Context) {
      */
     fun clearAllDownloads(): Boolean {
         return try {
-            val downloadsDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "MediVet")
+            val downloadsDir = File(
+                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), 
+                "MediVet"
+            )
             if (downloadsDir.exists()) {
                 downloadsDir.deleteRecursively()
             }

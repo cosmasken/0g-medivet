@@ -2,6 +2,17 @@ const express = require('express');
 const { pool } = require('../lib/database');
 const router = express.Router();
 
+// Simple health check endpoint
+router.get('/', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    services: {
+      database: 'OK'
+    }
+  });
+});
+
 // Get health data summary for a user
 router.get('/user/:userId', async (req, res) => {
   console.log('GET /health/user:', req.params.userId);

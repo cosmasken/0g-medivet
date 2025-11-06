@@ -14,15 +14,12 @@ sealed class Screen(
     // Main MediVet screens
     object Dashboard : Screen("dashboard", R.string.dashboard)
     object Files : Screen("files", R.string.files)
-    object Analysis : Screen("analysis", R.string.analysis)
     object Profile : Screen("profile", R.string.profile)
     
     // Sub-pages
     object AllFiles : Screen("all_files", R.string.all_files, false)
     object FileDetail : Screen("file_detail", R.string.file_detail, false)
-    object AnalysisDetail : Screen("analysis_detail", R.string.analysis_detail, false)
     object UploadFile : Screen("upload_file", R.string.upload_file, false)
-    object GenerateAnalysis : Screen("generate_analysis", R.string.generate_analysis, false)
     object PersonalDetails : Screen("personal_details", R.string.personal_details, false)
     object MedicalHistory : Screen("medical_history", R.string.medical_history, false)
     object DataPermissions : Screen("data_permissions", R.string.data_permissions, false)
@@ -48,7 +45,6 @@ sealed class Screen(
         val Labeled = listOf(
             Dashboard,
             Files,
-            Analysis,
             Profile,
             Wallet,
             ExerciseSessions,

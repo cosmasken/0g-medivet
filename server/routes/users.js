@@ -62,6 +62,11 @@ router.post('/auth', async (req, res) => {
   }
 });
 
+// Check username availability
+router.get('/check-username/:username', (req, res) => {
+  res.json({ available: true });
+});
+
 // Get user by ID
 router.get('/:userId', async (req, res) => {
   try {

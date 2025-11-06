@@ -105,7 +105,6 @@ fun ShowMainApp(healthConnectManager: HealthConnectManager) {
         val showBottomNav = listOf(
             Screen.Dashboard.route,
             Screen.Files.route,
-            Screen.Analysis.route,
             Screen.Profile.route
         ).contains(currentRoute)
 
@@ -117,7 +116,6 @@ fun ShowMainApp(healthConnectManager: HealthConnectManager) {
                         val titleId = when (currentRoute) {
                             Screen.Dashboard.route -> Screen.Dashboard.titleId
                             Screen.Files.route -> Screen.Files.titleId
-                            Screen.Analysis.route -> Screen.Analysis.titleId
                             Screen.Profile.route -> Screen.Profile.titleId
                             Screen.ExerciseSessions.route -> Screen.ExerciseSessions.titleId
                             Screen.InputReadings.route -> Screen.InputReadings.titleId

@@ -1,7 +1,8 @@
 package com.medivet.healthconnect.data.repository
 
 import com.medivet.healthconnect.data.api.model.AuthRequest
-import com.medivet.healthconnect.data.api.model.ComputeAnalysisRequest
+
+
 import com.medivet.healthconnect.data.api.model.CreateRecordRequest
 import com.medivet.healthconnect.data.api.model.CredentialAuthRequest
 import com.medivet.healthconnect.data.api.model.LoginRequest
@@ -27,5 +28,5 @@ class MediVetRepository(private val apiService: MediVetApiService) {
     suspend fun getHealthStats(userId: String) = apiService.getHealthStats(userId)
 
     // Compute
-    suspend fun analyzeMedicalData(request: ComputeAnalysisRequest) = apiService.analyzeMedicalData(request)
+    
 }

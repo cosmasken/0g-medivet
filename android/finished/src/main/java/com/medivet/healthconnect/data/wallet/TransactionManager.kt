@@ -59,7 +59,8 @@ class TransactionManager(private val context: Context) {
         expirationDays: Int = 30
     ): TransactionResult = withContext(Dispatchers.IO) {
         try {
-            val expirationTimestamp = System.currentTimeMillis() / 1000 + (expirationDays * 24 * 60 * 60)
+            val expirationTimestamp = System.currentTimeMillis() / 1000 + 
+                (expirationDays * 24 * 60 * 60)
             
             val txData = transactionBuilder.buildGrantAccessTransaction(
                 providerAddress,
@@ -149,7 +150,10 @@ class TransactionManager(private val context: Context) {
         feeAmountEth: String
     ): TransactionResult = withContext(Dispatchers.IO) {
         try {
-            val feeAmountWei = org.web3j.utils.Convert.toWei(feeAmountEth, org.web3j.utils.Convert.Unit.ETHER).toBigInteger()
+            val feeAmountWei = org.web3j.utils.Convert.toWei(
+                feeAmountEth, 
+                org.web3j.utils.Convert.Unit.ETHER
+            ).toBigInteger()
             
             val txData = transactionBuilder.buildStorageFeeTransaction(
                 storageNodeAddress,
@@ -186,7 +190,10 @@ class TransactionManager(private val context: Context) {
     /**
      * Wait for transaction confirmation.
      */
-    suspend fun waitForConfirmation(txHash: String, maxWaitTime: Long = 60000): Boolean = withContext(Dispatchers.IO) {
+    suspend fun waitForConfirmation(
+        txHash: String, 
+        maxWaitTime: Long = 60000
+    ): Boolean = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
         
         while (System.currentTimeMillis() - startTime < maxWaitTime) {

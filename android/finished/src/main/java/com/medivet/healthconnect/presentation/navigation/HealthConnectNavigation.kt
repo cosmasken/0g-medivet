@@ -29,8 +29,7 @@ import com.medivet.healthconnect.presentation.screen.files.FileDetailScreen
 import com.medivet.healthconnect.presentation.screen.files.UploadFileScreen
 import com.medivet.healthconnect.presentation.screen.files.DownloadFileScreen
 import com.medivet.healthconnect.presentation.screen.files.ShareFileScreen
-import com.medivet.healthconnect.presentation.screen.analysis.AnalysisScreen
-import com.medivet.healthconnect.presentation.screen.analysis.GenerateAnalysisScreen
+
 import com.medivet.healthconnect.presentation.screen.profile.ProfileScreen
 import com.medivet.healthconnect.presentation.screen.profile.PersonalDetailsScreen
 import com.medivet.healthconnect.presentation.screen.profile.ExportDataScreen
@@ -103,17 +102,11 @@ fun HealthConnectNavigation(
         composable(Screen.Files.route) {
             FilesScreen(
                 onUploadFile = { navController.navigate(Screen.UploadFile.route) },
-                onFileClick = { fileId -> navController.navigate("${Screen.FileDetail.route}/$fileId") },
-                onAnalyzeClick = { fileId -> navController.navigate("${Screen.AnalysisDetail.route}/$fileId") }
+                onFileClick = { fileId -> navController.navigate("${Screen.FileDetail.route}/$fileId") }
             )
         }
         
-        composable(Screen.Analysis.route) {
-            AnalysisScreen(
-                onGenerateAnalysis = { navController.navigate(Screen.GenerateAnalysis.route) }
-            )
-        }
-        
+
         composable(Screen.Profile.route) {
             ProfileScreen(
                 onLogout = {
@@ -142,7 +135,6 @@ fun HealthConnectNavigation(
         composable(Screen.AllFiles.route) {
             AllFilesScreen(
                 onFileClick = { fileId -> navController.navigate("${Screen.FileDetail.route}/$fileId") },
-                onAnalyzeClick = { fileId -> navController.navigate("${Screen.AnalysisDetail.route}/$fileId") },
                 onUploadFile = { navController.navigate(Screen.UploadFile.route) }
             )
         }
@@ -151,7 +143,6 @@ fun HealthConnectNavigation(
             val fileId = backStackEntry.arguments?.getString("fileId") ?: "1"
             FileDetailScreen(
                 fileId = fileId,
-                onAnalyzeClick = { navController.navigate("${Screen.AnalysisDetail.route}/$fileId") },
                 onDownloadClick = { navController.navigate("${Screen.DownloadFile.route}/$fileId") },
                 onShareClick = { navController.navigate("${Screen.ShareFile.route}/$fileId") }
             )
@@ -163,18 +154,8 @@ fun HealthConnectNavigation(
             )
         }
         
-        composable(Screen.GenerateAnalysis.route) {
-            GenerateAnalysisScreen(
-                onAnalysisComplete = { navController.popBackStack() }
-            )
-        }
-        
-        composable("${Screen.AnalysisDetail.route}/{fileId}") { backStackEntry ->
-            val fileId = backStackEntry.arguments?.getString("fileId") ?: "1"
-            // Show analysis details for specific file
-            AnalysisScreen()
-        }
-        
+
+
         composable(Screen.PersonalDetails.route) {
             PersonalDetailsScreen()
         }

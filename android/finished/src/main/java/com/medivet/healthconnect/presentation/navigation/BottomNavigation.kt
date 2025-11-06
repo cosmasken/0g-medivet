@@ -23,7 +23,6 @@ fun MediVetBottomNavigation(
     val items = listOf(
         BottomNavItem(Screen.Dashboard, Icons.Default.Dashboard),
         BottomNavItem(Screen.Files, Icons.Default.Folder),
-        BottomNavItem(Screen.Analysis, Icons.Default.Analytics),
         BottomNavItem(Screen.Profile, Icons.Default.Person)
     )
 

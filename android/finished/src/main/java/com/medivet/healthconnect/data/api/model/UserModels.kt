@@ -55,7 +55,5 @@ data class HealthCheckResponse(
 )
 
 data class Services(
-    val database: String,
-    val supabase: String,
-    val compute: String
+    val database: String
 )
