@@ -175,20 +175,20 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   }
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Transaction History</h2>
-        <p className="mt-1 text-sm text-gray-500">
+    <div className="p-4 sm:p-6 bg-white rounded-lg shadow">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Transaction History</h2>
+        <p className="mt-1 text-xs sm:text-sm text-gray-500">
           Audit trail of consent and payment transactions
         </p>
       </div>
 
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-        <div className="flex space-x-2">
+      <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+        <div className="w-full sm:w-auto">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as 'all' | 'pending' | 'confirmed' | 'failed')}
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            className="block w-full sm:w-auto pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
           >
             <option value="all">All Statuses</option>
             <option value="confirmed">Confirmed</option>
@@ -196,7 +196,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <option value="failed">Failed</option>
           </select>
         </div>
-        <div className="flex-1 max-w-md sm:ml-4">
+        <div className="w-full sm:max-w-md">
           <div className="relative rounded-md shadow-sm">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -208,35 +208,98 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search transactions..."
-              className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 py-2 sm:text-sm border-gray-300 rounded-md"
+              className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 py-2 text-sm border-gray-300 rounded-md"
             />
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile view - Card layout */}
+      <div className="sm:hidden space-y-3">
+        {filteredTransactions.length === 0 ? (
+          <div className="text-center py-8 text-sm text-gray-500">
+            No transactions found
+          </div>
+        ) : (
+          filteredTransactions.map((tx, index) => (
+            <div key={index} className="border rounded-lg p-4 bg-white shadow-sm">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-medium text-sm">{formatType(tx)}</div>
+                  <div className="text-xs text-gray-500 mt-1">ID: {tx.id}</div>
+                </div>
+                <div>{('status' in tx) ? formatStatus(tx.status) : 'N/A'}</div>
+              </div>
+              
+              <div className="mt-3 space-y-2">
+                {('providerId' in tx || 'patientId' in tx) && (
+                  <div className="text-sm">
+                    <div><span className="text-gray-500">Provider:</span> {tx.providerId || 'N/A'}</div>
+                    <div><span className="text-gray-500">Patient:</span> {tx.patientId || 'N/A'}</div>
+                  </div>
+                )}
+                {'type' in tx && (
+                  <div className="text-sm">
+                    <div><span className="text-gray-500">Type:</span> {tx.type}</div>
+                    <div><span className="text-gray-500">From:</span> {tx.from}</div>
+                  </div>
+                )}
+                
+                {'amount' in tx && tx.amount && (
+                  <div className="text-sm">
+                    <span className="text-gray-500">Amount:</span> {formatAmount(tx.amount)}
+                  </div>
+                )}
+                
+                {tx.timestamp && (
+                  <div className="text-sm">
+                    <span className="text-gray-500">Date:</span> {format(new Date(tx.timestamp), 'MMM dd, yyyy HH:mm')}
+                  </div>
+                )}
+                
+                {'transactionHash' in tx && tx.transactionHash && (
+                  <div className="text-sm break-all">
+                    <span className="text-gray-500">Hash:</span>{' '}
+                    <a 
+                      href={`https://chainscan.0g.ai/tx/${tx.transactionHash}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 hover:text-indigo-900"
+                    >
+                      {tx.transactionHash.substring(0, 20)}...
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop view - Table layout */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Type
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 ID
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Details
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Amount
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Transaction Hash
               </th>
             </tr>
@@ -244,20 +307,20 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredTransactions.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={7} className="px-4 py-4 text-center text-sm text-gray-500">
                   No transactions found
                 </td>
               </tr>
             ) : (
               filteredTransactions.map((tx, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                     {formatType(tx)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {tx.id}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className="px-4 py-3 text-sm text-gray-500">
                     {('providerId' in tx || 'patientId' in tx) && (
                       <div>
                         <div>Provider: {tx.providerId || 'N/A'}</div>
@@ -271,22 +334,22 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {'amount' in tx && tx.amount ? formatAmount(tx.amount) : 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {('status' in tx) ? formatStatus(tx.status) : 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {tx.timestamp ? format(new Date(tx.timestamp), 'MMM dd, yyyy HH:mm') : 'N/A'}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className="px-4 py-3 text-sm text-gray-500">
                     {'transactionHash' in tx && tx.transactionHash ? (
                       <a 
                         href={`https://chainscan.0g.ai/tx/${tx.transactionHash}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="text-indigo-600 hover:text-indigo-900 break-all"
                       >
                         {tx.transactionHash.substring(0, 20)}...
                       </a>
