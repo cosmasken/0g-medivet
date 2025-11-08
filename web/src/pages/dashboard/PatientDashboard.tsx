@@ -38,7 +38,7 @@ export default function PatientDashboard() {
 
   const loadRecords = async () => {
     if (!currentUser?.id) return;
-    
+
     try {
       setLoading(true);
       const response = await getUserRecords(currentUser.id);
@@ -65,16 +65,16 @@ export default function PatientDashboard() {
 
   const handleUpload = async () => {
     if (!selectedFile || !currentUser?.id) return;
-    
+
     try {
       console.log('📤 Starting client-side 0G Storage upload:', selectedFile.name);
-      
+
       // Upload directly to 0G Storage using client-side SDK
       const result = await uploadFile(selectedFile, 'turbo');
-      
+
       if (result.success) {
         console.log('✅ Client upload successful:', result);
-        
+
         // Save record to backend with 0G Storage hash
         const recordData = {
           user_id: currentUser.id,
@@ -85,7 +85,7 @@ export default function PatientDashboard() {
           tx_hash: result.txHash,
           upload_date: new Date().toISOString()
         };
-        
+
         const response = await fetch(`${API_BASE_URL}/records`, {
           method: 'POST',
           headers: {
@@ -93,7 +93,7 @@ export default function PatientDashboard() {
           },
           body: JSON.stringify(recordData)
         });
-        
+
         if (response.ok) {
           toast.success(`File "${selectedFile.name}" uploaded to 0G Storage successfully!`);
           setSelectedFile(null);
@@ -107,7 +107,7 @@ export default function PatientDashboard() {
       } else {
         throw new Error(result.error || 'Upload failed');
       }
-      
+
     } catch (error) {
       console.error('❌ Upload failed:', error);
       toast.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -117,32 +117,33 @@ export default function PatientDashboard() {
   const handleDownload = async (record: any) => {
     try {
       setDownloading(record.id);
-      
-      console.log('📥 Starting server-side 0G Storage download:', {
+
+      console.log('📥 Starting frontend 0G Storage download:', {
         fileName: record.file_name,
-        storageHash: record.storage_hash,
+        storageHash: record.storage_hash || record.zero_g_hash,
         recordId: record.id
       });
-      
+
       // Check if we have a valid storage hash
-      if (!record.storage_hash || record.storage_hash.startsWith('temp-hash-')) {
-        console.warn('⚠️ Record has temporary hash, cannot download from 0G Storage');
-        toast.error('This file was uploaded before 0G Storage integration and cannot be downloaded.');
+      const storageHash = record.storage_hash || record.zero_g_hash;
+      if (!storageHash || storageHash.startsWith('temp-hash-') || storageHash === 'unknown') {
+        console.warn('⚠️ Record has invalid hash, cannot download from 0G Storage');
+        toast.error('This file cannot be downloaded - invalid storage hash.');
         return;
       }
-      
-      // Download via server API
-      const response = await fetch(`${API_BASE_URL}/download/stream/${record.storage_hash}?networkType=turbo&filename=${encodeURIComponent(record.file_name)}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Server download failed:', { status: response.status, error: errorText });
-        toast.error(`Download failed: ${response.status} ${response.statusText}`);
+
+      // Use frontend 0G download
+      const { downloadFromStorage } = await import('@/lib/0g/downloader');
+      const [fileData, downloadError] = await downloadFromStorage(storageHash, 'turbo');
+
+      if (downloadError || !fileData) {
+        console.error('❌ Frontend download failed:', downloadError);
+        toast.error(`Download failed: ${downloadError?.message || 'Unknown error'}`);
         return;
       }
-      
-      // Create blob from response and trigger download
-      const blob = await response.blob();
+
+      // Create blob and trigger download
+      const blob = new Blob([fileData], { type: record.file_type || 'application/octet-stream' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -151,10 +152,10 @@ export default function PatientDashboard() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       console.log('✅ File downloaded successfully from 0G Storage');
       toast.success(`File "${record.file_name}" downloaded successfully!`);
-      
+
     } catch (error) {
       console.error('❌ Download failed:', error);
       toast.error(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -186,7 +187,7 @@ export default function PatientDashboard() {
                 <p className="text-sm text-gray-500">Patient Dashboard</p>
               </div>
             </div>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -240,14 +241,14 @@ export default function PatientDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  <Button 
+                  <Button
                     onClick={() => setShowUpload(!showUpload)}
                     className="h-20 flex flex-col items-center justify-center"
                   >
                     <Upload className="h-6 w-6 mb-2" />
-                    Upload via Server
+                    Upload to 0G Storage
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     className="h-20 flex flex-col items-center justify-center"
                     onClick={() => loadRecords()}
@@ -265,7 +266,7 @@ export default function PatientDashboard() {
                 <CardHeader>
                   <CardTitle>Upload Medical Records</CardTitle>
                   <CardDescription>
-                    Upload files via MediVet server to 0G Storage
+                    Upload files directly to 0G Storage from your browser
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -289,8 +290,8 @@ export default function PatientDashboard() {
                     </div>
                   )}
                   <div className="flex gap-2">
-                    <Button 
-                      onClick={handleUpload} 
+                    <Button
+                      onClick={handleUpload}
                       disabled={!selectedFile || uploading}
                     >
                       {uploading ? (uploadStatus || 'Uploading to 0G Storage...') : 'Upload to 0G Storage'}
@@ -328,7 +329,7 @@ export default function PatientDashboard() {
                   <div className="text-center py-8">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500">No medical records uploaded yet</p>
-                    <Button 
+                    <Button
                       onClick={() => setShowUpload(true)}
                       className="mt-4"
                     >
@@ -351,8 +352,8 @@ export default function PatientDashboard() {
                             </p>
                           )}
                         </div>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => handleDownload(record)}
                           disabled={downloading === record.id}
@@ -388,7 +389,7 @@ export default function PatientDashboard() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Storage</p>
-                  <Badge variant="outline">Server → 0G Storage</Badge>
+                  <Badge variant="outline">Direct 0G Storage</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -398,17 +399,17 @@ export default function PatientDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="h-5 w-5 mr-2" />
-                  MediVet Server
+                  0G Storage
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">
-                  Files uploaded via secure server to 0G Storage
+                  Files uploaded directly from browser to 0G Storage
                 </p>
                 <div className="space-y-2 text-xs text-gray-500">
-                  <p>✅ Server-side 0G integration</p>
-                  <p>✅ No CORS issues</p>
-                  <p>✅ Secure file handling</p>
+                  <p>✅ Direct 0G integration</p>
+                  <p>✅ Client-side encryption</p>
+                  <p>✅ Decentralized storage</p>
                   <p>✅ Blockchain verified</p>
                 </div>
               </CardContent>
