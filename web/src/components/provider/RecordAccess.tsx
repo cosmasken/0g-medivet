@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { contractService } from '@/services/contractService';
+import { logContractTransaction } from '@/lib/api';
+import { useWallet } from '@/hooks/useWallet';
 import { toast } from 'react-hot-toast';
 
 interface RecordAccessProps {
@@ -15,6 +17,7 @@ export function RecordAccess({ patientAddress, recordId }: RecordAccessProps) {
   const [purpose, setPurpose] = useState('');
   const [accessFee, setAccessFee] = useState('0');
   const [loading, setLoading] = useState(false);
+  const { address } = useWallet();
 
   const loadAccessFee = async () => {
     try {
@@ -27,7 +30,7 @@ export function RecordAccess({ patientAddress, recordId }: RecordAccessProps) {
   };
 
   const handleAccessRecord = async () => {
-    if (!purpose.trim()) {
+    if (!purpose.trim() || !address) {
       toast.error('Please enter the purpose for accessing this record');
       return;
     }
@@ -39,7 +42,22 @@ export function RecordAccess({ patientAddress, recordId }: RecordAccessProps) {
         await loadAccessFee();
       }
       
-      await contractService.accessRecord(patientAddress, recordId, purpose, accessFee);
+      const receipt = await contractService.accessRecord(patientAddress, recordId, purpose, accessFee);
+      
+      // Log the transaction on the backend
+      await logContractTransaction({
+        wallet_address: address,
+        action: 'ACCESS_RECORD',
+        transaction_hash: receipt.hash,
+        details: {
+          patient_address: patientAddress,
+          record_id: recordId,
+          purpose,
+          fee: accessFee,
+          timestamp: Date.now()
+        }
+      });
+      
       toast.success('Record access granted! Payment processed.');
       setPurpose('');
     } catch (error: any) {

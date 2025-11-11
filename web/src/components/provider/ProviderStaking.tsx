@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { contractService } from '@/services/contractService';
 import { useWallet } from '@/hooks/useWallet';
+import { logContractTransaction } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { AlertCircle, CheckCircle, Coins, TrendingDown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -41,14 +42,26 @@ export function ProviderStaking() {
   }, [loadStakeInfo]);
 
   const handleStake = async (amount: string) => {
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!amount || parseFloat(amount) <= 0 || !address) {
       toast.error('Please enter a valid stake amount');
       return;
     }
 
     setStakeLoading(true);
     try {
-      await contractService.stakeAsProvider(amount);
+      const receipt = await contractService.stakeAsProvider(amount);
+      
+      // Log the transaction on the backend
+      await logContractTransaction({
+        wallet_address: address,
+        action: 'STAKE_AS_PROVIDER',
+        transaction_hash: receipt.hash,
+        details: {
+          amount,
+          timestamp: Date.now()
+        }
+      });
+      
       toast.success('Successfully staked as provider!');
       setStakeAmount('');
       loadStakeInfo();
@@ -60,14 +73,26 @@ export function ProviderStaking() {
   };
 
   const handleUnstake = async () => {
-    if (!currentStake || parseFloat(currentStake) <= 0) {
+    if (!currentStake || parseFloat(currentStake) <= 0 || !address) {
       toast.error('No stake to unstake');
       return;
     }
 
     setUnstakeLoading(true);
     try {
-      await contractService.unstakeAsProvider(currentStake);
+      const receipt = await contractService.unstakeAsProvider(currentStake);
+      
+      // Log the transaction on the backend
+      await logContractTransaction({
+        wallet_address: address,
+        action: 'UNSTAKE_AS_PROVIDER',
+        transaction_hash: receipt.hash,
+        details: {
+          amount: currentStake,
+          timestamp: Date.now()
+        }
+      });
+      
       toast.success('Successfully unstaked!');
       loadStakeInfo();
     } catch (error: any) {
@@ -78,14 +103,26 @@ export function ProviderStaking() {
   };
 
   const handleIncreaseStake = async () => {
-    if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
+    if (!stakeAmount || parseFloat(stakeAmount) <= 0 || !address) {
       toast.error('Please enter a valid stake amount');
       return;
     }
 
     setIncreasingStake(true);
     try {
-      await contractService.stakeAsProvider(stakeAmount);
+      const receipt = await contractService.stakeAsProvider(stakeAmount);
+      
+      // Log the transaction on the backend
+      await logContractTransaction({
+        wallet_address: address,
+        action: 'INCREASE_STAKE',
+        transaction_hash: receipt.hash,
+        details: {
+          amount: stakeAmount,
+          timestamp: Date.now()
+        }
+      });
+      
       toast.success('Successfully increased stake!');
       setStakeAmount('');
       loadStakeInfo();

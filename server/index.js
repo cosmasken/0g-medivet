@@ -48,6 +48,7 @@ const providersRouter = require('./routes/providers');
 const sharingRouter = require('./routes/sharing');
 const healthRouter = require('./routes/health');
 const healthConnectRouter = require('./routes/health-connect');
+const auditRouter = require('./routes/audit');
 
 // Always available routes
 app.use('/api/contract', contractRouter);
@@ -57,6 +58,7 @@ app.use('/api/providers', providersRouter);
 app.use('/api/sharing', sharingRouter);
 app.use('/api/health', healthRouter);
 app.use('/api/health-connect', healthConnectRouter);
+app.use('/api/audit', auditRouter);
 
 
 // Health check
