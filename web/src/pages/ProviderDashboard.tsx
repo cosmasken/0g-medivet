@@ -9,7 +9,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWallet } from '@/hooks/useWallet';
 import { useAuthStore } from '@/stores/authStore';
-import { stakeAsProvider, accessRecord, checkProviderStake } from '@/lib/api';
+import { checkProviderStake, logContractTransaction } from '@/lib/api';
+import { contractService } from '@/services/contractService';
 import { ProviderStaking } from '@/components/provider/ProviderStaking';
 import { Search, FileText, Users, DollarSign, Settings, LogOut, User, Stethoscope, AlertCircle, Shield, Activity, Wallet, Zap } from 'lucide-react';
 
@@ -39,8 +40,12 @@ export default function ProviderDashboard() {
     if (!address) return;
 
     try {
-      const response = await checkProviderStake(address);
-      setIsStaked(response.isStaked || false);
+      await contractService.initialize();
+      // Use the contract service directly instead of the API call that was failing
+      const minStake = await contractService.getMinimumStake();
+      const currentStake = await contractService.getProviderStake(address);
+      
+      setIsStaked(parseFloat(currentStake) >= parseFloat(minStake));
     } catch (error) {
       console.error('Failed to check stake status:', error);
     }
@@ -52,19 +57,31 @@ export default function ProviderDashboard() {
   };
 
   const handleStake = async () => {
-    if (!address || !signMessage) {
+    if (!address) {
       alert('Please connect your wallet first');
       return;
     }
 
     try {
       setStaking(true);
-
-      // Sign a message to prove ownership
-      const message = `Stake as healthcare provider on MediVet\nAddress: ${address}\nTimestamp: ${Date.now()}`;
-      const signature = await signMessage({ message });
-
-      await stakeAsProvider(address, signature);
+      
+      // Initialize contract service
+      await contractService.initialize();
+      
+      // Stake as provider (0.1 OG as per smart contract requirement)
+      const receipt = await contractService.stakeAsProvider('0.1');
+      
+      // Log the transaction on the backend
+      await logContractTransaction({
+        wallet_address: address,
+        action: 'STAKE_AS_PROVIDER',
+        transaction_hash: receipt.hash,
+        details: {
+          amount: '0.1',
+          timestamp: Date.now()
+        }
+      });
+      
       alert('Successfully staked as provider!');
       setIsStaked(true);
     } catch (error) {
@@ -82,7 +99,7 @@ export default function ProviderDashboard() {
   };
 
   const handleAccessRecord = async () => {
-    if (!selectedPatient || !accessPurpose.trim() || !address || !signMessage) {
+    if (!selectedPatient || !accessPurpose.trim() || !address) {
       alert('Please fill in all fields and connect your wallet');
       return;
     }
@@ -90,16 +107,22 @@ export default function ProviderDashboard() {
     try {
       setAccessing(true);
 
-      // Sign a message for record access
-      const message = `Access medical record\nProvider: ${address}\nPatient: ${selectedPatient}\nPurpose: ${accessPurpose}\nTimestamp: ${Date.now()}`;
-      const signature = await signMessage({ message });
+      // Initialize contract service
+      await contractService.initialize();
 
-      await accessRecord({
-        patientAddress: selectedPatient,
-        recordId: 'sample-record-id',
-        purpose: accessPurpose,
-        providerAddress: address,
-        signature
+      // Access record with payment (0.001 OG as per smart contract requirement)
+      const receipt = await contractService.accessRecord(selectedPatient, 'sample-record-id', accessPurpose, '0.001');
+      
+      // Log the transaction on the backend
+      await logContractTransaction({
+        wallet_address: address,
+        action: 'ACCESS_RECORD',
+        transaction_hash: receipt.hash,
+        details: {
+          patient_address: selectedPatient,
+          purpose: accessPurpose,
+          timestamp: Date.now()
+        }
       });
 
       alert('Record access granted! Payment processed.');
@@ -112,12 +135,45 @@ export default function ProviderDashboard() {
     }
   };
 
-  const stats = [
-    { label: 'Active Patients', value: '12', icon: Users, color: 'text-blue-600' },
-    { label: 'Records Accessed', value: '47', icon: FileText, color: 'text-green-600' },
-    { label: 'Earned Fees', value: '0.12 OG', icon: DollarSign, color: 'text-purple-600' },
-    { label: 'Stake Amount', value: isStaked ? '1.0 OG' : '0.0 OG', icon: Wallet, color: 'text-amber-600' }
-  ];
+  const [stats, setStats] = useState([
+    { label: 'Active Patients', value: '0', icon: Users, color: 'text-blue-600' },
+    { label: 'Records Accessed', value: '0', icon: FileText, color: 'text-green-600' },
+    { label: 'Earned Fees', value: '0.00 OG', icon: DollarSign, color: 'text-purple-600' },
+    { label: 'Stake Amount', value: '0.00 OG', icon: Wallet, color: 'text-amber-600' }
+  ]);
+
+  // Load provider stats
+  useEffect(() => {
+    if (address) {
+      loadProviderStats();
+    }
+  }, [address]);
+
+  const loadProviderStats = async () => {
+    if (!address) return;
+
+    try {
+      // Fetch stake info from contract
+      const stakeInfo = await contractService.getProviderStake(address);
+
+      const newStats = [
+        { label: 'Active Patients', value: '0', icon: Users, color: 'text-blue-600' },
+        { label: 'Records Accessed', value: '0', icon: FileText, color: 'text-green-600' },
+        { label: 'Earned Fees', value: '0.00 OG', icon: DollarSign, color: 'text-purple-600' },
+        {
+          label: 'Stake Amount',
+          value: `${parseFloat(stakeInfo || '0').toFixed(2)} OG`,
+          icon: Wallet,
+          color: 'text-amber-600'
+        }
+      ];
+
+      setStats(newStats);
+    } catch (error) {
+      console.error('Failed to load provider stats:', error);
+      // Keep default zero values on error
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">

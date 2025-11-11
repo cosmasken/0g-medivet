@@ -70,6 +70,12 @@ export class ContractService {
     const fee = await this.contract.ACCESS_FEE();
     return ethers.formatEther(fee);
   }
+
+  async unstakeAsProvider(amount: string) {
+    if (!this.contract) throw new Error('Contract not initialized');
+    const tx = await this.contract.unstake();
+    return tx.wait();
+  }
 }
 
 export const contractService = new ContractService();

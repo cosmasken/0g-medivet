@@ -166,12 +166,25 @@ export default function PatientDashboard() {
     }
   };
 
-  const stats = [
-    { label: 'Medical Records', value: records.length, icon: FileText, color: 'text-blue-600' },
-    { label: 'Shared Records', value: '2', icon: Users, color: 'text-green-600' },
-    { label: 'Total Size', value: `${(records.reduce((sum, record) => sum + (record.file_size || 0), 0) / (1024*1024)).toFixed(2)} MB`, icon: Download, color: 'text-amber-600' },
-    { label: 'Active Providers', value: '3', icon: Heart, color: 'text-red-600' }
-  ];
+  const [stats, setStats] = useState([
+    { label: 'Medical Records', value: '0', icon: FileText, color: 'text-blue-600' },
+    { label: 'Shared Records', value: '0', icon: Users, color: 'text-green-600' },
+    { label: 'Total Size', value: '0 MB', icon: Download, color: 'text-amber-600' },
+    { label: 'Active Providers', value: '0', icon: Heart, color: 'text-red-600' }
+  ]);
+
+  // Update stats when records change
+  useEffect(() => {
+    const totalSize = (records.reduce((sum, record) => sum + (record.file_size || 0), 0) / (1024*1024)).toFixed(2);
+    const sharedRecords = records.filter(record => record.shared || record.is_shared || false).length;
+    
+    setStats([
+      { label: 'Medical Records', value: records.length.toString(), icon: FileText, color: 'text-blue-600' },
+      { label: 'Shared Records', value: sharedRecords.toString(), icon: Users, color: 'text-green-600' },
+      { label: 'Total Size', value: `${totalSize} MB`, icon: Download, color: 'text-amber-600' },
+      { label: 'Active Providers', value: '0', icon: Heart, color: 'text-red-600' }  // This would come from a separate API call
+    ]);
+  }, [records]);
 
   return (
     <div className="min-h-screen bg-gray-50">

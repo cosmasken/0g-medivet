@@ -31,54 +31,9 @@ export const getUserRecords = async (userId: string) => {
   return response.json();
 };
 
-// Contract operations with message signing
-export const stakeAsProvider = async (walletAddress: string, signature: string) => {
-  const response = await fetch(`${API_BASE_URL}/contract/provider/stake`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ walletAddress, signature })
-  });
-
-  if (!response.ok) throw new Error('Failed to stake as provider');
-  return response.json();
-};
-
-export const giveConsent = async (data: {
-  providerAddress: string;
-  recordId: string;
-  durationDays: number;
-  patientAddress: string;
-  signature: string;
-}) => {
-  const response = await fetch(`${API_BASE_URL}/contract/consent/give`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-
-  if (!response.ok) throw new Error('Failed to give consent');
-  return response.json();
-};
-
-export const accessRecord = async (data: {
-  patientAddress: string;
-  recordId: string;
-  purpose: string;
-  providerAddress: string;
-  signature: string;
-}) => {
-  const response = await fetch(`${API_BASE_URL}/contract/record/access`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-
-  if (!response.ok) throw new Error('Failed to access record');
-  return response.json();
-};
-
+// Contract operations are handled client-side, but we can still get contract info
 export const getContractInfo = async () => {
-  const response = await fetch(`${API_BASE_URL}/test/contract`);
+  const response = await fetch(`${API_BASE_URL}/contract/info`);
   if (!response.ok) throw new Error('Failed to get contract info');
   return response.json();
 };
@@ -104,5 +59,22 @@ export const createAuditLog = async (data: {
   });
 
   if (!response.ok) throw new Error('Failed to create audit log');
+  return response.json();
+};
+
+// Log contract transactions that were executed client-side
+export const logContractTransaction = async (data: {
+  wallet_address: string;
+  action: string;
+  transaction_hash: string;
+  details: any;
+}) => {
+  const response = await fetch(`${API_BASE_URL}/contract/log-transaction`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  if (!response.ok) throw new Error('Failed to log contract transaction');
   return response.json();
 };
